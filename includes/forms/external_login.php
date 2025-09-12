@@ -29,13 +29,21 @@
                 'enabled' => get_option('microsoftgraph_signin_enabled'),
                 'icon' => 'windows',
             ),
+            'oidc' => array(
+                'enabled' => get_option('oidc_enabled'),
+                'icon' => 'key',
+                'name' => get_option('oidc_provider_type') === 'keycloak' ? 'Keycloak' : 'SSO',
+            ),
         );
         foreach ($login_links as $provider => $data)
         {
             if ($data['enabled'] == 'true')
             {
     ?>
-                <a href="process.php?do=social_login&provider=<?php echo $provider; ?>" name="Sign in with <?php echo $provider; ?>" class="button_<?php echo $provider; ?>">
+                <a href="process.php?do=social_login&provider=<?php echo $provider; ?>" 
+                   name="Sign in with <?php echo isset($data['name']) ? $data['name'] : ucfirst($provider); ?>" 
+                   class="button_<?php echo $provider; ?>"
+                   title="<?php echo sprintf(__('Sign in with %s', 'cftp_admin'), isset($data['name']) ? $data['name'] : ucfirst($provider)); ?>">
                     <span class="fa-stack fa-lg">
                         <i class="fa fa-circle fa-stack-2x"></i>
                         <i class="fa fa-<?php echo $data['icon']; ?> fa-stack-1x fa-inverse"></i>

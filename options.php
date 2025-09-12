@@ -85,6 +85,14 @@ switch ($section) {
         $section_title = __('External Login', 'cftp_admin');
         $checkboxes = array();
         break;
+    case 'oidc':
+        $section_title = __('OpenID Connect / Keycloak', 'cftp_admin');
+        $checkboxes = array(
+            'oidc_enabled',
+            'oidc_auto_create_users',
+            'oidc_group_sync_enabled',
+        );
+        break;
     case 'cron':
         $section_title = __('Scheduled tasks (cron)', 'cftp_admin');
         $checkboxes = array(
@@ -152,6 +160,15 @@ if ($_POST) {
         'yahoo_client_id',
         'yahoo_client_secret',
         'oidc_identifier_url',
+        'oidc_server_url',
+        'oidc_realm',
+        'oidc_client_id',
+        'oidc_client_secret',
+        'oidc_redirect_uri',
+        'oidc_provider_type',
+        'oidc_default_role',
+        'oidc_role_mapping',
+        'oidc_user_attribute_mapping',
         'ldap_signin_enabled',
         'ldap_hosts',
         'ldap_port',
