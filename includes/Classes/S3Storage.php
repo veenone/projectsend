@@ -14,6 +14,8 @@ class S3Storage extends ExternalStorage
     private $region;
     private $access_key;
     private $secret_key;
+    private $endpoint;
+    private $use_path_style;
 
     /**
      * Constructor
@@ -29,6 +31,8 @@ class S3Storage extends ExternalStorage
             $this->secret_key = $this->credentials['secret_key'] ?? '';
             $this->bucket_name = $this->credentials['bucket_name'] ?? '';
             $this->region = $this->credentials['region'] ?? 'us-east-1';
+            $this->endpoint = $this->credentials['endpoint'] ?? '';
+            $this->use_path_style = isset($this->credentials['use_path_style']) && $this->credentials['use_path_style'] == '1';
 
             $this->initializeS3Client();
         }
@@ -46,14 +50,28 @@ class S3Storage extends ExternalStorage
                 return;
             }
 
-            $this->s3_client = new \Aws\S3\S3Client([
+            $config = [
                 'version' => 'latest',
-                'region' => $this->region,
+                'region' => $this->region ?: 'us-east-1',
                 'credentials' => [
                     'key' => $this->access_key,
                     'secret' => $this->secret_key,
                 ],
-            ]);
+            ];
+
+            // Add custom endpoint for S3-compatible services (MinIO, SeaweedFS, etc.)
+            if (!empty($this->endpoint)) {
+                $config['endpoint'] = $this->endpoint;
+                $this->logOperation('init', '', 'info', 'Using custom endpoint: ' . $this->endpoint);
+            }
+
+            // Enable path-style addressing for MinIO and other S3-compatible services
+            if ($this->use_path_style) {
+                $config['use_path_style_endpoint'] = true;
+                $this->logOperation('init', '', 'info', 'Using path-style addressing');
+            }
+
+            $this->s3_client = new \Aws\S3\S3Client($config);
 
             $this->is_connected = true;
             $this->logOperation('init', '', 'success', 'S3 client initialized');
@@ -280,7 +298,7 @@ class S3Storage extends ExternalStorage
      * @param int $max_keys Maximum number of files to return
      * @return array List of files with metadata
      */
-    public function listFiles($prefix = '', $max_keys = 1000)
+    public function listFiles($prefix = '', $max_keys = 1000, $continuation_token = null)
     {
         if (!$this->s3_client) {
             return [
@@ -298,6 +316,10 @@ class S3Storage extends ExternalStorage
 
             if (!empty($prefix)) {
                 $params['Prefix'] = $prefix;
+            }
+
+            if (!empty($continuation_token)) {
+                $params['ContinuationToken'] = $continuation_token;
             }
 
             $result = $this->s3_client->listObjectsV2($params);
@@ -321,10 +343,148 @@ class S3Storage extends ExternalStorage
                 'success' => true,
                 'files' => $files,
                 'truncated' => $result['IsTruncated'] ?? false,
-                'next_token' => $result['NextContinuationToken'] ?? null
+                'next_token' => $result['NextContinuationToken'] ?? null,
+                'key_count' => $result['KeyCount'] ?? 0
             ];
         } catch (\Exception $e) {
             $this->logOperation('list', $prefix, 'error', $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'files' => []
+            ];
+        }
+    }
+
+    /**
+     * Count total number of objects in the bucket
+     * Uses pagination to count all objects
+     *
+     * @param string $prefix Optional prefix to filter objects
+     * @return array Response with total count
+     */
+    public function countFiles($prefix = '')
+    {
+        if (!$this->s3_client) {
+            return [
+                'success' => false,
+                'message' => $this->getErrorMessage('connection_failed'),
+                'count' => 0
+            ];
+        }
+
+        try {
+            $total_count = 0;
+            $continuation_token = null;
+
+            do {
+                $params = [
+                    'Bucket' => $this->bucket_name,
+                    'MaxKeys' => 1000
+                ];
+
+                if (!empty($prefix)) {
+                    $params['Prefix'] = $prefix;
+                }
+
+                if (!empty($continuation_token)) {
+                    $params['ContinuationToken'] = $continuation_token;
+                }
+
+                $result = $this->s3_client->listObjectsV2($params);
+
+                if (isset($result['KeyCount'])) {
+                    $total_count += $result['KeyCount'];
+                }
+
+                $continuation_token = $result['NextContinuationToken'] ?? null;
+
+            } while ($result['IsTruncated'] ?? false);
+
+            $this->logOperation('count', $prefix, 'success', $total_count . ' total files');
+
+            return [
+                'success' => true,
+                'count' => $total_count
+            ];
+        } catch (\Exception $e) {
+            $this->logOperation('count', $prefix, 'error', $e->getMessage());
+            return [
+                'success' => false,
+                'message' => $e->getMessage(),
+                'count' => 0
+            ];
+        }
+    }
+
+    /**
+     * List all files with automatic pagination
+     * WARNING: This can be slow for buckets with many files
+     *
+     * @param string $prefix Optional prefix to filter objects
+     * @param int $max_results Maximum number of results to return (0 = unlimited)
+     * @return array Response with all files
+     */
+    public function listAllFiles($prefix = '', $max_results = 0)
+    {
+        if (!$this->s3_client) {
+            return [
+                'success' => false,
+                'message' => $this->getErrorMessage('connection_failed'),
+                'files' => []
+            ];
+        }
+
+        try {
+            $all_files = [];
+            $continuation_token = null;
+
+            do {
+                $params = [
+                    'Bucket' => $this->bucket_name,
+                    'MaxKeys' => 1000
+                ];
+
+                if (!empty($prefix)) {
+                    $params['Prefix'] = $prefix;
+                }
+
+                if (!empty($continuation_token)) {
+                    $params['ContinuationToken'] = $continuation_token;
+                }
+
+                $result = $this->s3_client->listObjectsV2($params);
+
+                if (isset($result['Contents'])) {
+                    foreach ($result['Contents'] as $object) {
+                        $all_files[] = [
+                            'key' => $object['Key'],
+                            'size' => $object['Size'],
+                            'last_modified' => $object['LastModified']->format('Y-m-d H:i:s'),
+                            'etag' => trim($object['ETag'], '"'),
+                            'storage_class' => $object['StorageClass'] ?? 'STANDARD'
+                        ];
+
+                        // Stop if we've reached max_results
+                        if ($max_results > 0 && count($all_files) >= $max_results) {
+                            break 2;
+                        }
+                    }
+                }
+
+                $continuation_token = $result['NextContinuationToken'] ?? null;
+
+            } while ($result['IsTruncated'] ?? false);
+
+            $this->logOperation('list_all', $prefix, 'success', count($all_files) . ' files retrieved');
+
+            return [
+                'success' => true,
+                'files' => $all_files,
+                'total_count' => count($all_files)
+            ];
+        } catch (\Exception $e) {
+            $this->logOperation('list_all', $prefix, 'error', $e->getMessage());
             return [
                 'success' => false,
                 'message' => $e->getMessage(),
