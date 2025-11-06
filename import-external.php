@@ -42,6 +42,14 @@ if (isset($_POST['action'])) {
 
                     $imported_count = 0;
                     $errors = [];
+                    $preserve_folders = !empty($_POST['preserve_folders']);
+                    $folder_importer = null;
+                    $created_folders_count = 0;
+
+                    // Initialize folder importer if folder preservation is enabled
+                    if ($preserve_folders) {
+                        $folder_importer = new \ProjectSend\Classes\FolderStructureImporter(CURRENT_USER_ID);
+                    }
 
                     foreach ($selected_files as $file_key) {
                         // Get file metadata from external storage
@@ -60,6 +68,14 @@ if (isset($_POST['action'])) {
                         // Set additional external storage properties
                         $file->bucket_name = $storage->getBucketName();
 
+                        // Handle folder structure if enabled
+                        if ($preserve_folders && $folder_importer) {
+                            $import_result = $folder_importer->importPath($file_key, CURRENT_USER_ID);
+                            if ($import_result['folder_id']) {
+                                $file->folder_id = $import_result['folder_id'];
+                            }
+                        }
+
                         // Set file properties
                         $file->title = $file->filename_original;
                         $file->description = sprintf(__('Imported from %s', 'cftp_admin'), $integration['name']);
@@ -77,9 +93,19 @@ if (isset($_POST['action'])) {
                         }
                     }
 
+                    // Get count of created folders
+                    if ($preserve_folders && $folder_importer) {
+                        $created_folders = $folder_importer->getCreatedFolders();
+                        $created_folders_count = count($created_folders);
+                    }
+
                     // Show results
                     if ($imported_count > 0) {
-                        $flash->success(sprintf(__('Successfully imported %d files.', 'cftp_admin'), $imported_count));
+                        $success_message = sprintf(__('Successfully imported %d files.', 'cftp_admin'), $imported_count);
+                        if ($preserve_folders && $created_folders_count > 0) {
+                            $success_message .= ' ' . sprintf(__('Created %d new folders.', 'cftp_admin'), $created_folders_count);
+                        }
+                        $flash->success($success_message);
                     }
 
                     if (!empty($errors)) {
@@ -250,13 +276,21 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
                                                     <input type="checkbox" id="select_all_checkbox">
                                                 </th>
                                                 <th><?php _e('File Name', 'cftp_admin'); ?></th>
+                                                <th><?php _e('Folder Path', 'cftp_admin'); ?></th>
                                                 <th><?php _e('Size', 'cftp_admin'); ?></th>
                                                 <th><?php _e('Modified', 'cftp_admin'); ?></th>
                                                 <th><?php _e('Storage Class', 'cftp_admin'); ?></th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <?php foreach ($external_files as $file): ?>
+                                            <?php
+                                            $folder_preview_helper = new \ProjectSend\Classes\FolderStructureImporter();
+                                            foreach ($external_files as $file):
+                                                $parsed_path = $folder_preview_helper->parsePath($file['key']);
+                                                $folder_path = !empty($parsed_path['path_components'])
+                                                    ? implode(' / ', $parsed_path['path_components'])
+                                                    : __('Root', 'cftp_admin');
+                                            ?>
                                                 <tr>
                                                     <td>
                                                         <input type="checkbox" name="files[]" value="<?php echo html_output($file['key']); ?>" class="file_checkbox">
@@ -265,6 +299,11 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
                                                         <strong><?php echo html_output(basename($file['key'])); ?></strong>
                                                         <br>
                                                         <small class="text-muted"><?php echo html_output($file['key']); ?></small>
+                                                    </td>
+                                                    <td>
+                                                        <span class="badge bg-info folder-path" data-folder-path="<?php echo html_output($folder_path); ?>">
+                                                            <?php echo html_output($folder_path); ?>
+                                                        </span>
                                                     </td>
                                                     <td>
                                                         <?php echo format_file_size($file['size']); ?>
@@ -283,6 +322,33 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
                                     </table>
                                 </div>
 
+                                <!-- Import Options -->
+                                <div class="card mt-4 mb-3">
+                                    <div class="card-body">
+                                        <h6 class="card-title"><?php _e('Import Options', 'cftp_admin'); ?></h6>
+
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" name="preserve_folders" id="preserve_folders" value="1" checked>
+                                            <label class="form-check-label" for="preserve_folders">
+                                                <strong><?php _e('Preserve folder structure from S3 paths', 'cftp_admin'); ?></strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    <?php _e('Automatically create folders based on the S3 file paths. For example, "Central_R_D/CoE_Colombes/Documents/file.pdf" will create nested folders and place the file in "Documents".', 'cftp_admin'); ?>
+                                                </small>
+                                            </label>
+                                        </div>
+
+                                        <!-- Folder Preview Area -->
+                                        <div id="folder_preview" class="mt-3" style="display: none;">
+                                            <div class="alert alert-info">
+                                                <h6><i class="fa fa-folder-open"></i> <?php _e('Folder Structure Preview', 'cftp_admin'); ?></h6>
+                                                <p class="mb-2"><strong id="preview_file_count">0</strong> <?php _e('files selected', 'cftp_admin'); ?></p>
+                                                <p class="mb-0"><strong id="preview_folder_count">0</strong> <?php _e('unique folders will be created', 'cftp_admin'); ?></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <div class="text-end mt-3">
                                     <button type="submit" name="action" value="import" class="btn btn-success">
                                         <i class="fa fa-download"></i> <?php _e('Import Selected Files', 'cftp_admin'); ?>
@@ -298,6 +364,94 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
     </div>
 </div>
 
+
+<script>
+$(document).ready(function() {
+    // Select all/none functionality
+    $('#select_all, #select_all_checkbox').on('click', function() {
+        $('.file_checkbox').prop('checked', true);
+        updateFolderPreview();
+    });
+
+    $('#select_none').on('click', function() {
+        $('.file_checkbox').prop('checked', false);
+        updateFolderPreview();
+    });
+
+    // Update preview when checkboxes change
+    $('.file_checkbox').on('change', function() {
+        updateFolderPreview();
+    });
+
+    // Toggle folder path column visibility
+    $('#preserve_folders').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('.folder-path').parent().show();
+            $('th:contains("<?php _e('Folder Path', 'cftp_admin'); ?>")').show();
+            updateFolderPreview();
+        } else {
+            $('.folder-path').parent().hide();
+            $('th:contains("<?php _e('Folder Path', 'cftp_admin'); ?>")').hide();
+            $('#folder_preview').hide();
+        }
+    });
+
+    // Initial preview update
+    updateFolderPreview();
+
+    /**
+     * Update folder preview based on selected files
+     */
+    function updateFolderPreview() {
+        const preserveFolders = $('#preserve_folders').is(':checked');
+
+        if (!preserveFolders) {
+            $('#folder_preview').hide();
+            return;
+        }
+
+        // Count selected files
+        const selectedCheckboxes = $('.file_checkbox:checked');
+        const fileCount = selectedCheckboxes.length;
+
+        if (fileCount === 0) {
+            $('#folder_preview').hide();
+            return;
+        }
+
+        // Extract unique folder paths from selected files
+        const uniqueFolders = new Set();
+
+        selectedCheckboxes.each(function() {
+            const row = $(this).closest('tr');
+            const folderPath = row.find('.folder-path').data('folder-path');
+
+            if (folderPath && folderPath !== '<?php _e('Root', 'cftp_admin'); ?>') {
+                // Add each level of the path
+                const pathParts = folderPath.split(' / ');
+                let currentPath = '';
+
+                pathParts.forEach(function(part) {
+                    currentPath += (currentPath ? ' / ' : '') + part;
+                    uniqueFolders.add(currentPath);
+                });
+            }
+        });
+
+        const folderCount = uniqueFolders.size;
+
+        // Update preview
+        $('#preview_file_count').text(fileCount);
+        $('#preview_folder_count').text(folderCount);
+
+        if (folderCount > 0) {
+            $('#folder_preview').show();
+        } else {
+            $('#folder_preview').hide();
+        }
+    }
+});
+</script>
 
 <?php
 include_once ADMIN_VIEWS_DIR . DS . 'footer.php';
