@@ -170,7 +170,7 @@ if (!current_role_in(['Client'])) {
     // Build themes submenu
     $themes_submenu = array(
         array(
-            'label' => __('Themes', 'cftp_admin'),
+            'label' => __('Client Themes', 'cftp_admin'),
             'link' => 'themes.php',
         ),
     );
@@ -179,13 +179,19 @@ if (!current_role_in(['Client'])) {
     $current_theme = get_option('selected_clients_template');
     if ($current_theme && function_exists('theme_has_settings') && theme_has_settings($current_theme)) {
         $themes_submenu[] = array(
-            'divider' => true,
-        );
-        $themes_submenu[] = array(
-            'label' => __('Theme Settings', 'cftp_admin'),
+            'label' => __('Client Theme Settings', 'cftp_admin'),
             'link' => 'theme-settings.php?theme=' . urlencode($current_theme),
         );
     }
+
+    // Add system themes link
+    $themes_submenu[] = array(
+        'divider' => true,
+    );
+    $themes_submenu[] = array(
+        'label' => __('System Themes', 'cftp_admin'),
+        'link' => 'options.php?section=branding#section-system-theme',
+    );
 
     $items['themes'] = array(
         'nav' => 'themes',

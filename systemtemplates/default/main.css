@@ -1,0 +1,52 @@
+/**
+ * Default System Theme CSS
+ *
+ * This theme uses the standard ProjectSend styling with minimal customizations.
+ * The base styles are loaded from the main application CSS files.
+ * This file contains only theme-specific overrides and enhancements.
+ */
+
+/* Theme-specific variables */
+:root {
+    --system-theme-accent: #2980b9;
+    --system-theme-sidebar-width: 250px;
+}
+
+/* Light mode customizations */
+body:not(.dark-mode) {
+    /* Keep default light mode styles */
+}
+
+/* Dark mode customizations */
+body.dark-mode {
+    /* Keep default dark mode styles */
+}
+
+/* Optional: Add subtle transitions for theme elements */
+.main_side, #header, .footer {
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Add smooth hover effects for navigation */
+.main_side .main_menu li a:hover {
+    transform: translateX(3px);
+    transition: transform 0.2s ease;
+}
+
+/* Enhance card shadows for better depth */
+.card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}

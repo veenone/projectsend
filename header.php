@@ -55,6 +55,12 @@ password_change_required();
     <?php meta_favicon(); ?>
 
     <?php
+        // Load system theme functions and assets
+        if (!defined('IS_INSTALL') && file_exists(ROOT_DIR . '/includes/functions.system-themes.php')) {
+            require_once ROOT_DIR . '/includes/functions.system-themes.php';
+            load_system_theme_assets();
+        }
+
         render_assets('js', 'head');
         render_assets('css', 'head');
 

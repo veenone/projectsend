@@ -1,0 +1,253 @@
+/**
+ * Business Professional System Theme CSS
+ *
+ * Professional styling with refined colors and enhanced spacing
+ * Designed for enterprise and corporate environments
+ */
+
+/* Business theme color variables */
+:root {
+    --business-primary: #1e3a5f;
+    --business-primary-light: #2c5282;
+    --business-accent: #3498db;
+    --business-accent-hover: #2980b9;
+    --business-sidebar-bg: #f8f9fa;
+    --business-sidebar-border: #e1e4e8;
+    --business-header-bg: #1e3a5f;
+    --business-text-primary: #2c3e50;
+}
+
+body.dark-mode {
+    --business-primary: #2c5282;
+    --business-primary-light: #3a6ba5;
+    --business-sidebar-bg: #1a1f2e;
+    --business-sidebar-border: #2d3748;
+    --business-header-bg: #1a1f2e;
+    --business-text-primary: #e2e8f0;
+}
+
+/* Header customization */
+#header.navbar {
+    background-color: var(--business-header-bg) !important;
+    border-bottom: 3px solid var(--business-accent);
+    padding: 0.75rem 1.5rem;
+}
+
+#header .navbar-brand {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: #ffffff !important;
+}
+
+/* Sidebar customization */
+.main_side {
+    background-color: var(--business-sidebar-bg);
+    border-right: 1px solid var(--business-sidebar-border);
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.05);
+}
+
+.main_side .main_menu li a {
+    padding: 12px 20px;
+    border-radius: 6px;
+    margin: 4px 8px;
+    transition: all 0.25s ease;
+    font-weight: 500;
+}
+
+.main_side .main_menu li a:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+    transform: translateX(4px);
+    color: var(--business-accent);
+}
+
+.main_side .main_menu li.active a,
+.main_side .main_menu li a.active {
+    background-color: var(--business-accent);
+    color: #ffffff !important;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(52, 152, 219, 0.3);
+}
+
+body.dark-mode .main_side .main_menu li.active a,
+body.dark-mode .main_side .main_menu li a.active {
+    background-color: var(--business-primary-light);
+}
+
+/* Content area */
+.main_content {
+    background-color: #f5f7fa;
+    padding: 2rem;
+}
+
+body.dark-mode .main_content {
+    background-color: #0f1419;
+}
+
+/* Cards and panels */
+.card {
+    border: 1px solid #e1e4e8;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid var(--business-accent);
+    font-weight: 600;
+    color: var(--business-text-primary);
+    padding: 1rem 1.25rem;
+}
+
+body.dark-mode .card {
+    border-color: #2d3748;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .card-header {
+    background-color: #1a1f2e;
+    color: #e2e8f0;
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--business-accent);
+    border-color: var(--business-accent);
+    font-weight: 500;
+    padding: 0.625rem 1.5rem;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+    background-color: var(--business-accent-hover);
+    border-color: var(--business-accent-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(52, 152, 219, 0.3);
+}
+
+/* Tables */
+.table {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: var(--business-primary);
+    color: #ffffff;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+    padding: 1rem;
+    border: none;
+}
+
+body.dark-mode .table thead th {
+    background-color: var(--business-primary-light);
+}
+
+.table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+.table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.05);
+}
+
+body.dark-mode .table tbody tr:hover {
+    background-color: rgba(52, 152, 219, 0.15);
+}
+
+/* Forms */
+.form-control {
+    border-radius: 6px;
+    border: 1.5px solid #d1d5db;
+    padding: 0.625rem 1rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus {
+    border-color: var(--business-accent);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--business-text-primary);
+    margin-bottom: 0.5rem;
+}
+
+/* Badges and alerts */
+.badge {
+    padding: 0.5rem 0.875rem;
+    border-radius: 6px;
+    font-weight: 500;
+}
+
+.alert {
+    border-radius: 8px;
+    border-left: 4px solid;
+    padding: 1rem 1.25rem;
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+    background-color: transparent;
+    padding: 1rem 0;
+    font-weight: 500;
+}
+
+.breadcrumb-item a {
+    color: var(--business-accent);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.breadcrumb-item a:hover {
+    color: var(--business-accent-hover);
+    text-decoration: underline;
+}
+
+/* Footer */
+.footer {
+    background-color: var(--business-sidebar-bg);
+    border-top: 1px solid var(--business-sidebar-border);
+    padding: 1.5rem;
+    color: var(--business-text-primary);
+}
+
+/* Scrollbar customization (Webkit browsers) */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--business-sidebar-bg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--business-accent);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--business-accent-hover);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .main_content {
+        padding: 1rem;
+    }
+
+    #header.navbar {
+        padding: 0.5rem 1rem;
+    }
+}

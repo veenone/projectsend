@@ -1,0 +1,573 @@
+/**
+ * IST Professional Template - Public Page Stylesheet
+ * Based on Business template with IST brand colors
+ *
+ * Color Palette:
+ * - Main: #7382E6 (Primary brand color)
+ * - Dark 1: #323C64 (Deep navy)
+ * - Dark 2: #5564A5 (Medium navy)
+ * - Light 1: #96AFFF (Soft blue)
+ * - Light 2: #CDDCFF (Pale blue)
+ */
+
+/* ============================================
+   IST COLOR VARIABLES
+   ============================================ */
+
+:root {
+    /* IST Brand Colors */
+    --ist-main: #7382E6;
+    --ist-dark-1: #323C64;
+    --ist-dark-2: #5564A5;
+    --ist-light-1: #96AFFF;
+    --ist-light-2: #CDDCFF;
+
+    /* Light Mode Colors */
+    --ist-primary: var(--ist-main);
+    --ist-primary-dark: var(--ist-dark-2);
+    --ist-primary-darker: var(--ist-dark-1);
+    --ist-primary-light: var(--ist-light-1);
+    --ist-primary-lighter: var(--ist-light-2);
+
+    /* Text Colors - Light Mode */
+    --ist-text-primary: #1a1a1a;
+    --ist-text-secondary: #4a4a4a;
+    --ist-text-muted: #6a6a6a;
+    --ist-text-on-primary: #ffffff;
+
+    /* Background Colors - Light Mode */
+    --ist-bg-primary: #ffffff;
+    --ist-bg-secondary: #f8f9fa;
+    --ist-bg-tertiary: #e9ecef;
+    --ist-bg-hover: var(--ist-light-2);
+    --ist-bg-accent: var(--ist-light-2);
+
+    /* Border Colors */
+    --ist-border-color: #dee2e6;
+    --ist-border-light: var(--ist-light-2);
+
+    /* Shadow */
+    --ist-shadow-sm: 0 2px 4px rgba(50, 60, 100, 0.08);
+    --ist-shadow-md: 0 4px 12px rgba(50, 60, 100, 0.12);
+    --ist-shadow-lg: 0 8px 24px rgba(50, 60, 100, 0.16);
+}
+
+/* ============================================
+   DARK MODE COLORS
+   ============================================ */
+
+[data-theme="dark"],
+body.dark-mode {
+    /* Inverted for dark mode */
+    --ist-primary: var(--ist-light-1);
+    --ist-primary-dark: var(--ist-main);
+    --ist-primary-darker: var(--ist-light-2);
+    --ist-primary-light: var(--ist-dark-2);
+    --ist-primary-lighter: var(--ist-dark-1);
+
+    /* Text Colors - Dark Mode */
+    --ist-text-primary: #e8e8e8;
+    --ist-text-secondary: #c0c0c0;
+    --ist-text-muted: #909090;
+    --ist-text-on-primary: #1a1a1a;
+
+    /* Background Colors - Dark Mode */
+    --ist-bg-primary: #1a1d2e;
+    --ist-bg-secondary: #252839;
+    --ist-bg-tertiary: #2f3349;
+    --ist-bg-hover: var(--ist-dark-2);
+    --ist-bg-accent: var(--ist-dark-1);
+
+    /* Border Colors */
+    --ist-border-color: #3a3f52;
+    --ist-border-light: var(--ist-dark-2);
+
+    /* Shadow */
+    --ist-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --ist-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --ist-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+body {
+    background-color: var(--ist-bg-secondary);
+    color: var(--ist-text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+}
+
+/* ============================================
+   HEADER & BRANDING
+   ============================================ */
+
+#header,
+.navbar {
+    background: linear-gradient(135deg, var(--ist-primary-darker) 0%, var(--ist-primary-dark) 100%);
+    border-bottom: 3px solid var(--ist-primary);
+    box-shadow: var(--ist-shadow-md);
+    color: #ffffff;
+}
+
+#header .navbar-brand,
+#header a,
+.navbar a {
+    color: #ffffff;
+    font-weight: 500;
+}
+
+#header a:hover,
+.navbar a:hover {
+    color: var(--ist-light-2);
+}
+
+.branding_unlogged figure,
+.logo {
+    filter: drop-shadow(var(--ist-shadow-sm));
+}
+
+/* ============================================
+   MAIN CONTENT AREA
+   ============================================ */
+
+.main_content,
+.main_content_unlogged {
+    background-color: var(--ist-bg-primary);
+    min-height: calc(100vh - 200px);
+    padding: 2rem 1rem;
+}
+
+/* ============================================
+   CARDS & PANELS
+   ============================================ */
+
+.card,
+.ps-card,
+.file-card {
+    background-color: var(--ist-bg-primary);
+    border: 1px solid var(--ist-border-color);
+    border-radius: 8px;
+    box-shadow: var(--ist-shadow-sm);
+    transition: all 0.3s ease;
+}
+
+.card:hover,
+.ps-card:hover,
+.file-card:hover {
+    box-shadow: var(--ist-shadow-md);
+    transform: translateY(-2px);
+}
+
+.ps-card-header,
+.card-header {
+    background: linear-gradient(135deg, var(--ist-primary) 0%, var(--ist-primary-dark) 100%);
+    color: var(--ist-text-on-primary);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    font-weight: 600;
+    padding: 1rem 1.5rem;
+}
+
+.ps-card-body,
+.card-body {
+    padding: 1.5rem;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn {
+    border-radius: 6px;
+    font-weight: 500;
+    padding: 0.5rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--ist-primary) 0%, var(--ist-primary-dark) 100%);
+    border: none;
+    color: var(--ist-text-on-primary);
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background: linear-gradient(135deg, var(--ist-primary-dark) 0%, var(--ist-primary-darker) 100%);
+    box-shadow: var(--ist-shadow-md);
+    transform: translateY(-1px);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--ist-primary);
+    color: var(--ist-primary);
+    background-color: transparent;
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+}
+
+.btn-lg {
+    padding: 0.75rem 2rem;
+    font-size: 1.1rem;
+}
+
+/* ============================================
+   FILE LIST / TABLE
+   ============================================ */
+
+.file-list,
+.files-list {
+    background-color: var(--ist-bg-primary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.file-item,
+.files-list-item {
+    border-bottom: 1px solid var(--ist-border-color);
+    padding: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.file-item:hover,
+.files-list-item:hover {
+    background-color: var(--ist-bg-hover);
+}
+
+.file-name {
+    color: var(--ist-primary);
+    font-weight: 500;
+}
+
+.file-name:hover {
+    color: var(--ist-primary-dark);
+    text-decoration: underline;
+}
+
+.file-meta {
+    color: var(--ist-text-muted);
+    font-size: 0.9rem;
+}
+
+/* Download button in file list */
+.file-download-btn,
+.btn-download {
+    background-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+}
+
+.file-download-btn:hover,
+.btn-download:hover {
+    background-color: var(--ist-primary-dark);
+    color: var(--ist-text-on-primary);
+}
+
+/* ============================================
+   FORMS & INPUTS
+   ============================================ */
+
+.form-control,
+.form-select,
+input[type="text"],
+input[type="email"],
+input[type="password"],
+textarea {
+    background-color: var(--ist-bg-primary);
+    border: 1px solid var(--ist-border-color);
+    border-radius: 6px;
+    color: var(--ist-text-primary);
+    padding: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.form-control:focus,
+.form-select:focus,
+input:focus,
+textarea:focus {
+    border-color: var(--ist-primary);
+    box-shadow: 0 0 0 0.2rem rgba(115, 130, 230, 0.25);
+    background-color: var(--ist-bg-primary);
+    color: var(--ist-text-primary);
+    outline: none;
+}
+
+.form-label,
+label {
+    color: var(--ist-text-primary);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* ============================================
+   SEARCH & FILTERS
+   ============================================ */
+
+.search-box {
+    background-color: var(--ist-bg-primary);
+    border: 2px solid var(--ist-border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.search-box input {
+    border-color: var(--ist-primary-light);
+}
+
+.search-box .btn-primary {
+    min-width: 120px;
+}
+
+/* ============================================
+   ALERTS & MESSAGES
+   ============================================ */
+
+.alert {
+    border-radius: 8px;
+    border-left: 4px solid;
+    padding: 1rem 1.5rem;
+}
+
+.alert-info {
+    background-color: var(--ist-light-2);
+    border-left-color: var(--ist-primary);
+    color: var(--ist-dark-1);
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border-left-color: #28a745;
+    color: #155724;
+}
+
+.alert-warning {
+    background-color: #fff3cd;
+    border-left-color: #ffc107;
+    color: #856404;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    border-left-color: #dc3545;
+    color: #721c24;
+}
+
+/* ============================================
+   FOOTER
+   ============================================ */
+
+#footer,
+footer {
+    background-color: var(--ist-primary-darker);
+    color: var(--ist-text-on-primary);
+    padding: 2rem 0;
+    margin-top: 3rem;
+    border-top: 3px solid var(--ist-primary);
+}
+
+#footer a,
+footer a {
+    color: var(--ist-light-2);
+}
+
+#footer a:hover,
+footer a:hover {
+    color: #ffffff;
+}
+
+/* ============================================
+   BREADCRUMBS
+   ============================================ */
+
+.breadcrumb {
+    background-color: var(--ist-bg-secondary);
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+}
+
+.breadcrumb-item a {
+    color: var(--ist-primary);
+}
+
+.breadcrumb-item.active {
+    color: var(--ist-text-muted);
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+
+.pagination {
+    margin-top: 2rem;
+}
+
+.pagination .page-link {
+    background-color: var(--ist-bg-primary);
+    border: 1px solid var(--ist-border-color);
+    color: var(--ist-primary);
+    margin: 0 0.25rem;
+    border-radius: 6px;
+}
+
+.pagination .page-link:hover {
+    background-color: var(--ist-bg-hover);
+    border-color: var(--ist-primary);
+    color: var(--ist-primary-dark);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--ist-primary);
+    border-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+}
+
+/* ============================================
+   BADGES & TAGS
+   ============================================ */
+
+.badge {
+    border-radius: 4px;
+    padding: 0.35em 0.65em;
+    font-weight: 500;
+}
+
+.badge.bg-primary {
+    background-color: var(--ist-primary) !important;
+    color: var(--ist-text-on-primary);
+}
+
+.badge.bg-secondary {
+    background-color: var(--ist-dark-2) !important;
+    color: #ffffff;
+}
+
+/* ============================================
+   LOADING & SPINNERS
+   ============================================ */
+
+.spinner-border {
+    color: var(--ist-primary);
+}
+
+.loading-overlay {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   FILE TYPE ICONS
+   ============================================ */
+
+.file-icon {
+    color: var(--ist-primary);
+    font-size: 2rem;
+}
+
+.file-icon.pdf {
+    color: #dc3545;
+}
+
+.file-icon.doc,
+.file-icon.docx {
+    color: #2b579a;
+}
+
+.file-icon.xls,
+.file-icon.xlsx {
+    color: #217346;
+}
+
+.file-icon.zip,
+.file-icon.rar {
+    color: #ffc107;
+}
+
+/* ============================================
+   PROFESSIONAL ENHANCEMENTS
+   ============================================ */
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Selection color */
+::selection {
+    background-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+}
+
+/* Focus visible for accessibility */
+*:focus-visible {
+    outline: 2px solid var(--ist-primary);
+    outline-offset: 2px;
+}
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--ist-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ist-primary);
+    border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--ist-primary-dark);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+
+@media (max-width: 768px) {
+    .ps-card-header,
+    .card-header {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+    }
+
+    .btn-lg {
+        padding: 0.5rem 1.5rem;
+        font-size: 1rem;
+    }
+
+    .file-item,
+    .files-list-item {
+        padding: 0.75rem;
+    }
+}
+
+/* ============================================
+   PRINT STYLES
+   ============================================ */
+
+@media print {
+    body {
+        background-color: white;
+        color: black;
+    }
+
+    .btn,
+    #header,
+    #footer,
+    .navbar {
+        display: none;
+    }
+}

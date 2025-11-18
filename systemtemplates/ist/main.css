@@ -1,0 +1,531 @@
+/**
+ * IST Professional System Theme CSS
+ * Based on Business theme with IST brand colors
+ *
+ * Color Palette:
+ * - Main: #7382E6 (Primary brand color)
+ * - Dark 1: #323C64 (Deep navy)
+ * - Dark 2: #5564A5 (Medium navy)
+ * - Light 1: #96AFFF (Soft blue)
+ * - Light 2: #CDDCFF (Pale blue)
+ */
+
+/* ============================================
+   IST COLOR VARIABLES
+   ============================================ */
+
+:root {
+    /* IST Brand Colors */
+    --ist-main: #7382E6;
+    --ist-dark-1: #323C64;
+    --ist-dark-2: #5564A5;
+    --ist-light-1: #96AFFF;
+    --ist-light-2: #CDDCFF;
+
+    /* Light Mode Colors */
+    --ist-primary: var(--ist-main);
+    --ist-primary-dark: var(--ist-dark-2);
+    --ist-primary-darker: var(--ist-dark-1);
+    --ist-primary-light: var(--ist-light-1);
+    --ist-primary-lighter: var(--ist-light-2);
+
+    /* Text Colors - Light Mode */
+    --ist-text-primary: #1a1a1a;
+    --ist-text-secondary: #4a4a4a;
+    --ist-text-muted: #6a6a6a;
+    --ist-text-on-primary: #ffffff;
+
+    /* Background Colors - Light Mode */
+    --ist-bg-primary: #ffffff;
+    --ist-bg-secondary: #f8f9fa;
+    --ist-bg-tertiary: #e9ecef;
+    --ist-bg-hover: var(--ist-light-2);
+
+    /* Border Colors */
+    --ist-border-color: #dee2e6;
+    --ist-border-light: var(--ist-light-2);
+
+    /* Shadow */
+    --ist-shadow-sm: 0 2px 4px rgba(50, 60, 100, 0.08);
+    --ist-shadow-md: 0 4px 12px rgba(50, 60, 100, 0.12);
+    --ist-shadow-lg: 0 8px 24px rgba(50, 60, 100, 0.16);
+}
+
+/* ============================================
+   DARK MODE COLORS
+   ============================================ */
+
+[data-theme="dark"],
+body.dark-mode {
+    /* Inverted for dark mode */
+    --ist-primary: var(--ist-light-1);
+    --ist-primary-dark: var(--ist-main);
+    --ist-primary-darker: var(--ist-light-2);
+    --ist-primary-light: var(--ist-dark-2);
+    --ist-primary-lighter: var(--ist-dark-1);
+
+    /* Text Colors - Dark Mode */
+    --ist-text-primary: #e8e8e8;
+    --ist-text-secondary: #c0c0c0;
+    --ist-text-muted: #909090;
+    --ist-text-on-primary: #1a1a1a;
+
+    /* Background Colors - Dark Mode */
+    --ist-bg-primary: #1a1d2e;
+    --ist-bg-secondary: #252839;
+    --ist-bg-tertiary: #2f3349;
+    --ist-bg-hover: var(--ist-dark-2);
+
+    /* Border Colors */
+    --ist-border-color: #3a3f52;
+    --ist-border-light: var(--ist-dark-2);
+
+    /* Shadow */
+    --ist-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
+    --ist-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --ist-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================
+   HEADER / TOP BAR
+   ============================================ */
+
+/* Main header with IST gradient */
+#header.navbar {
+    background: linear-gradient(135deg, var(--ist-dark-1) 0%, var(--ist-dark-2) 50%, var(--ist-main) 100%) !important;
+    box-shadow: var(--ist-shadow-md);
+    border-bottom: 2px solid var(--ist-primary);
+}
+
+/* Header in dark mode */
+[data-theme="dark"] #header.navbar,
+body.dark-mode #header.navbar {
+    background: linear-gradient(135deg, var(--ist-dark-1) 0%, var(--ist-dark-2) 100%) !important;
+    border-bottom: 2px solid var(--ist-light-1);
+}
+
+/* Header links */
+#header .navbar-brand,
+#header .nav-link,
+#header .dropdown-toggle {
+    color: #ffffff !important;
+}
+
+#header .nav-link:hover,
+#header .dropdown-toggle:hover {
+    color: var(--ist-light-2) !important;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+body {
+    color: var(--ist-text-primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+    color: var(--ist-text-primary);
+    font-weight: 600;
+}
+
+a {
+    color: var(--ist-primary);
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--ist-primary-dark);
+    text-decoration: none;
+}
+
+.text-muted {
+    color: var(--ist-text-muted) !important;
+}
+
+/* ============================================
+   BUTTONS
+   ============================================ */
+
+.btn-primary {
+    background-color: var(--ist-primary);
+    border-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+    font-weight: 500;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: var(--ist-primary-dark);
+    border-color: var(--ist-primary-dark);
+    color: var(--ist-text-on-primary);
+    box-shadow: var(--ist-shadow-md);
+}
+
+.btn-outline-primary {
+    color: var(--ist-primary);
+    border-color: var(--ist-primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--ist-primary);
+    border-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+}
+
+/* ============================================
+   NAVIGATION / SIDEBAR
+   ============================================ */
+
+.main_side_menu {
+    background-color: var(--ist-bg-secondary);
+    border-right: 1px solid var(--ist-border-color);
+}
+
+.main_menu .nav_top_level {
+    color: var(--ist-text-primary);
+    transition: all 0.2s ease;
+}
+
+.main_menu .nav_top_level:hover,
+.main_menu .current_nav > .nav_top_level {
+    background-color: var(--ist-bg-hover);
+    color: var(--ist-primary);
+}
+
+.main_menu .dropdown_content {
+    background-color: var(--ist-bg-tertiary);
+}
+
+.main_menu .dropdown_content a {
+    color: var(--ist-text-secondary);
+}
+
+.main_menu .dropdown_content a:hover,
+.main_menu .dropdown_content .current_page a {
+    background-color: var(--ist-primary-lighter);
+    color: var(--ist-primary-darker);
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+
+#header,
+.navbar {
+    background-color: var(--ist-primary-darker);
+    border-bottom: 3px solid var(--ist-primary);
+    color: #ffffff;
+}
+
+#header a,
+.navbar a {
+    color: #ffffff;
+}
+
+#header a:hover,
+.navbar a:hover {
+    color: var(--ist-light-2);
+}
+
+/* ============================================
+   CARDS & PANELS
+   ============================================ */
+
+.card,
+.ps-card {
+    background-color: var(--ist-bg-primary);
+    border: 1px solid var(--ist-border-color);
+    box-shadow: var(--ist-shadow-sm);
+    transition: box-shadow 0.3s ease;
+}
+
+.card:hover,
+.ps-card:hover {
+    box-shadow: var(--ist-shadow-md);
+}
+
+.card-header {
+    background-color: var(--ist-bg-secondary);
+    border-bottom: 2px solid var(--ist-primary-lighter);
+    color: var(--ist-text-primary);
+    font-weight: 600;
+}
+
+/* ============================================
+   TABLES
+   ============================================ */
+
+.table {
+    color: var(--ist-text-primary);
+}
+
+.table thead th {
+    background-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+    border-color: var(--ist-primary-dark);
+    font-weight: 600;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: var(--ist-bg-secondary);
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--ist-bg-hover);
+}
+
+.table td,
+.table th {
+    border-color: var(--ist-border-color);
+}
+
+/* ============================================
+   FORMS
+   ============================================ */
+
+.form-control,
+.form-select {
+    background-color: var(--ist-bg-primary);
+    border-color: var(--ist-border-color);
+    color: var(--ist-text-primary);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: var(--ist-primary);
+    box-shadow: 0 0 0 0.2rem rgba(115, 130, 230, 0.25);
+    background-color: var(--ist-bg-primary);
+    color: var(--ist-text-primary);
+}
+
+.form-label {
+    color: var(--ist-text-primary);
+    font-weight: 500;
+}
+
+/* ============================================
+   ALERTS
+   ============================================ */
+
+.alert-info {
+    background-color: var(--ist-light-2);
+    border-color: var(--ist-light-1);
+    color: var(--ist-dark-1);
+}
+
+.alert-primary {
+    background-color: var(--ist-primary-lighter);
+    border-color: var(--ist-primary-light);
+    color: var(--ist-primary-darker);
+}
+
+/* ============================================
+   BADGES
+   ============================================ */
+
+.badge.bg-primary {
+    background-color: var(--ist-primary) !important;
+    color: var(--ist-text-on-primary);
+}
+
+.badge.bg-secondary {
+    background-color: var(--ist-dark-2) !important;
+    color: #ffffff;
+}
+
+/* ============================================
+   LINKS & NAVIGATION TABS
+   ============================================ */
+
+.nav-tabs .nav-link {
+    color: var(--ist-text-secondary);
+}
+
+.nav-tabs .nav-link:hover {
+    color: var(--ist-primary);
+    border-color: var(--ist-border-color);
+}
+
+.nav-tabs .nav-link.active {
+    color: var(--ist-primary);
+    background-color: var(--ist-bg-primary);
+    border-color: var(--ist-border-color) var(--ist-border-color) var(--ist-bg-primary);
+    font-weight: 600;
+}
+
+/* ============================================
+   PAGINATION
+   ============================================ */
+
+.pagination .page-link {
+    color: var(--ist-primary);
+    background-color: var(--ist-bg-primary);
+    border-color: var(--ist-border-color);
+}
+
+.pagination .page-link:hover {
+    color: var(--ist-primary-dark);
+    background-color: var(--ist-bg-hover);
+    border-color: var(--ist-border-color);
+}
+
+.pagination .page-item.active .page-link {
+    background-color: var(--ist-primary);
+    border-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+}
+
+/* ============================================
+   MODALS
+   ============================================ */
+
+.modal-content {
+    background-color: var(--ist-bg-primary);
+    border: 1px solid var(--ist-border-color);
+    box-shadow: var(--ist-shadow-lg);
+}
+
+.modal-header {
+    background-color: var(--ist-primary);
+    color: var(--ist-text-on-primary);
+    border-bottom: 2px solid var(--ist-primary-dark);
+}
+
+.modal-header .btn-close {
+    filter: brightness(0) invert(1);
+}
+
+.modal-footer {
+    background-color: var(--ist-bg-secondary);
+    border-top: 1px solid var(--ist-border-color);
+}
+
+/* ============================================
+   DROPDOWNS
+   ============================================ */
+
+.dropdown-menu {
+    background-color: var(--ist-bg-primary);
+    border: 1px solid var(--ist-border-color);
+    box-shadow: var(--ist-shadow-md);
+}
+
+.dropdown-item {
+    color: var(--ist-text-primary);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: var(--ist-bg-hover);
+    color: var(--ist-primary);
+}
+
+/* ============================================
+   SCROLLBAR CUSTOMIZATION
+   ============================================ */
+
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--ist-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--ist-primary);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--ist-primary-dark);
+}
+
+/* ============================================
+   PROFESSIONAL ENHANCEMENTS
+   ============================================ */
+
+/* Smooth transitions */
+* {
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Enhanced focus states */
+*:focus {
+    outline: 2px solid var(--ist-primary);
+    outline-offset: 2px;
+}
+
+/* Professional shadows on interactive elements */
+button,
+.btn,
+input[type="submit"],
+.card,
+.modal-content {
+    transition: all 0.3s ease;
+}
+
+/* Section headers */
+h3[id^="section-"] {
+    color: var(--ist-primary-darker);
+    border-left: 4px solid var(--ist-primary);
+    padding-left: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+/* Dividers */
+.options_divide,
+hr {
+    border-color: var(--ist-border-light);
+    opacity: 0.5;
+}
+
+/* File upload areas */
+.file-upload-area {
+    border: 2px dashed var(--ist-primary-light);
+    background-color: var(--ist-bg-secondary);
+    transition: all 0.3s ease;
+}
+
+.file-upload-area:hover {
+    border-color: var(--ist-primary);
+    background-color: var(--ist-bg-hover);
+}
+
+/* Status indicators */
+.badge.text-bg-success {
+    background-color: #28a745 !important;
+}
+
+.badge.text-bg-warning {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.badge.text-bg-danger {
+    background-color: #dc3545 !important;
+}
+
+/* Progress bars */
+.progress {
+    background-color: var(--ist-bg-tertiary);
+}
+
+.progress-bar {
+    background-color: var(--ist-primary);
+}
+
+/* Tooltips */
+.tooltip-inner {
+    background-color: var(--ist-dark-1);
+    color: #ffffff;
+}
+
+/* Loading states */
+.spinner-border {
+    color: var(--ist-primary);
+}

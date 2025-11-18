@@ -246,6 +246,14 @@ if ($_POST) {
         }
     }
 
+    // Validate system theme selection
+    if (isset($_POST['selected_system_theme']) && !empty($_POST['selected_system_theme'])) {
+        if (!is_valid_system_theme($_POST['selected_system_theme'])) {
+            $_POST['selected_system_theme'] = 'default';
+            $flash->warning(__('Invalid system theme selected. Defaulting to "default" theme.', 'cftp_admin'));
+        }
+    }
+
     // If every option is completed, continue
     if ($options_missing > 0) {
         $flash->error(__('Some fields were not completed. Options could not be saved.', 'cftp_admin'));
