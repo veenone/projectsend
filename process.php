@@ -62,9 +62,20 @@ switch ($_GET['do']) {
     case 'test_ldap_connection':
         // Require admin level for testing LDAP connection
         redirect_if_role_not_allowed([9]);
-        
+
         $test_result = $auth->testLdapConnection();
         echo json_encode($test_result);
+        break;
+    case 'ldap_sync_users':
+        // Require manage_users permission for LDAP sync
+        check_access_enhanced(['manage_users']);
+
+        $dry_run = isset($_POST['dry_run']) && $_POST['dry_run'] === '1';
+
+        $ldap_sync = new \ProjectSend\Classes\LdapSync();
+        $result = $ldap_sync->syncAllUsers($dry_run);
+
+        echo json_encode($result);
         break;
     case 'logout':
         force_logout();
