@@ -96,6 +96,7 @@ require_once ROOT_DIR . '/includes/functions.public.php';
 
 // Theme settings functions
 require_once ROOT_DIR . '/includes/functions.theme-settings.php';
+require_once ROOT_DIR . '/includes/functions.system-themes.php';
 
 // System theme functions - loaded on demand
 // See header.php and options pages for usage

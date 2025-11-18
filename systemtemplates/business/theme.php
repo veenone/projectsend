@@ -12,6 +12,7 @@ Description: A professional business theme for the system interface with refined
 return [
     'name' => 'Business Professional System Theme',
     'slug' => 'business',
+    'description' => 'Professional business theme for enterprise environments',
     'version' => '1.0.0',
     'features' => [
         'dark_mode' => true,

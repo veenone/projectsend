@@ -94,6 +94,7 @@ class Options
         define('THUMBNAILS_FILES_URL', BASE_URI . 'upload/thumbnails');
         define('EMAIL_TEMPLATES_URL', BASE_URI . 'emails/');
         define('TEMPLATES_URL', BASE_URI . 'templates/');
+        define('SYSTEM_TEMPLATES_URL', BASE_URI . 'systemtemplates/');
 
         // Widgets
         define('WIDGETS_URL', BASE_URI . 'includes/widgets/');

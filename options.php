@@ -231,7 +231,7 @@ if ($_POST) {
     }
 
     // If uploading a logo on the branding page
-    if (isset($_FILES['select_logo']) && !empty($_FILES['select_logo'])) {
+    if (isset($_FILES['select_logo']) && !empty($_FILES['select_logo']['name'])) {
         $upload_logo = option_file_upload($_FILES['select_logo'], 'image', 'logo_filename', 29);
         if ($upload_logo['status'] != 'success') {
             $flash->error($upload_logo['message']);

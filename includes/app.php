@@ -263,6 +263,7 @@ define('UPGRADES_DIR', INCLUDES_DIR . DS . 'upgrades');
 define('ADMIN_VIEWS_DIR', ROOT_DIR);
 define('EMAIL_TEMPLATES_DIR', ADMIN_VIEWS_DIR . DS . 'emails');
 define('TEMPLATES_DIR', ROOT_DIR . DS . 'templates');
+define('SYSTEM_TEMPLATES_DIR', ROOT_DIR . DS . 'systemtemplates');
 define('JSON_CACHE_DIR', ROOT_DIR . DS . 'cache');
 
 /* Branding */

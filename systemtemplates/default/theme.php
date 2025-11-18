@@ -12,6 +12,7 @@ Description: The default system theme with clean, modern design based on Bootstr
 return [
     'name' => 'Default System Theme',
     'slug' => 'default',
+    'description' => 'Clean, modern design with light and dark modes',
     'version' => '1.0.0',
     'features' => [
         'dark_mode' => true,
