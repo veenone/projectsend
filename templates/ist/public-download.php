@@ -111,27 +111,35 @@ $body_class = array('template', 'ist-template', 'ist-download', 'hide_title');
 
         /* Link styles */
         a:not([class*="bg-"]):not([class*="border-"]):not(.btn) {
-            color: var(--ist-main);
+            color: var(--ist-main) !important;
             transition: color 0.2s ease;
         }
 
         a:not([class*="bg-"]):not([class*="border-"]):not(.btn):hover {
-            color: var(--ist-dark-2);
+            color: var(--ist-dark-2) !important;
         }
 
         /* Ensure proper text colors for spans and general text */
-        span:not([class*="text-"]):not([class*="bg-"]) {
-            color: var(--ist-text-primary);
+        span {
+            color: var(--ist-text-primary) !important;
+        }
+
+        /* Keep badge and utility class colors */
+        span[class*="text-"],
+        span[class*="bg-"],
+        .badge,
+        .badge span {
+            color: inherit !important;
         }
 
         /* Headings */
         h1, h2, h3, h4, h5, h6 {
-            color: var(--ist-text-primary);
+            color: var(--ist-text-primary) !important;
         }
 
         /* Paragraphs */
         p:not([class*="text-"]) {
-            color: var(--ist-text-secondary);
+            color: var(--ist-text-secondary) !important;
         }
     </style>
 
