@@ -30,9 +30,9 @@
     --ist-primary-lighter: var(--ist-light-2);
 
     /* Text Colors - Light Mode */
-    --ist-text-primary: #1a1a1a;
-    --ist-text-secondary: #4a4a4a;
-    --ist-text-muted: #6a6a6a;
+    --ist-text-primary: #323C64;
+    --ist-text-secondary: #5564A5;
+    --ist-text-muted: #7382E6;
     --ist-text-on-primary: #ffffff;
 
     /* Background Colors - Light Mode */
@@ -65,9 +65,9 @@ body.dark-mode {
     --ist-primary-lighter: var(--ist-dark-1);
 
     /* Text Colors - Dark Mode */
-    --ist-text-primary: #e8e8e8;
-    --ist-text-secondary: #c0c0c0;
-    --ist-text-muted: #909090;
+    --ist-text-primary: #CDDCFF;
+    --ist-text-secondary: #96AFFF;
+    --ist-text-muted: #7382E6;
     --ist-text-on-primary: #1a1a1a;
 
     /* Background Colors - Dark Mode */
@@ -123,21 +123,36 @@ body.dark-mode #header.navbar {
    ============================================ */
 
 body {
-    color: var(--ist-text-primary);
+    color: var(--ist-text-primary) !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
-    color: var(--ist-text-primary);
+    color: var(--ist-text-primary) !important;
     font-weight: 600;
 }
 
+/* Span elements */
+span {
+    color: var(--ist-text-primary) !important;
+}
+
+/* Preserve utility class colors */
+span[class*="text-"],
+span[class*="bg-"],
+.badge,
+.badge span,
+span.label,
+span.alert {
+    color: inherit !important;
+}
+
 a {
-    color: var(--ist-primary);
+    color: var(--ist-primary) !important;
     transition: color 0.2s ease;
 }
 
 a:hover {
-    color: var(--ist-primary-dark);
+    color: var(--ist-primary-dark) !important;
     text-decoration: none;
 }
 

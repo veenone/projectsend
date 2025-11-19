@@ -352,22 +352,26 @@
             });
 
             // Collapse all
-            document.getElementById('files_collapse_all').addEventListener('click', function(e) {
-                let wrappers = document.querySelectorAll('.file_editor_wrapper');
-                wrappers.forEach(wrapper => {
-                    wrapper.classList.add('collapsed');
+            const collapseAllBtn = document.getElementById('files_collapse_all');
+            if (collapseAllBtn) {
+                collapseAllBtn.addEventListener('click', function(e) {
+                    let wrappers = document.querySelectorAll('.file_editor_wrapper');
+                    wrappers.forEach(wrapper => {
+                        wrapper.classList.add('collapsed');
+                    });
                 });
-                    
-            })
+            }
 
             // Expand all
-            document.getElementById('files_expand_all').addEventListener('click', function(e) {
-                let wrappers = document.querySelectorAll('.file_editor_wrapper');
-                wrappers.forEach(wrapper => {
-                    wrapper.classList.remove('collapsed');
+            const expandAllBtn = document.getElementById('files_expand_all');
+            if (expandAllBtn) {
+                expandAllBtn.addEventListener('click', function(e) {
+                    let wrappers = document.querySelectorAll('.file_editor_wrapper');
+                    wrappers.forEach(wrapper => {
+                        wrapper.classList.remove('collapsed');
+                    });
                 });
-                    
-            })
+            }
         });
 
         // Track form changes for unsaved changes warning
