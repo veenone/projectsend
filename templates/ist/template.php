@@ -1,10 +1,10 @@
 <?php
 /**
  * Template name: IST Professional
- * URI: https://www.projectsend.org
- * Author: ProjectSend
- * Author URI: https://www.projectsend.org
- * Description: Professional business template with IST brand colors, featuring elegant design and excellent readability in both light and dark modes. Based on the business template.
+ * URI: https://www.idemia.org
+ * Author: Achmad Fienan Rahardianto
+ * Author URI: https://www.idemia.org
+ * Description: Professional business template with IST brand colors.
  * Version: 1.0.0
  */
 
