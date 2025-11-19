@@ -99,3 +99,14 @@ define('DEBUG', false);
  * Default: 'stable'
  */
 define('UPDATE_CHANNEL', 'stable');
+
+/**
+ * Encryption salt for secure password hashing and option encryption
+ * This should be a random string unique to your installation.
+ * You can generate a secure random string or use the default formula below.
+ * IMPORTANT: Do not change this value after installation, as it will
+ * invalidate all encrypted data (like LDAP passwords).
+ *
+ * Example: define('HASH_SALT', 'your-random-string-here');
+ */
+define('HASH_SALT', 'ps_' . md5('projectsend' . DB_NAME . DB_HOST));

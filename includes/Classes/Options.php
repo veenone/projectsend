@@ -17,6 +17,135 @@ class Options
     }
 
     /**
+     * List of options that should be encrypted in the database
+     */
+    private static $encrypted_options = [
+        'ldap_admin_password',
+    ];
+
+    /**
+     * Check if an option should be encrypted
+     */
+    private function isEncryptedOption($option)
+    {
+        return in_array($option, self::$encrypted_options);
+    }
+
+    /**
+     * Encrypt an option value
+     */
+    private function encryptValue($value)
+    {
+        if (empty($value)) {
+            return '';
+        }
+
+        // Get master key from HASH_SALT or ENCRYPTION_MASTER_KEY
+        $master_key = $this->getMasterKey();
+        if (!$master_key) {
+            error_log('WARNING: Cannot encrypt option - no master key available');
+            return $value; // Fallback to plaintext (not ideal but prevents data loss)
+        }
+
+        $algorithm = 'aes-256-gcm';
+        $iv = random_bytes(openssl_cipher_iv_length($algorithm));
+        $tag = '';
+
+        $encrypted = openssl_encrypt(
+            $value,
+            $algorithm,
+            $master_key,
+            OPENSSL_RAW_DATA,
+            $iv,
+            $tag
+        );
+
+        if ($encrypted === false) {
+            error_log('WARNING: Encryption failed for option');
+            return $value; // Fallback to plaintext
+        }
+
+        // Combine IV + encrypted data + tag, then base64 encode
+        $encrypted_with_tag = $encrypted . $tag;
+        return 'ENC:' . base64_encode($iv . $encrypted_with_tag);
+    }
+
+    /**
+     * Decrypt an option value
+     */
+    private function decryptValue($value)
+    {
+        if (empty($value)) {
+            return '';
+        }
+
+        // Check if value is encrypted (has ENC: prefix)
+        if (substr($value, 0, 4) !== 'ENC:') {
+            // Not encrypted, return as-is (for backward compatibility)
+            return $value;
+        }
+
+        // Remove ENC: prefix and decode
+        $encrypted_data = base64_decode(substr($value, 4));
+        if ($encrypted_data === false) {
+            error_log('WARNING: Failed to decode encrypted option value');
+            return '';
+        }
+
+        $master_key = $this->getMasterKey();
+        if (!$master_key) {
+            error_log('WARNING: Cannot decrypt option - no master key available');
+            return '';
+        }
+
+        $algorithm = 'aes-256-gcm';
+        $iv_length = openssl_cipher_iv_length($algorithm);
+        $tag_length = 16; // GCM tag is 16 bytes
+
+        // Extract IV, encrypted data, and tag
+        $iv = substr($encrypted_data, 0, $iv_length);
+        $encrypted_with_tag = substr($encrypted_data, $iv_length);
+        $encrypted = substr($encrypted_with_tag, 0, -$tag_length);
+        $tag = substr($encrypted_with_tag, -$tag_length);
+
+        $decrypted = openssl_decrypt(
+            $encrypted,
+            $algorithm,
+            $master_key,
+            OPENSSL_RAW_DATA,
+            $iv,
+            $tag
+        );
+
+        if ($decrypted === false) {
+            error_log('WARNING: Decryption failed for option - authentication failed');
+            return '';
+        }
+
+        return $decrypted;
+    }
+
+    /**
+     * Get or generate the master encryption key
+     */
+    private function getMasterKey()
+    {
+        // Check if master key exists in config
+        if (defined('ENCRYPTION_MASTER_KEY') && !empty(ENCRYPTION_MASTER_KEY)) {
+            return base64_decode(ENCRYPTION_MASTER_KEY);
+        }
+
+        // For backward compatibility, generate from existing secret if available
+        if (defined('HASH_SALT') && !empty(HASH_SALT)) {
+            // Derive a 256-bit key from the existing hash salt
+            return hash_pbkdf2('sha256', HASH_SALT, 'projectsend-options-encryption', 10000, 32, true);
+        }
+
+        // No key available
+        return null;
+    }
+
+    /**
      * Gets the values from the options table, which has 2 columns.
      * The first one is the option name, and the second is the assigned value.
      */
@@ -39,6 +168,10 @@ class Options
             $value = $results['value'];
 
             if ((!empty($value))) {
+                // Decrypt if this is an encrypted option
+                if ($this->isEncryptedOption($option)) {
+                    return $this->decryptValue($value);
+                }
                 return $value;
             }
         } catch (\Exception $e) {
@@ -94,6 +227,7 @@ class Options
         define('THUMBNAILS_FILES_URL', BASE_URI . 'upload/thumbnails');
         define('EMAIL_TEMPLATES_URL', BASE_URI . 'emails/');
         define('TEMPLATES_URL', BASE_URI . 'templates/');
+        define('SYSTEM_TEMPLATES_URL', BASE_URI . 'systemtemplates/');
 
         // Widgets
         define('WIDGETS_URL', BASE_URI . 'includes/widgets/');
