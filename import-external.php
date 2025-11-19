@@ -63,19 +63,22 @@ if (isset($_POST['action'])) {
                     }
 
                     foreach ($selected_files as $file_key) {
-                        // Try to use cached metadata first, fall back to API call
-                        $metadata = null;
-                        if (isset($metadata_cache[$file_key])) {
-                            $metadata = $metadata_cache[$file_key];
-                        } else {
-                            // Only make API call if metadata not in cache
-                            $metadata = $storage->getFileMetadata($file_key);
-                        }
+                        // Always fetch full metadata from S3 to get custom metadata and tags
+                        // The basic cache doesn't include X-Amz-Meta-* headers and tags
+                        $metadata = $storage->getFileMetadata($file_key);
 
                         if (!$metadata) {
                             $errors[] = sprintf(__('Could not get metadata for %s', 'cftp_admin'), $file_key);
+                            error_log("Import: Failed to get metadata for $file_key");
                             continue;
                         }
+
+                        // Log full metadata structure
+                        $has_custom_meta = isset($metadata['metadata']) && is_array($metadata['metadata']) && !empty($metadata['metadata']);
+                        $has_tags = isset($metadata['tags']) && is_array($metadata['tags']) && !empty($metadata['tags']);
+                        error_log("Import: File $file_key - Full metadata: " . json_encode($metadata));
+                        error_log("Import: File $file_key - Custom metadata: " . ($has_custom_meta ? count($metadata['metadata']) . ' fields = ' . json_encode($metadata['metadata']) : 'none'));
+                        error_log("Import: File $file_key - Tags: " . ($has_tags ? count($metadata['tags']) . ' tags = ' . json_encode($metadata['tags']) : 'none'));
 
                         // Skip folders (objects ending with /)
                         if (substr($file_key, -1) === '/') {
@@ -99,6 +102,9 @@ if (isset($_POST['action'])) {
                             // Set additional external storage properties
                             $file->bucket_name = $storage->getBucketName();
 
+                            // Set defaults first (before custom properties)
+                            $file->setDefaults();
+
                             // Handle folder structure if enabled
                             if ($preserve_folders && $folder_importer) {
                                 $import_result = $folder_importer->importPath($file_key, CURRENT_USER_ID);
@@ -107,12 +113,12 @@ if (isset($_POST['action'])) {
                                 }
                             }
 
-                            // Set file properties
+                            // Set file properties (after defaults so they don't get overwritten)
                             $file->title = $file->filename_original;
                             $file->description = sprintf(__('Imported from %s', 'cftp_admin'), $integration['name']);
 
-                            // Set defaults like import-orphans does
-                            $file->setDefaults();
+                            // Log what's about to be saved
+                            error_log("Import: About to save file $file_key - s3_metadata = " . ($file->s3_metadata ? strlen($file->s3_metadata) . ' bytes' : 'NULL/EMPTY'));
 
                             // Add to database using the Files class method
                             $result = $file->addToDatabase();
@@ -197,7 +203,18 @@ if (!empty($_GET['integration']) || !empty($_POST['integration_id'])) {
     // Pagination parameters
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
     $per_page = isset($_GET['per_page']) ? max(10, min(1000, (int)$_GET['per_page'])) : 100;
-    $continuation_token = isset($_GET['token']) ? $_GET['token'] : null;
+
+    // Initialize session cache for pagination tokens
+    $tokens_cache_key = 'pagination_tokens_' . $integration_id . '_' . $per_page;
+    if (!isset($_SESSION[$tokens_cache_key])) {
+        $_SESSION[$tokens_cache_key] = [1 => null]; // Page 1 has no token
+    }
+
+    // Reset cache if per_page changed
+    if (isset($_GET['per_page']) && isset($_SESSION['last_per_page_' . $integration_id]) && $_SESSION['last_per_page_' . $integration_id] != $per_page) {
+        $_SESSION[$tokens_cache_key] = [1 => null];
+    }
+    $_SESSION['last_per_page_' . $integration_id] = $per_page;
 
     $pagination_info['page'] = $page;
     $pagination_info['per_page'] = $per_page;
@@ -217,12 +234,44 @@ if (!empty($_GET['integration']) || !empty($_POST['integration_id'])) {
                 $pagination_info['total_files_in_bucket'] = $_SESSION[$cache_key];
             }
 
+            // Get continuation token for requested page
+            $continuation_token = null;
+            if ($page > 1) {
+                // Check if we have the token for this page
+                if (isset($_SESSION[$tokens_cache_key][$page])) {
+                    $continuation_token = $_SESSION[$tokens_cache_key][$page];
+                } else {
+                    // We need to build up tokens by fetching previous pages
+                    // Start from the last known page
+                    $last_known_page = max(array_keys($_SESSION[$tokens_cache_key]));
+
+                    for ($p = $last_known_page; $p < $page; $p++) {
+                        $token = $_SESSION[$tokens_cache_key][$p] ?? null;
+                        $result = $storage->listFiles('', $per_page, $token);
+
+                        if ($result['success'] && isset($result['next_token'])) {
+                            $_SESSION[$tokens_cache_key][$p + 1] = $result['next_token'];
+                        } else {
+                            // Can't go further
+                            break;
+                        }
+                    }
+
+                    $continuation_token = $_SESSION[$tokens_cache_key][$page] ?? null;
+                }
+            }
+
             // List files for current page
             $storage_result = $storage->listFiles('', $per_page, $continuation_token);
             if ($storage_result['success']) {
                 $external_files = $storage_result['files'];
                 $pagination_info['has_more'] = $storage_result['truncated'] ?? false;
                 $pagination_info['next_token'] = $storage_result['next_token'] ?? null;
+
+                // Cache the token for next page
+                if ($pagination_info['next_token']) {
+                    $_SESSION[$tokens_cache_key][$page + 1] = $pagination_info['next_token'];
+                }
 
                 // Filter out files that are already in the database
                 $existing_keys = [];
@@ -239,6 +288,18 @@ if (!empty($_GET['integration']) || !empty($_POST['integration_id'])) {
                 $external_files = array_filter($external_files, function($file) use ($existing_keys) {
                     return !in_array($file['key'], $existing_keys);
                 });
+
+                // Fetch full metadata for each remaining file to display in collapsible sections
+                foreach ($external_files as &$file) {
+                    $full_metadata = $storage->getFileMetadata($file['key']);
+                    if ($full_metadata && isset($full_metadata['metadata'])) {
+                        $file['custom_metadata'] = $full_metadata['metadata'];
+                    }
+                    if ($full_metadata && isset($full_metadata['tags'])) {
+                        $file['tags'] = $full_metadata['tags'];
+                    }
+                }
+                unset($file); // Break reference
 
                 $pagination_info['displayed_files'] = count($external_files);
             } else {
@@ -422,6 +483,7 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
                                                 <th width="30">
                                                     <input type="checkbox" id="select_all_checkbox">
                                                 </th>
+                                                <th width="30"></th>
                                                 <th><?php _e('File Name', 'cftp_admin'); ?></th>
                                                 <th><?php _e('Folder Path', 'cftp_admin'); ?></th>
                                                 <th><?php _e('Size', 'cftp_admin'); ?></th>
@@ -432,15 +494,26 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
                                         <tbody>
                                             <?php
                                             $folder_preview_helper = new \ProjectSend\Classes\FolderStructureImporter();
+                                            $row_index = 0;
                                             foreach ($external_files as $file):
+                                                $row_index++;
                                                 $parsed_path = $folder_preview_helper->parsePath($file['key']);
                                                 $folder_path = !empty($parsed_path['path_components'])
                                                     ? implode(' / ', $parsed_path['path_components'])
                                                     : __('Root', 'cftp_admin');
+                                                $has_metadata = (!empty($file['custom_metadata']) || !empty($file['tags']));
+                                                $metadata_row_id = 'metadata_row_' . $row_index;
                                             ?>
                                                 <tr>
                                                     <td>
                                                         <input type="checkbox" name="files[]" value="<?php echo html_output($file['key']); ?>" class="file_checkbox">
+                                                    </td>
+                                                    <td>
+                                                        <?php if ($has_metadata): ?>
+                                                            <button type="button" class="btn btn-sm btn-link p-0 toggle-metadata" data-target="<?php echo $metadata_row_id; ?>" title="<?php _e('Show/Hide Metadata', 'cftp_admin'); ?>">
+                                                                <i class="fa fa-chevron-down"></i>
+                                                            </button>
+                                                        <?php endif; ?>
                                                     </td>
                                                     <td>
                                                         <strong><?php echo html_output(basename($file['key'])); ?></strong>
@@ -464,6 +537,61 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
                                                         </span>
                                                     </td>
                                                 </tr>
+                                                <?php if ($has_metadata): ?>
+                                                <tr id="<?php echo $metadata_row_id; ?>" class="metadata-row" style="display: none;">
+                                                    <td colspan="7">
+                                                        <div class="card bg-light">
+                                                            <div class="card-body p-3">
+                                                                <h6 class="mb-3"><i class="fa fa-info-circle"></i> <?php _e('S3 Metadata', 'cftp_admin'); ?></h6>
+
+                                                                <?php if (!empty($file['custom_metadata'])): ?>
+                                                                    <div class="mb-3">
+                                                                        <strong><?php _e('Custom Metadata (X-Amz-Meta-*):', 'cftp_admin'); ?></strong>
+                                                                        <table class="table table-sm table-bordered mt-2 mb-0">
+                                                                            <thead>
+                                                                                <tr>
+                                                                                    <th width="30%"><?php _e('Key', 'cftp_admin'); ?></th>
+                                                                                    <th><?php _e('Value', 'cftp_admin'); ?></th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <?php foreach ($file['custom_metadata'] as $key => $value): ?>
+                                                                                <tr>
+                                                                                    <td><code><?php echo html_output($key); ?></code></td>
+                                                                                    <td><?php echo html_output($value); ?></td>
+                                                                                </tr>
+                                                                                <?php endforeach; ?>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                <?php endif; ?>
+
+                                                                <?php if (!empty($file['tags'])): ?>
+                                                                    <div>
+                                                                        <strong><?php _e('Object Tags:', 'cftp_admin'); ?></strong>
+                                                                        <table class="table table-sm table-bordered mt-2 mb-0">
+                                                                            <thead>
+                                                                                <tr>
+                                                                                    <th width="30%"><?php _e('Tag', 'cftp_admin'); ?></th>
+                                                                                    <th><?php _e('Value', 'cftp_admin'); ?></th>
+                                                                                </tr>
+                                                                            </thead>
+                                                                            <tbody>
+                                                                                <?php foreach ($file['tags'] as $tag_key => $tag_value): ?>
+                                                                                <tr>
+                                                                                    <td><code><?php echo html_output($tag_key); ?></code></td>
+                                                                                    <td><?php echo html_output($tag_value); ?></td>
+                                                                                </tr>
+                                                                                <?php endforeach; ?>
+                                                                            </tbody>
+                                                                        </table>
+                                                                    </div>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                                <?php endif; ?>
                                             <?php endforeach; ?>
                                         </tbody>
                                     </table>
@@ -529,7 +657,7 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
                                                 <!-- Next Page -->
                                                 <?php if ($pagination_info['has_more']): ?>
                                                     <li class="page-item">
-                                                        <a class="page-link" href="?integration=<?php echo $selected_integration['id']; ?>&per_page=<?php echo $per_page; ?>&page=<?php echo $current_page + 1; ?>&token=<?php echo urlencode($pagination_info['next_token']); ?>">
+                                                        <a class="page-link" href="?integration=<?php echo $selected_integration['id']; ?>&per_page=<?php echo $per_page; ?>&page=<?php echo $current_page + 1; ?>">
                                                             <?php _e('Next', 'cftp_admin'); ?> &rsaquo;
                                                         </a>
                                                     </li>
@@ -763,6 +891,21 @@ $(document).ready(function() {
         $('#select_all_files').removeClass('btn-success').addClass('btn-primary');
         $('#select_all_files').html('<i class="fa fa-check-square"></i> <?php _e('Select ALL Files', 'cftp_admin'); ?> (<?php echo number_format($pagination_info['total_files_in_bucket']); ?>)');
         updateFolderPreview();
+    });
+
+    // Toggle metadata row
+    $('.toggle-metadata').on('click', function() {
+        var targetId = $(this).data('target');
+        var $metadataRow = $('#' + targetId);
+        var $icon = $(this).find('i');
+
+        if ($metadataRow.is(':visible')) {
+            $metadataRow.hide();
+            $icon.removeClass('fa-chevron-up').addClass('fa-chevron-down');
+        } else {
+            $metadataRow.show();
+            $icon.removeClass('fa-chevron-down').addClass('fa-chevron-up');
+        }
     });
 
     // Update preview when checkboxes change

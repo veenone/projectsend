@@ -4,6 +4,11 @@
  * Handles importing files in batches to prevent timeouts
  */
 require_once 'bootstrap.php';
+
+// Suppress any warnings/notices to prevent breaking JSON
+error_reporting(E_ERROR | E_PARSE);
+ini_set('display_errors', '0');
+
 redirect_if_not_logged_in();
 
 // Check for system administration permissions
@@ -20,13 +25,16 @@ if (!validateCsrfToken()) {
     exit;
 }
 
-// Set JSON header
-header('Content-Type: application/json');
-
-// Disable output buffering for real-time progress
-if (ob_get_level()) {
+// Disable output buffering to prevent any buffered HTML
+while (ob_get_level()) {
     ob_end_clean();
 }
+
+// Start clean output buffer
+ob_start();
+
+// Set JSON header
+header('Content-Type: application/json');
 
 // Increase limits for batch processing
 ini_set('memory_limit', '512M');
@@ -167,18 +175,31 @@ try {
             foreach ($file_batch as $file_data) {
                 $file_key = $file_data['key'];
 
-                // Use cached metadata
-                $metadata = [
-                    'size' => $file_data['size'],
-                    'last_modified' => $file_data['last_modified'],
-                    'mime_type' => 'application/octet-stream'
-                ];
+                // CRITICAL: Fetch full metadata from S3 to get X-Amz-Meta-* headers and tags
+                // The cached metadata doesn't include custom metadata
+                $metadata = $storage->getFileMetadata($file_key);
+
+                if (!$metadata) {
+                    error_log("AJAX Import: Failed to get metadata for $file_key");
+                    $errors[] = basename($file_key) . ': Could not retrieve metadata';
+                    continue;
+                }
+
+                // Log metadata for debugging
+                $has_custom_meta = isset($metadata['metadata']) && is_array($metadata['metadata']) && !empty($metadata['metadata']);
+                $has_tags = isset($metadata['tags']) && is_array($metadata['tags']) && !empty($metadata['tags']);
+                error_log("AJAX Import: File $file_key - Custom metadata: " . ($has_custom_meta ? count($metadata['metadata']) . ' fields' : 'none') . ", Tags: " . ($has_tags ? count($metadata['tags']) . ' tags' : 'none'));
 
                 try {
                     // Create new file record
                     $file = new \ProjectSend\Classes\Files();
+
+                    // Set external file properties (this will populate s3_metadata)
                     $file->setExternalFileProperties($file_key, $metadata, $integration_id, $integration['type']);
                     $file->bucket_name = $storage->getBucketName();
+
+                    // Set defaults FIRST (before custom properties)
+                    $file->setDefaults();
 
                     // Handle folder structure
                     if ($preserve_folders && $folder_importer) {
@@ -188,10 +209,12 @@ try {
                         }
                     }
 
-                    // Set file properties
+                    // Set file properties AFTER defaults (so they don't get overwritten)
                     $file->title = $file->filename_original;
                     $file->description = sprintf(__('Imported from %s', 'cftp_admin'), $integration['name']);
-                    $file->setDefaults();
+
+                    // Log what's about to be saved
+                    error_log("AJAX Import: About to save file $file_key - s3_metadata = " . ($file->s3_metadata ? strlen($file->s3_metadata) . ' bytes' : 'NULL/EMPTY'));
 
                     // Add to database
                     $result = $file->addToDatabase();
@@ -230,7 +253,12 @@ try {
     $response['success'] = false;
     $response['message'] = $e->getMessage();
     error_log("Import AJAX error: " . $e->getMessage());
+    error_log("Import AJAX stack trace: " . $e->getTraceAsString());
 }
 
+// Clear any output that might have leaked
+ob_clean();
+
+// Output clean JSON
 echo json_encode($response);
 exit;

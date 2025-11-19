@@ -128,6 +128,73 @@
                                                 </span>
                                             </div>
                                             <?php endif; ?>
+
+                                            <?php
+                                            // Display S3 Metadata if available
+                                            if (!empty($file->s3_metadata)) {
+                                                $s3_metadata_decoded = json_decode($file->s3_metadata, true);
+                                                if ($s3_metadata_decoded && is_array($s3_metadata_decoded)) {
+                                            ?>
+                                            <hr class="my-3">
+                                            <h5 class="mb-3"><?php _e('S3 Metadata', 'cftp_admin'); ?></h5>
+
+                                            <?php if (!empty($s3_metadata_decoded['current-version'])): ?>
+                                            <div class="file-info-item">
+                                                <span class="info-label"><?php _e('Current Version', 'cftp_admin');?>:</span>
+                                                <span class="info-value"><?php echo html_output($s3_metadata_decoded['current-version']); ?></span>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($s3_metadata_decoded['version'])): ?>
+                                            <div class="file-info-item">
+                                                <span class="info-label"><?php _e('Version', 'cftp_admin');?>:</span>
+                                                <span class="info-value"><?php echo html_output($s3_metadata_decoded['version']); ?></span>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($s3_metadata_decoded['version-id'])): ?>
+                                            <div class="file-info-item">
+                                                <span class="info-label"><?php _e('Version ID', 'cftp_admin');?>:</span>
+                                                <span class="info-value"><code><?php echo html_output($s3_metadata_decoded['version-id']); ?></code></span>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($s3_metadata_decoded['sharepoint-url'])): ?>
+                                            <div class="file-info-item">
+                                                <span class="info-label"><?php _e('SharePoint URL', 'cftp_admin');?>:</span>
+                                                <span class="info-value">
+                                                    <a href="<?php echo html_output($s3_metadata_decoded['sharepoint-url']); ?>" target="_blank" class="text-primary">
+                                                        <i class="fa fa-external-link"></i> <?php _e('Open', 'cftp_admin'); ?>
+                                                    </a>
+                                                </span>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($s3_metadata_decoded['created-by'])): ?>
+                                            <div class="file-info-item">
+                                                <span class="info-label"><?php _e('Created By', 'cftp_admin');?>:</span>
+                                                <span class="info-value"><?php echo html_output($s3_metadata_decoded['created-by']); ?></span>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($s3_metadata_decoded['created-by-title'])): ?>
+                                            <div class="file-info-item">
+                                                <span class="info-label"><?php _e('Created By Title', 'cftp_admin');?>:</span>
+                                                <span class="info-value"><?php echo html_output($s3_metadata_decoded['created-by-title']); ?></span>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <?php if (!empty($s3_metadata_decoded['modified-date'])): ?>
+                                            <div class="file-info-item">
+                                                <span class="info-label"><?php _e('Modified Date', 'cftp_admin');?>:</span>
+                                                <span class="info-value"><?php echo html_output($s3_metadata_decoded['modified-date']); ?></span>
+                                            </div>
+                                            <?php endif; ?>
+
+                                            <?php
+                                                }
+                                            }
+                                            ?>
                                         </div>
                                     </div>
                                 </div><!-- /.col-lg-4 -->

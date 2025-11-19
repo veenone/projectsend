@@ -326,6 +326,40 @@
                 html += '</div>';
             }
 
+            // S3 Metadata (if available)
+            if (file.s3_metadata && Object.keys(file.s3_metadata).length > 0) {
+                html += '<div class="detail-group">';
+                html += '<div class="detail-group-title">S3 Metadata</div>';
+
+                // Define metadata fields to display in specific order
+                const metadataFields = [
+                    { key: 'current-version', label: 'Current Version' },
+                    { key: 'version', label: 'Version' },
+                    { key: 'version-id', label: 'Version ID' },
+                    { key: 'sharepoint-url', label: 'SharePoint URL', isUrl: true },
+                    { key: 'created-by', label: 'Created By' },
+                    { key: 'created-by-title', label: 'Created By Title' },
+                    { key: 'modified-date', label: 'Modified Date' }
+                ];
+
+                metadataFields.forEach(field => {
+                    if (file.s3_metadata[field.key]) {
+                        html += '<div class="detail-item">';
+                        html += `<span class="detail-label">${field.label}</span>`;
+
+                        if (field.isUrl) {
+                            html += `<span class="detail-value"><a href="${file.s3_metadata[field.key]}" target="_blank" class="text-primary"><i class="fa fa-external-link"></i> ${file.s3_metadata[field.key]}</a></span>`;
+                        } else {
+                            html += `<span class="detail-value">${file.s3_metadata[field.key]}</span>`;
+                        }
+
+                        html += '</div>';
+                    }
+                });
+
+                html += '</div>';
+            }
+
             html += '</div>';
 
             // Actions section

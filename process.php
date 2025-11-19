@@ -230,6 +230,14 @@ switch ($_GET['do']) {
             'groups' => $file->assignments_groups
         ];
 
+        // Add S3 metadata if available
+        if (!empty($file->s3_metadata)) {
+            $s3_metadata_decoded = json_decode($file->s3_metadata, true);
+            if ($s3_metadata_decoded && is_array($s3_metadata_decoded)) {
+                $file_data['s3_metadata'] = $s3_metadata_decoded;
+            }
+        }
+
         echo json_encode(['success' => true, 'file' => $file_data]);
     break;
 
@@ -260,12 +268,20 @@ switch ($_GET['do']) {
             
             // Get file data using the getPublicData method
             $file_data = $file->getPublicData();
-            
+
             if (empty($file_data)) {
                 echo json_encode(['success' => false, 'error' => 'Failed to get file data', 'debug' => 'getPublicData() returned empty']);
                 break;
             }
-            
+
+            // Add S3 metadata if available
+            if (!empty($file->s3_metadata)) {
+                $s3_metadata_decoded = json_decode($file->s3_metadata, true);
+                if ($s3_metadata_decoded && is_array($s3_metadata_decoded)) {
+                    $file_data['s3_metadata'] = $s3_metadata_decoded;
+                }
+            }
+
             echo json_encode(['success' => true, 'file' => $file_data]);
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => 'Exception occurred: ' . $e->getMessage(), 'debug' => 'Exception in get_public_file_info']);

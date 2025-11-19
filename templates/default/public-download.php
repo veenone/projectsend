@@ -71,6 +71,67 @@ include_once ADMIN_VIEWS_DIR . DS . 'header-unlogged.php';
                             ?>
                         </div>
 
+                        <?php
+                        // Display S3 Metadata if available
+                        if (!empty($file->s3_metadata)) {
+                            $s3_metadata_decoded = json_decode($file->s3_metadata, true);
+                            if ($s3_metadata_decoded && is_array($s3_metadata_decoded)) {
+                        ?>
+                                <div class="s3-metadata mt-4">
+                                    <h5><?php _e('Document Information', 'cftp_admin'); ?></h5>
+                                    <div class="metadata-table">
+                                        <?php if (!empty($s3_metadata_decoded['current-version'])): ?>
+                                            <div class="metadata-row">
+                                                <span class="metadata-label"><?php _e('Current Version', 'cftp_admin');?>:</span>
+                                                <span class="metadata-value"><?php echo html_output($s3_metadata_decoded['current-version']); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($s3_metadata_decoded['version'])): ?>
+                                            <div class="metadata-row">
+                                                <span class="metadata-label"><?php _e('Version', 'cftp_admin');?>:</span>
+                                                <span class="metadata-value"><?php echo html_output($s3_metadata_decoded['version']); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($s3_metadata_decoded['sharepoint-url'])): ?>
+                                            <div class="metadata-row">
+                                                <span class="metadata-label"><?php _e('SharePoint URL', 'cftp_admin');?>:</span>
+                                                <span class="metadata-value">
+                                                    <a href="<?php echo html_output($s3_metadata_decoded['sharepoint-url']); ?>" target="_blank" class="text-primary">
+                                                        <?php _e('Open in SharePoint', 'cftp_admin'); ?>
+                                                    </a>
+                                                </span>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($s3_metadata_decoded['created-by'])): ?>
+                                            <div class="metadata-row">
+                                                <span class="metadata-label"><?php _e('Created By', 'cftp_admin');?>:</span>
+                                                <span class="metadata-value"><?php echo html_output($s3_metadata_decoded['created-by']); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($s3_metadata_decoded['created-by-title'])): ?>
+                                            <div class="metadata-row">
+                                                <span class="metadata-label"><?php _e('Created By Title', 'cftp_admin');?>:</span>
+                                                <span class="metadata-value"><?php echo html_output($s3_metadata_decoded['created-by-title']); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+
+                                        <?php if (!empty($s3_metadata_decoded['modified-date'])): ?>
+                                            <div class="metadata-row">
+                                                <span class="metadata-label"><?php _e('Modified Date', 'cftp_admin');?>:</span>
+                                                <span class="metadata-value"><?php echo html_output($s3_metadata_decoded['modified-date']); ?></span>
+                                            </div>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                        <?php
+                            }
+                        }
+                        ?>
+
                         <?php if ($can_download == true) { ?>
                             <div class="actions">
                                 <a href="<?php echo $file->public_url . '&download'; ?>" class="btn btn-primary">

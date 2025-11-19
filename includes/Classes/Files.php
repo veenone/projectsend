@@ -55,6 +55,8 @@ class Files
     public $download_limit_enabled; // 1 if download limits are enabled, 0 otherwise
     public $download_limit_type; // 'per_user' or 'total'
     public $download_limit_count; // maximum number of downloads allowed
+    public $original_upload_date; // For preserving S3 metadata timestamps
+    public $s3_metadata; // JSON storage for S3 custom metadata (X-Amz-Meta-* headers, tags, etc.)
     private $dbh;
     private $logger;
     private $external_storage;
@@ -292,6 +294,9 @@ class Files
             $this->download_limit_enabled = isset($row['download_limit_enabled']) ? (int)$row['download_limit_enabled'] : 0;
             $this->download_limit_type = $row['download_limit_type'] ?? 'total';
             $this->download_limit_count = isset($row['download_limit_count']) ? (int)$row['download_limit_count'] : 0;
+
+            // Load S3 custom metadata
+            $this->s3_metadata = $row['s3_metadata'] ?? null;
         }
 
         $this->full_path = $this->getFilePath();
@@ -1083,6 +1088,39 @@ class Files
             $this->mime_type = $metadata['content_type'];
         }
 
+        // Preserve original upload date from S3 metadata if available
+        if (isset($metadata['last_modified'])) {
+            $this->original_upload_date = $metadata['last_modified'];
+        }
+
+        // Store S3 custom metadata (X-Amz-Meta-* headers and tags) as JSON
+        // Flatten structure to make it easier to access in views
+        $s3_custom_metadata = [];
+
+        // Extract custom metadata fields (X-Amz-Meta-* headers)
+        if (isset($metadata['metadata']) && is_array($metadata['metadata'])) {
+            foreach ($metadata['metadata'] as $key => $value) {
+                $s3_custom_metadata[$key] = $value;
+            }
+        }
+
+        // Extract tags and merge them
+        if (isset($metadata['tags']) && is_array($metadata['tags'])) {
+            foreach ($metadata['tags'] as $key => $value) {
+                // Prefix tags with 'tag-' to differentiate from metadata
+                $s3_custom_metadata['tag-' . $key] = $value;
+            }
+        }
+
+        // Store as JSON if we have any metadata
+        if (!empty($s3_custom_metadata)) {
+            $this->s3_metadata = json_encode($s3_custom_metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            error_log("Files::setExternalFileProperties: Stored s3_metadata JSON (" . strlen($this->s3_metadata) . " bytes) with keys: " . implode(', ', array_keys($s3_custom_metadata)) . " for file: " . $this->filename_original);
+            error_log("Files::setExternalFileProperties: Full s3_metadata JSON: " . $this->s3_metadata);
+        } else {
+            error_log("Files::setExternalFileProperties: No s3_metadata to store for file: " . $this->filename_original . " (metadata array empty)");
+        }
+
         // Don't set full_path for external files as they don't exist locally
         $this->full_path = null;
 
@@ -1126,9 +1164,24 @@ class Files
         $this->public_token = generate_random_string(32);
         $this->disk_folder_year = (isset($this->date_folder_year)) ? (int)$this->date_folder_year : null;
         $this->disk_folder_month = (isset($this->date_folder_month)) ? (int)$this->date_folder_month : null;
-		
-        $statement = $this->dbh->prepare("INSERT INTO " . TABLE_FILES . " (user_id, url, original_url, size, filename, description, uploader, expires, expiry_date, public_allow, public_token, folder_id, disk_folder_year, disk_folder_month, storage_type, external_path, bucket_name, integration_id, encrypted, encryption_key_encrypted, encryption_iv, encryption_algorithm, encryption_file_iv, download_limit_enabled, download_limit_type, download_limit_count)"
-                                        ."VALUES (:user_id, :url, :original_url, :size, :filename, :description, :uploader, :expires, :expiry_date, :public, :public_token, :folder_id, :disk_folder_year, :disk_folder_month, :storage_type, :external_path, :bucket_name, :integration_id, :encrypted, :encryption_key_encrypted, :encryption_iv, :encryption_algorithm, :encryption_file_iv, :download_limit_enabled, :download_limit_type, :download_limit_count)");
+
+        // Build SQL query - include timestamp and s3_metadata if set
+        $sql_columns = "user_id, url, original_url, size, filename, description, uploader, expires, expiry_date, public_allow, public_token, folder_id, disk_folder_year, disk_folder_month, storage_type, external_path, bucket_name, integration_id, encrypted, encryption_key_encrypted, encryption_iv, encryption_algorithm, encryption_file_iv, download_limit_enabled, download_limit_type, download_limit_count";
+        $sql_values = ":user_id, :url, :original_url, :size, :filename, :description, :uploader, :expires, :expiry_date, :public, :public_token, :folder_id, :disk_folder_year, :disk_folder_month, :storage_type, :external_path, :bucket_name, :integration_id, :encrypted, :encryption_key_encrypted, :encryption_iv, :encryption_algorithm, :encryption_file_iv, :download_limit_enabled, :download_limit_type, :download_limit_count";
+
+        // Add timestamp if original_upload_date is set
+        if (!empty($this->original_upload_date)) {
+            $sql_columns .= ", timestamp";
+            $sql_values .= ", :timestamp";
+        }
+
+        // Add s3_metadata if set
+        if (!empty($this->s3_metadata)) {
+            $sql_columns .= ", s3_metadata";
+            $sql_values .= ", :s3_metadata";
+        }
+
+        $statement = $this->dbh->prepare("INSERT INTO " . TABLE_FILES . " (" . $sql_columns . ") VALUES (" . $sql_values . ")");
         $statement->bindParam(':user_id', $this->uploader_id, PDO::PARAM_INT);
         $statement->bindParam(':url', $this->filename_on_disk);
         $statement->bindParam(':original_url', $this->filename_original);
@@ -1155,7 +1208,27 @@ class Files
         $statement->bindParam(':download_limit_enabled', $this->download_limit_enabled, PDO::PARAM_INT);
         $statement->bindParam(':download_limit_type', $this->download_limit_type);
         $statement->bindParam(':download_limit_count', $this->download_limit_count, PDO::PARAM_INT);
-        $statement->execute();
+
+        // Bind timestamp if original_upload_date is set (for S3 metadata preservation)
+        if (!empty($this->original_upload_date)) {
+            $statement->bindParam(':timestamp', $this->original_upload_date);
+        }
+
+        // Bind s3_metadata if set (for S3 custom metadata and tags)
+        if (!empty($this->s3_metadata)) {
+            $statement->bindParam(':s3_metadata', $this->s3_metadata);
+            error_log("Files::addToDatabase: Binding s3_metadata (" . strlen($this->s3_metadata) . " bytes) for file: " . $this->filename_original);
+        } else {
+            error_log("Files::addToDatabase: s3_metadata is empty for file: " . $this->filename_original);
+        }
+
+        try {
+            $statement->execute();
+            error_log("Files::addToDatabase: Successfully executed INSERT for file: " . $this->filename_original);
+        } catch (PDOException $e) {
+            error_log("Files::addToDatabase: PDO Error: " . $e->getMessage());
+            throw $e;
+        }
 
         $this->file_id = $this->dbh->lastInsertId();
         $this->id = $this->file_id;
@@ -2156,5 +2229,125 @@ class Files
             'success' => false,
             'message' => __('Invalid storage selection', 'cftp_admin')
         ];
+    }
+
+    /**
+     * Helper methods for S3 custom metadata
+     */
+
+    /**
+     * Check if file has S3 custom metadata
+     *
+     * @return bool
+     */
+    public function hasS3Metadata()
+    {
+        return !empty($this->s3_metadata);
+    }
+
+    /**
+     * Get all S3 custom metadata as decoded array
+     *
+     * @return array Array with 'custom_metadata' and 'tags' keys, or empty array
+     */
+    public function getS3CustomMetadata()
+    {
+        if (empty($this->s3_metadata)) {
+            return [];
+        }
+
+        $decoded = json_decode($this->s3_metadata, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Get a specific S3 metadata field (X-Amz-Meta-* header)
+     *
+     * @param string $field Field name (e.g., 'checkin-comment', 'created-by')
+     * @return string|null Field value or null if not found
+     */
+    public function getS3MetadataField($field)
+    {
+        $metadata = $this->getS3CustomMetadata();
+
+        if (!isset($metadata['custom_metadata']) || !is_array($metadata['custom_metadata'])) {
+            return null;
+        }
+
+        return $metadata['custom_metadata'][$field] ?? null;
+    }
+
+    /**
+     * Get all S3 tags
+     *
+     * @return array Associative array of tag key => value pairs
+     */
+    public function getS3Tags()
+    {
+        $metadata = $this->getS3CustomMetadata();
+
+        if (!isset($metadata['tags']) || !is_array($metadata['tags'])) {
+            return [];
+        }
+
+        return $metadata['tags'];
+    }
+
+    /**
+     * Get a specific S3 tag value
+     *
+     * @param string $tag_key Tag key name
+     * @return string|null Tag value or null if not found
+     */
+    public function getS3Tag($tag_key)
+    {
+        $tags = $this->getS3Tags();
+        return $tags[$tag_key] ?? null;
+    }
+
+    /**
+     * Get formatted display of S3 metadata for UI
+     * Returns array of label => value pairs for display
+     *
+     * @return array
+     */
+    public function getS3MetadataForDisplay()
+    {
+        if (!$this->hasS3Metadata()) {
+            return [];
+        }
+
+        $metadata = $this->getS3CustomMetadata();
+        $display = [];
+
+        // Map known metadata fields to friendly labels
+        $field_labels = [
+            'checkin-comment' => __('Check-in Comment', 'cftp_admin'),
+            'created-by' => __('Created By', 'cftp_admin'),
+            'created-by-email' => __('Creator Email', 'cftp_admin'),
+            'created-by-title' => __('Creator Title', 'cftp_admin'),
+            'created-date' => __('Created Date', 'cftp_admin'),
+            'is-current-version' => __('Is Current Version', 'cftp_admin'),
+            'is-versioned' => __('Is Versioned', 'cftp_admin'),
+            'modified-by' => __('Modified By', 'cftp_admin'),
+            'modified-date' => __('Modified Date', 'cftp_admin'),
+            'version' => __('Version', 'cftp_admin'),
+            'version-id' => __('Version ID', 'cftp_admin'),
+        ];
+
+        // Extract custom metadata fields
+        if (isset($metadata['custom_metadata']) && is_array($metadata['custom_metadata'])) {
+            foreach ($metadata['custom_metadata'] as $key => $value) {
+                $label = $field_labels[$key] ?? ucwords(str_replace('-', ' ', $key));
+                $display[$label] = $value;
+            }
+        }
+
+        // Add tags
+        if (isset($metadata['tags']) && is_array($metadata['tags']) && !empty($metadata['tags'])) {
+            $display[__('Tags', 'cftp_admin')] = $metadata['tags'];
+        }
+
+        return $display;
     }
 }

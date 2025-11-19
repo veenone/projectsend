@@ -542,12 +542,40 @@ class S3Storage extends ExternalStorage
                 'Key' => $remote_file_path
             ]);
 
+            // Extract custom metadata
+            $custom_metadata = [];
+            if (isset($result['Metadata']) && is_array($result['Metadata'])) {
+                foreach ($result['Metadata'] as $key => $value) {
+                    // S3 returns metadata keys in lowercase, restore original casing in storage
+                    $custom_metadata[$key] = $value;
+                }
+            }
+
+            // Try to get object tagging
+            $tags = [];
+            try {
+                $tagging_result = $this->s3_client->getObjectTagging([
+                    'Bucket' => $this->bucket_name,
+                    'Key' => $remote_file_path
+                ]);
+
+                if (isset($tagging_result['TagSet']) && is_array($tagging_result['TagSet'])) {
+                    foreach ($tagging_result['TagSet'] as $tag) {
+                        $tags[$tag['Key']] = $tag['Value'];
+                    }
+                }
+            } catch (\Exception $tag_e) {
+                // Tags might not be accessible or not exist, continue without them
+                $this->logOperation('metadata', $remote_file_path, 'warning', 'Could not retrieve tags: ' . $tag_e->getMessage());
+            }
+
             return [
                 'size' => $result['ContentLength'],
                 'last_modified' => $result['LastModified']->format('Y-m-d H:i:s'),
                 'content_type' => $result['ContentType'],
                 'etag' => trim($result['ETag'], '"'),
-                'metadata' => $result['Metadata'] ?? []
+                'metadata' => $custom_metadata,
+                'tags' => $tags
             ];
         } catch (\Exception $e) {
             $this->logOperation('metadata', $remote_file_path, 'error', $e->getMessage());

@@ -316,6 +316,69 @@ $body_class = array('template', 'business-template', 'business-download', 'hide_
                         </div>
                     <?php endif; ?>
 
+                    <!-- S3 Metadata -->
+                    <?php
+                    if (!empty($file->s3_metadata)) {
+                        $s3_metadata_decoded = json_decode($file->s3_metadata, true);
+                        if ($s3_metadata_decoded && is_array($s3_metadata_decoded)):
+                    ?>
+                        <div class="mb-6">
+                            <h4 class="text-lg font-medium text-gray-900 dark:text-white mb-3">
+                                <i class="fas fa-info-circle mr-2"></i><?php echo __('Document Information', 'business_template'); ?>
+                            </h4>
+                            <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 rounded-lg p-4 border border-blue-200 dark:border-blue-700">
+                                <div class="space-y-3">
+                                    <?php if (!empty($s3_metadata_decoded['current-version'])): ?>
+                                        <div class="flex items-start">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-200 min-w-[180px]"><?php echo __('Current Version', 'business_template'); ?>:</span>
+                                            <span class="text-gray-900 dark:text-white"><?php echo html_output($s3_metadata_decoded['current-version']); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($s3_metadata_decoded['version'])): ?>
+                                        <div class="flex items-start">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-200 min-w-[180px]"><?php echo __('Version', 'business_template'); ?>:</span>
+                                            <span class="text-gray-900 dark:text-white"><?php echo html_output($s3_metadata_decoded['version']); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($s3_metadata_decoded['sharepoint-url'])): ?>
+                                        <div class="flex items-start">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-200 min-w-[180px]"><?php echo __('SharePoint URL', 'business_template'); ?>:</span>
+                                            <a href="<?php echo html_output($s3_metadata_decoded['sharepoint-url']); ?>" target="_blank" class="text-primary-600 dark:text-primary-400 hover:underline">
+                                                <i class="fas fa-external-link-alt mr-1"></i><?php echo __('Open in SharePoint', 'business_template'); ?>
+                                            </a>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($s3_metadata_decoded['created-by'])): ?>
+                                        <div class="flex items-start">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-200 min-w-[180px]"><?php echo __('Created By', 'business_template'); ?>:</span>
+                                            <span class="text-gray-900 dark:text-white"><?php echo html_output($s3_metadata_decoded['created-by']); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($s3_metadata_decoded['created-by-title'])): ?>
+                                        <div class="flex items-start">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-200 min-w-[180px]"><?php echo __('Created By Title', 'business_template'); ?>:</span>
+                                            <span class="text-gray-900 dark:text-white"><?php echo html_output($s3_metadata_decoded['created-by-title']); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <?php if (!empty($s3_metadata_decoded['modified-date'])): ?>
+                                        <div class="flex items-start">
+                                            <span class="font-semibold text-gray-700 dark:text-gray-200 min-w-[180px]"><?php echo __('Modified Date', 'business_template'); ?>:</span>
+                                            <span class="text-gray-900 dark:text-white"><?php echo html_output($s3_metadata_decoded['modified-date']); ?></span>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    <?php
+                        endif;
+                    }
+                    ?>
+
                     <!-- Preview Section -->
                     <?php if (get_option('public_listing_enable_preview') == 1): ?>
                         <div class="mb-6">
