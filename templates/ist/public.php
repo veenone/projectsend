@@ -114,8 +114,8 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
             --ist-dark-2: #5564A5;
             --ist-light-1: #96AFFF;
             --ist-light-2: #CDDCFF;
-            --ist-text-primary: #1f2937;
-            --ist-text-secondary: #4b5563;
+            --ist-text-primary: #323C64;
+            --ist-text-secondary: #5564A5;
         }
 
         .dark :root {
@@ -124,8 +124,8 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
             --ist-dark-2: #7382E6;
             --ist-light-1: #5564A5;
             --ist-light-2: #323C64;
-            --ist-text-primary: #f3f4f6;
-            --ist-text-secondary: #d1d5db;
+            --ist-text-primary: #CDDCFF;
+            --ist-text-secondary: #96AFFF;
         }
 
         /* Custom gradient backgrounds */
