@@ -50,6 +50,21 @@ return [
             __('Formal typography', 'cftp_admin'),
         ]
     ],
+    'ist' => [
+        'id' => 'ist',
+        'name' => __('IST Professional', 'cftp_admin'),
+        'description' => __('IST Jakarta branded email template with professional gradient styling and corporate IST color palette', 'cftp_admin'),
+        'preview_image' => 'ist/screenshot.png',
+        'header_file' => 'ist/header.html',
+        'footer_file' => 'ist/footer.html',
+        'style' => 'corporate',
+        'color_scheme' => 'ist-blue',
+        'features' => [
+            __('IST brand colors', 'cftp_admin'),
+            __('Gradient header design', 'cftp_admin'),
+            __('Professional layout', 'cftp_admin'),
+        ]
+    ],
     'minimal' => [
         'id' => 'minimal',
         'name' => __('Minimal Simple', 'cftp_admin'),
