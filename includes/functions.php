@@ -1820,16 +1820,16 @@ function get_branding_layout($return_thumbnail = false)
 
     if ($branding['exists'] === true) {
         $branding_image = ($return_thumbnail === true) ? $branding['thumbnail'] : $branding['url'];
+
+        // Check type only when branding exists
+        if ($branding['type'] == 'raster') {
+            $replace = '<img src="' . $branding_image . '" alt="' . html_output(get_option('this_install_title')) . '" />';
+        } elseif ($branding['type'] == 'vector') {
+            $replace = sanitize_svg($branding['dir']);
+        }
     } else {
         $branding_image = ASSETS_IMG_URL . DEFAULT_LOGO_FILENAME;
-    }
-
-    $replace = '<img src="' . $branding_image . '" alt="' . html_output(get_option('this_install_title')) . '" />';
-
-    if ($branding['type'] == 'raster') {
         $replace = '<img src="' . $branding_image . '" alt="' . html_output(get_option('this_install_title')) . '" />';
-    } elseif ($branding['type'] == 'vector') {
-        $replace = sanitize_svg($branding['dir']);
     }
 
     $layout = str_replace('%LOGO%', $replace, $layout);
