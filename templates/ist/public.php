@@ -114,6 +114,8 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
             --ist-dark-2: #5564A5;
             --ist-light-1: #96AFFF;
             --ist-light-2: #CDDCFF;
+            --ist-text-primary: #1f2937;
+            --ist-text-secondary: #4b5563;
         }
 
         .dark :root {
@@ -122,6 +124,8 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
             --ist-dark-2: #7382E6;
             --ist-light-1: #5564A5;
             --ist-light-2: #323C64;
+            --ist-text-primary: #f3f4f6;
+            --ist-text-secondary: #d1d5db;
         }
 
         /* Custom gradient backgrounds */
@@ -131,6 +135,41 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
 
         .dark .ist-gradient-header {
             background: linear-gradient(135deg, #323C64 0%, #5564A5 100%);
+        }
+
+        /* Link styles */
+        a {
+            color: var(--ist-main);
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--ist-dark-2);
+        }
+
+        /* Ensure proper text colors for spans and general text */
+        span:not([class*="text-"]):not([class*="bg-"]) {
+            color: var(--ist-text-primary);
+        }
+
+        /* File card title and description colors */
+        .file-card h3 {
+            color: var(--ist-text-primary);
+        }
+
+        .file-card p {
+            color: var(--ist-text-secondary);
+        }
+
+        /* Breadcrumb and navigation links */
+        .breadcrumb a,
+        nav a:not([class*="bg-"]):not([class*="border-"]) {
+            color: var(--ist-main);
+        }
+
+        .breadcrumb a:hover,
+        nav a:not([class*="bg-"]):not([class*="border-"]):hover {
+            color: var(--ist-dark-2);
         }
 
         .line-clamp-2 {
