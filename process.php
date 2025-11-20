@@ -33,10 +33,10 @@ switch ($_GET['do']) {
         break;
     case 'login_ldap':
         // Validate required fields
-        if (empty($_POST['ldap_email']) || empty($_POST['ldap_password'])) {
+        if (empty($_POST['ldap_username']) || empty($_POST['ldap_password'])) {
             echo json_encode([
                 'status' => 'error',
-                'message' => __("Email and password are required.", 'cftp_admin')
+                'message' => __("Username and password are required.", 'cftp_admin')
             ]);
             exit;
         }
@@ -56,7 +56,7 @@ switch ($_GET['do']) {
         }
 
         // Perform LDAP authentication
-        $login = $auth->loginLdap($_POST['ldap_email'], $_POST['ldap_password'], $_POST['language'] ?? null);
+        $login = $auth->loginLdap($_POST['ldap_username'], $_POST['ldap_password'], $_POST['language'] ?? null, $_POST['remember_me'] ?? false);
         echo $login;
         break;
     case 'test_ldap_connection':
