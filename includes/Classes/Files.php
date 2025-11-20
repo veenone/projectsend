@@ -1323,6 +1323,10 @@ class Files
                 'affected_file_name' => $this->filename_original,
             ]);
 
+            // Invalidate file count cache when file is modified
+            // (assignments or folder changes may affect filtered counts)
+            invalidate_file_count_cache();
+
             return true;
 		}
 		
