@@ -49,6 +49,13 @@
     --ist-shadow-sm: 0 2px 4px rgba(50, 60, 100, 0.08);
     --ist-shadow-md: 0 4px 12px rgba(50, 60, 100, 0.12);
     --ist-shadow-lg: 0 8px 24px rgba(50, 60, 100, 0.16);
+
+    /* Legacy variable overrides for IST theme */
+    --main_color: var(--ist-main);
+    --color-primary: var(--ist-main);
+    --color-primary-light: var(--ist-light-1);
+    --color-primary-dark: var(--ist-dark-2);
+    --text-inverse: #ffffff;
 }
 
 /* ============================================
@@ -84,6 +91,13 @@ body.dark-mode {
     --ist-shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
     --ist-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
     --ist-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    /* Legacy variable overrides for dark mode */
+    --main_color: var(--ist-light-1);
+    --color-primary: var(--ist-light-1);
+    --color-primary-light: var(--ist-light-2);
+    --color-primary-dark: var(--ist-main);
+    --text-inverse: var(--ist-text-on-primary);
 }
 
 /* ============================================
