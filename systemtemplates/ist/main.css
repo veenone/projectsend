@@ -167,7 +167,7 @@ a:hover {
 .btn-primary {
     background-color: var(--ist-primary);
     border-color: var(--ist-primary);
-    color: var(--ist-text-on-primary);
+    color: #ffffff !important;
     font-weight: 500;
 }
 
@@ -175,19 +175,115 @@ a:hover {
 .btn-primary:focus {
     background-color: var(--ist-primary-dark);
     border-color: var(--ist-primary-dark);
-    color: var(--ist-text-on-primary);
+    color: #ffffff !important;
     box-shadow: var(--ist-shadow-md);
 }
 
+[data-theme="dark"] .btn-primary,
+body.dark-mode .btn-primary {
+    color: var(--ist-text-on-primary) !important;
+}
+
+[data-theme="dark"] .btn-primary:hover,
+[data-theme="dark"] .btn-primary:focus,
+body.dark-mode .btn-primary:hover,
+body.dark-mode .btn-primary:focus {
+    color: var(--ist-text-on-primary) !important;
+}
+
 .btn-outline-primary {
-    color: var(--ist-primary);
+    color: var(--ist-primary) !important;
     border-color: var(--ist-primary);
+    background-color: transparent;
 }
 
 .btn-outline-primary:hover {
     background-color: var(--ist-primary);
     border-color: var(--ist-primary);
-    color: var(--ist-text-on-primary);
+    color: #ffffff !important;
+}
+
+/* Button text links */
+a.btn {
+    color: #ffffff !important;
+}
+
+a.btn:hover {
+    color: #ffffff !important;
+    text-decoration: none;
+}
+
+[data-theme="dark"] a.btn,
+body.dark-mode a.btn {
+    color: var(--ist-text-on-primary) !important;
+}
+
+.btn-outline-primary.btn,
+a.btn.btn-outline-primary {
+    color: var(--ist-primary) !important;
+}
+
+.btn-outline-primary.btn:hover,
+a.btn.btn-outline-primary:hover {
+    color: #ffffff !important;
+}
+
+/* ============================================
+   FOLDER COMPONENTS
+   ============================================ */
+
+.folder,
+.folder-item,
+div.folder,
+.folder-card {
+    background-color: var(--ist-primary-lighter);
+    border: 1px solid var(--ist-primary-light);
+    color: var(--ist-text-primary) !important;
+}
+
+.folder:hover,
+.folder-item:hover,
+div.folder:hover,
+.folder-card:hover {
+    background-color: var(--ist-bg-hover);
+    border-color: var(--ist-primary);
+}
+
+.folder .folder-name,
+.folder-item .folder-name,
+.folder-title,
+.folder a {
+    color: var(--ist-text-primary) !important;
+}
+
+.folder .folder-name:hover,
+.folder-item .folder-name:hover,
+.folder-title:hover,
+.folder a:hover {
+    color: var(--ist-primary) !important;
+}
+
+/* Folder icons */
+i.fa-folder,
+i.fa-folder-open,
+.fa-folder,
+.fa-folder-open {
+    color: var(--ist-primary) !important;
+}
+
+/* Folder badges and counters */
+.folder .badge,
+.folder-item .badge {
+    background-color: var(--ist-primary) !important;
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] .folder .badge,
+[data-theme="dark"] .folder-item .badge,
+body.dark-mode .folder .badge,
+body.dark-mode .folder-item .badge {
+    background-color: var(--ist-primary-light) !important;
+    color: var(--ist-text-primary) !important;
 }
 
 /* ============================================
