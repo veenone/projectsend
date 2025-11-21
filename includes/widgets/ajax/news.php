@@ -17,7 +17,8 @@ $return = [
 
 $max_news = 5;
 $n = 0;
-foreach ($news as $item) {
+if (is_array($news) || is_object($news)) {
+    foreach ($news as $item) {
     if ($n < $max_news) {
         $return['items'][] = [
             'date' => format_date($item->date),
@@ -26,6 +27,7 @@ foreach ($news as $item) {
             'content' => make_excerpt(html_output(strip_tags($item->content, '<br />')),200),
         ];
         $n++;
+    }
     }
 }
 

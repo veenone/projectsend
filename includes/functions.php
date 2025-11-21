@@ -3065,3 +3065,122 @@ function client_get_profile_link()
     $my_account_link = current_user_is_client() ? 'clients-edit.php' : 'users-edit.php';
     return BASE_URI . $my_account_link . '?id=' . CURRENT_USER_ID;
 }
+
+/**
+ * Validate upload directory path
+ * Checks if the path is valid, writable, and secure
+ *
+ * @param string $path Path to validate
+ * @return array ['valid' => bool, 'error' => string, 'warnings' => array]
+ */
+function validate_upload_directory_path($path)
+{
+    $result = [
+        'valid' => false,
+        'error' => '',
+        'warnings' => []
+    ];
+
+    // Empty path is valid (uses default)
+    if (empty($path)) {
+        $result['valid'] = true;
+        return $result;
+    }
+
+    // Must be absolute path
+    if (!preg_match('#^(/|[A-Z]:\\\\)#', $path)) {
+        $result['error'] = __('Path must be absolute (start with / or drive letter)', 'cftp_admin');
+        return $result;
+    }
+
+    // Security: Prevent system directories
+    $forbidden_paths = ['/etc', '/var', '/usr', '/bin', '/sbin', '/boot', '/sys', '/proc', '/root'];
+    foreach ($forbidden_paths as $forbidden) {
+        if (strpos($path, $forbidden) === 0 && strlen($path) <= strlen($forbidden) + 20) {
+            $result['error'] = __('Cannot use system directories for security reasons', 'cftp_admin');
+            return $result;
+        }
+    }
+
+    // Check if path exists
+    if (!file_exists($path)) {
+        $result['error'] = __('Directory does not exist. Please create it first.', 'cftp_admin');
+        return $result;
+    }
+
+    // Must be a directory
+    if (!is_dir($path)) {
+        $result['error'] = __('Path is not a directory', 'cftp_admin');
+        return $result;
+    }
+
+    // Prevent directory traversal
+    $real_path = realpath($path);
+    if ($real_path === false) {
+        $result['error'] = __('Invalid path or permission denied', 'cftp_admin');
+        return $result;
+    }
+
+    // Must be writable
+    if (!is_writable($real_path)) {
+        $result['error'] = __('Directory is not writable by web server', 'cftp_admin');
+        return $result;
+    }
+
+    // Warning: Check if within web root (security issue)
+    $doc_root = isset($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : realpath(ROOT_DIR);
+    if ($doc_root && strpos($real_path, $doc_root) === 0) {
+        $result['warnings'][] = __('Warning: Directory is within web root and may be publicly accessible. Consider using a directory outside the web root for better security.', 'cftp_admin');
+    }
+
+    // Test: Try creating subdirectories
+    $test_dir = $real_path . DS . 'test_' . time();
+    if (@mkdir($test_dir, 0775)) {
+        @rmdir($test_dir);
+    } else {
+        $result['warnings'][] = __('Warning: Cannot create subdirectories. Check permissions.', 'cftp_admin');
+    }
+
+    $result['valid'] = true;
+    return $result;
+}
+
+/**
+ * Initialize upload directory structure
+ * Creates required subdirectories and security files
+ *
+ * @param string $base_path Base upload directory path
+ * @return array ['created' => array, 'errors' => array]
+ */
+function initialize_upload_directory($base_path)
+{
+    $subdirs = ['files', 'temp', 'thumbnails', 'admin'];
+    $created = [];
+    $errors = [];
+
+    foreach ($subdirs as $subdir) {
+        $full_path = $base_path . DS . $subdir;
+        if (!file_exists($full_path)) {
+            if (@mkdir($full_path, 0775, true)) {
+                $created[] = $subdir;
+
+                // Create .htaccess for security
+                $htaccess = $full_path . DS . '.htaccess';
+                $htaccess_content = "Options -Indexes\nOrder Deny,Allow\nDeny from All\n";
+                if ($subdir === 'files' || $subdir === 'temp') {
+                    $htaccess_content .= "<FilesMatch \"^$|(index)\\.php$\">\nAllow from All\n</FilesMatch>\n\n";
+                    $htaccess_content .= "php_flag engine off";
+                }
+                @file_put_contents($htaccess, $htaccess_content);
+
+                // Create index.php to prevent directory listing
+                $index_php = $full_path . DS . 'index.php';
+                @file_put_contents($index_php, "<?php\n// Silence is golden\n");
+            } else {
+                $errors[] = $subdir;
+            }
+        }
+    }
+
+    return ['created' => $created, 'errors' => $errors];
+}

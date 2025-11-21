@@ -227,9 +227,13 @@ a.btn:hover {
     text-decoration: none;
 }
 
+[data-theme="dark"] a.btn, body.dark-mode a.btn {
+    color: #ffffff !important;
+}
+
 [data-theme="dark"] a.btn,
 body.dark-mode a.btn {
-    color: var(--ist-text-on-primary) !important;
+    color: #ffffff !important;
 }
 
 .btn-outline-primary.btn,
@@ -245,6 +249,25 @@ a.btn.btn-outline-primary:hover {
 /* ============================================
    FOLDER COMPONENTS
    ============================================ */
+
+
+#folders_nav .folder a,
+#folders_nav .folder a {
+    color: #ffffff;
+}
+
+
+[data-theme="dark"] #folders_nav .folder,
+body.dark-mode #folders_nav .folder {
+    background-color: #5564A5;
+    border-color: #5564A5;
+}
+
+[data-theme="dark"] #folders_nav .folder a,
+body.dark-mode #folders_nav .folder a {
+    color: #ffffff;
+}
+
 
 .folder,
 .folder-item,

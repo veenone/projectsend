@@ -66,6 +66,22 @@ class Files
     private $use_date_folder;
     private $is_filetype_allowed;
 
+    // Temporary properties used during file operations
+    private $uid;
+    private $username;
+    private $makehash;
+    private $uploader;
+    private $uploader_id;
+    private $uploader_type;
+    private $hidden;
+    private $file_id;
+    private $action_type;
+    private $check_level;
+    private $thumbnails_pattern;
+    private $find_thumbnails;
+    private $thumbnail;
+    private $path;
+
     public function __construct($file_id = null)
     {
         global $dbh;

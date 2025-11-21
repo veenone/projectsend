@@ -555,6 +555,21 @@ html {
 }
 
 /* ============================================
+   FOLDER NAVIGATION
+   ============================================ */
+
+[data-theme="dark"] #folders_nav .folder,
+body.dark-mode #folders_nav .folder {
+    background-color: #5564A5;
+    border-color: #5564A5;
+}
+
+[data-theme="dark"] #folders_nav .folder a,
+body.dark-mode #folders_nav .folder a {
+    color: #ffffff;
+}
+
+/* ============================================
    PRINT STYLES
    ============================================ */
 

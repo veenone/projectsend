@@ -240,7 +240,33 @@ $session_expire_time = 31*24*60*60; // 31 days * 24 hours * 60 minutes * 60 seco
 define('SESSION_EXPIRE_TIME', $session_expire_time);
 
 /* Define the folder where uploaded files will reside */
-define('UPLOADED_FILES_ROOT', ROOT_DIR . DS . 'upload');
+// Get custom upload directory from options (requires database connection)
+// This is loaded after database initialization in bootstrap.php
+if (!defined('IS_MAKE_CONFIG') && function_exists('get_option')) {
+    $custom_upload_root = get_option('upload_directory_path');
+
+    // Validate custom path
+    if (!empty($custom_upload_root)) {
+        // Ensure it's an absolute path and clean it
+        $custom_upload_root = rtrim($custom_upload_root, DS);
+
+        // Security: Validate path exists and is writable
+        if (is_dir($custom_upload_root) && is_writable($custom_upload_root)) {
+            // Use realpath to prevent directory traversal
+            $validated_path = realpath($custom_upload_root);
+            if ($validated_path !== false) {
+                define('UPLOADED_FILES_ROOT', $validated_path);
+            }
+        }
+    }
+}
+
+// Fallback to default if not set or validation failed
+if (!defined('UPLOADED_FILES_ROOT')) {
+    define('UPLOADED_FILES_ROOT', ROOT_DIR . DS . 'upload');
+}
+
+// Define subdirectories
 define('UPLOADED_FILES_DIR', UPLOADED_FILES_ROOT . DS . 'files');
 define('UPLOADS_TEMP_DIR', UPLOADED_FILES_ROOT . DS . 'temp');
 define('THUMBNAILS_FILES_DIR', UPLOADED_FILES_ROOT . DS . 'thumbnails');

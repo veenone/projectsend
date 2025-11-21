@@ -201,6 +201,7 @@ if ($_POST) {
         'ip_whitelist',
         'ip_blacklist',
         'cron_email_summary_address_to',
+        'upload_directory_path',
     ];
 
     foreach ($checkboxes as $checkbox) {
@@ -269,6 +270,43 @@ if ($_POST) {
         if (!empty($_POST['base_uri'])) {
             if (substr($_POST['base_uri'], -1) != '/') {
                 $_POST['base_uri'] .= '/';
+            }
+        }
+
+        // Validate upload directory path if provided
+        if (isset($_POST['upload_directory_path'])) {
+            $path_to_validate = $_POST['upload_directory_path'];
+
+            // Only validate if not empty (empty = use default)
+            if (!empty($path_to_validate)) {
+                $validation = validate_upload_directory_path($path_to_validate);
+
+                if (!$validation['valid']) {
+                    $flash->error(__('Invalid upload directory:', 'cftp_admin') . ' ' . $validation['error']);
+                    $_POST['upload_directory_path'] = ''; // Reset to default
+                } else {
+                    // Show success message
+                    $flash->success(__('Upload directory validated successfully.', 'cftp_admin'));
+
+                    // Show warnings if any
+                    if (!empty($validation['warnings'])) {
+                        foreach ($validation['warnings'] as $warning) {
+                            $flash->warning($warning);
+                        }
+                    }
+
+                    // Try to initialize subdirectories
+                    $real_path = realpath($path_to_validate);
+                    if ($real_path) {
+                        $init_result = initialize_upload_directory($real_path);
+                        if (!empty($init_result['created'])) {
+                            $flash->success(__('Created subdirectories:', 'cftp_admin') . ' ' . implode(', ', $init_result['created']));
+                        }
+                        if (!empty($init_result['errors'])) {
+                            $flash->warning(__('Could not create subdirectories:', 'cftp_admin') . ' ' . implode(', ', $init_result['errors']));
+                        }
+                    }
+                }
             }
         }
 

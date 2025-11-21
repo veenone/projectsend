@@ -7,6 +7,89 @@
 // Define the form sections and fields for uploads
 $form_sections = [
     [
+        'title' => __('Upload Directory', 'cftp_admin'),
+        'description' => __('Configure where uploaded files are stored on the server.', 'cftp_admin'),
+        'fields' => [
+            [
+                'type' => 'text',
+                'name' => 'upload_directory_path',
+                'label' => __('Upload directory path', 'cftp_admin'),
+                'placeholder' => UPLOADED_FILES_ROOT,
+                'note' => '<strong>' . __('Leave empty to use default location:', 'cftp_admin') . '</strong> ' . UPLOADED_FILES_ROOT . '<br>' .
+                         '<strong>' . __('Recommended:', 'cftp_admin') . '</strong> ' . __('Use a directory outside your web root for better security (e.g., /var/projectsend-uploads).', 'cftp_admin') . '<br>' .
+                         '<strong>' . __('Important:', 'cftp_admin') . '</strong> ' . __('Changing this will NOT automatically move existing files. You must migrate files manually.', 'cftp_admin')
+            ],
+            [
+                'type' => 'custom',
+                'name' => 'upload_directory_validation',
+                'render_callback' => function($field) {
+                    $current_path = get_option('upload_directory_path');
+                    if (!empty($current_path)) {
+                        $validation = validate_upload_directory_path($current_path);
+
+                        echo '<div class="form-group row">';
+                        echo '<div class="col-sm-8 offset-sm-4">';
+
+                        if ($validation['valid']) {
+                            echo '<div class="alert alert-success">';
+                            echo '<i class="fa fa-check-circle"></i> ' . __('Directory is valid and writable', 'cftp_admin');
+                            echo '<br><strong>' . __('Current upload location:', 'cftp_admin') . '</strong> ' . UPLOADED_FILES_ROOT;
+                            echo '</div>';
+
+                            if (!empty($validation['warnings'])) {
+                                echo '<div class="alert alert-warning">';
+                                foreach ($validation['warnings'] as $warning) {
+                                    echo '<p class="mb-0">' . $warning . '</p>';
+                                }
+                                echo '</div>';
+                            }
+                        } else {
+                            echo '<div class="alert alert-danger">';
+                            echo '<i class="fa fa-exclamation-triangle"></i> ' . $validation['error'];
+                            echo '<br><strong>' . __('Using default location instead:', 'cftp_admin') . '</strong> ' . UPLOADED_FILES_ROOT;
+                            echo '</div>';
+                        }
+
+                        echo '</div>';
+                        echo '</div>';
+                    }
+                }
+            ],
+            [
+                'type' => 'custom',
+                'name' => 'upload_directory_info',
+                'render_callback' => function($field) {
+                    echo '<div class="form-group row">';
+                    echo '<div class="col-sm-8 offset-sm-4">';
+                    echo '<div class="alert alert-info">';
+                    echo '<h5>' . __('Setup Instructions', 'cftp_admin') . '</h5>';
+                    echo '<p>' . __('To use a custom upload directory:', 'cftp_admin') . '</p>';
+                    echo '<ol class="mb-2">';
+                    echo '<li>' . __('Create the directory on your server', 'cftp_admin') . '</li>';
+                    echo '<li>' . __('Set proper permissions (owner: web server user, permissions: 0755 or 0775)', 'cftp_admin') . '</li>';
+                    echo '<li>' . __('Enter the full absolute path above', 'cftp_admin') . '</li>';
+                    echo '<li>' . __('Click Save to apply changes', 'cftp_admin') . '</li>';
+                    echo '<li>' . __('The system will automatically create subdirectories (files/, temp/, thumbnails/, admin/)', 'cftp_admin') . '</li>';
+                    echo '</ol>';
+
+                    // Show example commands
+                    echo '<p class="mb-1"><strong>' . __('Example commands (Linux):', 'cftp_admin') . '</strong></p>';
+                    echo '<pre class="bg-light p-2 mb-2" style="font-size: 12px;">sudo mkdir -p /var/projectsend-uploads
+sudo chown -R www-data:www-data /var/projectsend-uploads
+sudo chmod -R 0775 /var/projectsend-uploads</pre>';
+
+                    // Show migration instructions
+                    echo '<p class="mb-1"><strong>' . __('To migrate existing files:', 'cftp_admin') . '</strong></p>';
+                    echo '<pre class="bg-light p-2" style="font-size: 12px;">sudo cp -r ' . UPLOADED_FILES_ROOT . '/* /var/projectsend-uploads/</pre>';
+
+                    echo '</div>';
+                    echo '</div>';
+                    echo '</div>';
+                }
+            ]
+        ]
+    ],
+    [
         'title' => __('File Organization', 'cftp_admin'),
         'description' => __('Configure how uploaded files are organized and stored.', 'cftp_admin'),
         'fields' => [
