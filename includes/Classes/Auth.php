@@ -395,7 +395,7 @@ class Auth
                     if (ldap_bind($ldap, $entries[0]['dn'], $password)) {
                         // Get full LDAP attributes for user creation/sync
                         $ldap_user_dn = $entries[0]['dn'];
-                        $attributes = ['mail', 'displayName', 'cn', 'name', 'telephoneNumber', 'mobile', 'postalAddress', 'streetAddress', 'department', 'title', 'company', 'manager', $username_attr, $email_attr];
+                        $attributes = array_unique(['mail', 'displayName', 'cn', 'name', 'telephoneNumber', 'mobile', 'postalAddress', 'streetAddress', 'department', 'title', 'company', 'manager', $username_attr, $email_attr]);
                         $user_result = @ldap_search($ldap, $ldap_user_dn, "(objectClass=*)", $attributes);
                         $user_data = @ldap_get_entries($ldap, $user_result);
 
