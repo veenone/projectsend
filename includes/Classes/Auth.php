@@ -318,21 +318,21 @@ class Auth
         }
     }
 
-    public function loginLdap($email, $password, $language, $remember_me = false)
+    public function loginLdap($username, $password, $language, $remember_me = false)
     {
         global $logger;
-        
+
         // Debug logging
-        error_log("LDAP Login Debug - Starting authentication for: " . $email);
-        
-        if ( !$email || !$password ) {
-            error_log("LDAP Login Debug - Empty email or password");
+        error_log("LDAP Login Debug - Starting authentication for: " . $username);
+
+        if ( !$username || !$password ) {
+            error_log("LDAP Login Debug - Empty username or password");
             $return = [
                 'status' => 'error',
-                'message' => __("Email and password cannot be empty.",'cftp_admin')
+                'message' => __("Username and password cannot be empty.",'cftp_admin')
             ];
-    
-            return json_encode($return);    
+
+            return json_encode($return);
         }
 
 		$selected_form_lang = (!empty( $language ) ) ? $language : SITE_LANG;
@@ -342,7 +342,7 @@ class Auth
         $ldap_bind_dn = get_option('ldap_bind_dn');
         $ldap_admin_user = get_option('ldap_admin_user');
         $ldap_admin_password = get_option('ldap_admin_password');
-        
+
         // Debug logging
         error_log("LDAP Login Debug - Server: " . $ldap_server);
         error_log("LDAP Login Debug - Bind DN: " . $ldap_bind_dn);
@@ -371,10 +371,21 @@ class Auth
                 error_log("LDAP Login Debug - Admin bind successful");
                 $ldap_search_base = get_option('ldap_search_base');
                 error_log("LDAP Login Debug - Search base: " . $ldap_search_base);
-                
+
+                // Get LDAP attributes for searching
+                $username_attr = get_option('ldap_username_attribute', null, 'uid');
+                $email_attr = get_option('ldap_email_attribute', null, 'mail');
+
+                // Build search filter to search by username OR email
+                // Escape special characters to prevent LDAP injection
+                $username_escaped = ldap_escape($username, '', LDAP_ESCAPE_FILTER);
+                $search_filter = "(|($username_attr=$username_escaped)($email_attr=$username_escaped))";
+
+                error_log("LDAP Login Debug - Searching for user: " . $username);
+                error_log("LDAP Login Debug - Search filter: " . $search_filter);
+
                 $arr = array('dn', 1);
-                error_log("LDAP Login Debug - Searching for user: " . $email);
-                $result = @ldap_search($ldap, $ldap_search_base, "(mail=$email)", $arr);
+                $result = @ldap_search($ldap, $ldap_search_base, $search_filter, $arr);
                 $entries = @ldap_get_entries($ldap, $result);
                 
                 error_log("LDAP Login Debug - Search result count: " . ($entries ? $entries['count'] : 'false'));
@@ -384,10 +395,10 @@ class Auth
                     if (ldap_bind($ldap, $entries[0]['dn'], $password)) {
                         // Get full LDAP attributes for user creation/sync
                         $ldap_user_dn = $entries[0]['dn'];
-                        $attributes = ['mail', 'displayName', 'cn', 'name', 'telephoneNumber', 'mobile', 'postalAddress', 'streetAddress', 'department', 'title', 'company', 'manager'];
+                        $attributes = array_unique(['mail', 'displayName', 'cn', 'name', 'telephoneNumber', 'mobile', 'postalAddress', 'streetAddress', 'department', 'title', 'company', 'manager', $username_attr, $email_attr]);
                         $user_result = @ldap_search($ldap, $ldap_user_dn, "(objectClass=*)", $attributes);
                         $user_data = @ldap_get_entries($ldap, $user_result);
-                        
+
                         if ($user_data['count'] > 0) {
                             $ldap_attributes = $user_data[0];
                             $ldap_attributes['dn'] = $ldap_user_dn; // Store DN for metadata
@@ -395,9 +406,24 @@ class Auth
                             $ldap_attributes = ['dn' => $ldap_user_dn];
                         }
 
-                        // Check if user exists in local database
-                        $statement = $this->dbh->prepare("SELECT * FROM " . TABLE_USERS . " WHERE email = :email");
-                        $statement->execute([':email' => $email]);
+                        // Extract email from LDAP attributes
+                        $email_attr_lower = strtolower($email_attr);
+                        $user_email = isset($ldap_attributes[$email_attr_lower][0]) ? $ldap_attributes[$email_attr_lower][0] : null;
+
+                        if (!$user_email) {
+                            $return = [
+                                'status' => 'error',
+                                'message' => __("Could not retrieve email address from LDAP user.", 'cftp_admin')
+                            ];
+                            return json_encode($return);
+                        }
+
+                        // Check if user exists in local database by email or username
+                        $statement = $this->dbh->prepare("SELECT * FROM " . TABLE_USERS . " WHERE email = :email OR user = :username");
+                        $statement->execute([
+                            ':email' => $user_email,
+                            ':username' => $username
+                        ]);
                         
                         if ($statement->rowCount() > 0) {
                             // User exists - login and sync data
@@ -474,7 +500,7 @@ class Auth
                             if (get_option('ldap_auto_create_users', null, 'true') == 'true') {
                                 error_log("LDAP Login Debug - Auto-create users is enabled");
                                 $new_user = new \ProjectSend\Classes\Users();
-                                $create_result = $new_user->createFromLdap($ldap_attributes, $email);
+                                $create_result = $new_user->createFromLdap($ldap_attributes, $user_email);
                                 error_log("LDAP Login Debug - Create result: " . json_encode($create_result));
                                 
                                 if (!empty($create_result['id'])) {
@@ -522,22 +548,22 @@ class Auth
                     else {
                         $return = [
                             'status' => 'error',
-                            'message' => __("The supplied email or password does not match an existing record.", 'cftp_admin')
+                            'message' => __("The supplied username or password does not match an existing record.", 'cftp_admin')
                         ];
-            
-                        return json_encode($return);        
+
+                        return json_encode($return);
                     }
                 }
                 else {
-                    // Email not found
+                    // User not found
                     error_log("LDAP Login Debug - User not found in LDAP");
-                    $this->setError(__("The supplied email or password does not match an existing record.", 'cftp_admin'));
+                    $this->setError(__("The supplied username or password does not match an existing record.", 'cftp_admin'));
                     $return = [
                         'status' => 'error',
-                        'message' => __("The supplied email or password does not match an existing record.", 'cftp_admin')
+                        'message' => __("The supplied username or password does not match an existing record.", 'cftp_admin')
                     ];
-        
-                    return json_encode($return);        
+
+                    return json_encode($return);
                 }
             }
             else {
