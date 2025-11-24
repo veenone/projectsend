@@ -253,7 +253,42 @@ $(document).ready(function() {
         });
     });
 });
-</script>',
+</script>'
+    ],
+    [
+        'title' => __('Bulk User Synchronization', 'cftp_admin'),
+        'description' => __('Configure bulk synchronization settings for importing multiple users from LDAP at once.', 'cftp_admin'),
+        'html_before' => '<div class="options_column">',
+        'fields' => [
+            [
+                'type' => 'text',
+                'name' => 'ldap_sync_filter',
+                'label' => __('User sync filter', 'cftp_admin'),
+                'placeholder' => '(objectClass=person)',
+                'value' => get_option('ldap_sync_filter', null, '(objectClass=person)'),
+                'note' => '<small class="form-text text-muted">' . __('LDAP filter to select users for bulk synchronization', 'cftp_admin') . '</small>'
+            ],
+            [
+                'type' => 'custom',
+                'name' => 'ldap_sync_link',
+                'render_callback' => function($field) {
+                    if (current_role_can('manage_users')) {
+                        ?>
+                        <div class="form-group row">
+                            <div class="col-sm-4"></div>
+                            <div class="col-sm-8">
+                                <a href="ldap-sync.php" class="btn btn-primary">
+                                    <i class="fa fa-sync"></i> <?php _e('Go to LDAP Sync Page', 'cftp_admin'); ?>
+                                </a><br>
+                                <small class="form-text text-muted"><?php _e('Manage bulk user synchronization from LDAP server', 'cftp_admin'); ?></small>
+                            </div>
+                        </div>
+                        <?php
+                    }
+                }
+            ]
+        ],
+        'html_after' => '</div>',
         'divider' => false // No divider at the end
     ]
 ];

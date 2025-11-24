@@ -155,6 +155,12 @@ if (!current_role_in(['Client'])) {
                 //'badge' => COUNT_USERS_INACTIVE,
             ),
             array(
+                'label' => __('LDAP Sync', 'cftp_admin'),
+                'link' => 'ldap-sync.php',
+                'permission' => 'manage_users',
+                'icon' => 'sync',
+            ),
+            array(
                 'divider' => true,
             ),
             array(
