@@ -204,7 +204,10 @@ class LdapSync
         // Skip if no email
         if (empty($email) || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->stats['skipped']++;
-            $this->errors[] = sprintf(__('Skipped entry: Invalid or missing email address', 'cftp_admin'));
+            $this->errors[] = sprintf(
+                __('Skipped entry %s: Invalid or missing email address', 'cftp_admin'),
+                $this->extractLdapAttribute($entry, 'dn', 'unknown')
+            );
             return false;
         }
 
