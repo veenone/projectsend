@@ -135,18 +135,18 @@ $(document).ready(function() {
                     var html = '<div class="alert alert-success">';
                     html += '<h5><i class="fa fa-check-circle"></i> ';
                     if (isDryRun) {
-                        html += '<?php _e('Preview completed successfully', 'cftp_admin'); ?>';
+                        html += <?php echo json_encode(__('Preview completed successfully', 'cftp_admin')); ?>;
                     } else {
-                        html += '<?php _e('Synchronization completed successfully', 'cftp_admin'); ?>';
+                        html += <?php echo json_encode(__('Synchronization completed successfully', 'cftp_admin')); ?>;
                     }
                     html += '</h5>';
                     html += '<ul class="mb-0">';
-                    html += '<li><strong><?php _e('Total users found:', 'cftp_admin'); ?></strong> ' + stats.total_found + '</li>';
-                    html += '<li><strong><?php _e('Users to be created:', 'cftp_admin'); ?></strong> ' + stats.created + '</li>';
-                    html += '<li><strong><?php _e('Users to be updated:', 'cftp_admin'); ?></strong> ' + stats.updated + '</li>';
-                    html += '<li><strong><?php _e('Users skipped:', 'cftp_admin'); ?></strong> ' + stats.skipped + '</li>';
+                    html += '<li><strong><?php echo json_encode(__('Total users found:', 'cftp_admin')); ?></strong> ' + stats.total_found + '</li>';
+                    html += '<li><strong><?php echo json_encode(__('Users to be created:', 'cftp_admin')); ?></strong> ' + stats.created + '</li>';
+                    html += '<li><strong><?php echo json_encode(__('Users to be updated:', 'cftp_admin')); ?></strong> ' + stats.updated + '</li>';
+                    html += '<li><strong><?php echo json_encode(__('Users skipped:', 'cftp_admin')); ?></strong> ' + stats.skipped + '</li>';
                     if (stats.errors > 0) {
-                        html += '<li class="text-danger"><strong><?php _e('Errors:', 'cftp_admin'); ?></strong> ' + stats.errors + '</li>';
+                        html += '<li class="text-danger"><strong><?php echo json_encode(__('Errors:', 'cftp_admin')); ?></strong> ' + stats.errors + '</li>';
                     }
                     html += '</ul>';
                     html += '</div>';
@@ -156,9 +156,9 @@ $(document).ready(function() {
                         html += '<div class="table-responsive mt-3">';
                         html += '<table class="table table-sm table-bordered">';
                         html += '<thead><tr>';
-                        html += '<th><?php _e('Email', 'cftp_admin'); ?></th>';
-                        html += '<th><?php _e('Action', 'cftp_admin'); ?></th>';
-                        html += '<th><?php _e('Status', 'cftp_admin'); ?></th>';
+                        html += '<th><?php echo json_encode(__('Email', 'cftp_admin')); ?></th>';
+                        html += '<th><?php echo json_encode(__('Action', 'cftp_admin')); ?></th>';
+                        html += '<th><?php echo json_encode(__('Status', 'cftp_admin')); ?></th>';
                         html += '</tr></thead><tbody>';
 
                         for (var i = 0; i < Math.min(stats.users.length, 50); i++) {
@@ -167,10 +167,10 @@ $(document).ready(function() {
                             var statusClass = '';
 
                             if (user.action === 'create' || user.action === 'created') {
-                                actionText = '<?php _e('Created', 'cftp_admin'); ?>';
+                                actionText = <?php echo json_encode(__('Created', 'cftp_admin')); ?>;
                                 statusClass = 'text-success';
                             } else if (user.action === 'update' || user.action === 'updated') {
-                                actionText = '<?php _e('Updated', 'cftp_admin'); ?>';
+                                actionText = <?php echo json_encode(__('Updated', 'cftp_admin')); ?>;
                                 statusClass = 'text-info';
                             }
 
@@ -179,9 +179,9 @@ $(document).ready(function() {
                             html += '<td class="' + statusClass + '">' + actionText + '</td>';
                             html += '<td>';
                             if (isDryRun) {
-                                html += '<span class="badge bg-warning"><?php _e('Preview', 'cftp_admin'); ?></span>';
+                                html += '<span class="badge bg-warning"><?php echo json_encode(__('Preview', 'cftp_admin')); ?></span>';
                             } else {
-                                html += '<span class="badge bg-success"><?php _e('Completed', 'cftp_admin'); ?></span>';
+                                html += '<span class="badge bg-success"><?php echo json_encode(__('Completed', 'cftp_admin')); ?></span>';
                             }
                             html += '</td>';
                             html += '</tr>';
@@ -189,7 +189,7 @@ $(document).ready(function() {
 
                         if (stats.users.length > 50) {
                             html += '<tr><td colspan="3" class="text-center text-muted">';
-                            html += '<?php _e('Showing first 50 users...', 'cftp_admin'); ?>';
+                            html += <?php echo json_encode(__('Showing first 50 users...', 'cftp_admin')); ?>;
                             html += '</td></tr>';
                         }
 
@@ -199,13 +199,13 @@ $(document).ready(function() {
                     // Show errors if any
                     if (response.errors && response.errors.length > 0) {
                         html += '<div class="alert alert-warning mt-3">';
-                        html += '<h5><?php _e('Errors encountered:', 'cftp_admin'); ?></h5>';
+                        html += '<h5><?php echo json_encode(__('Errors encountered:', 'cftp_admin')); ?></h5>';
                         html += '<ul class="mb-0">';
                         for (var i = 0; i < Math.min(response.errors.length, 10); i++) {
                             html += '<li>' + escapeHtml(response.errors[i]) + '</li>';
                         }
                         if (response.errors.length > 10) {
-                            html += '<li class="text-muted"><?php _e('... and more', 'cftp_admin'); ?></li>';
+                            html += '<li class="text-muted"><?php echo json_encode(__('... and more', 'cftp_admin')); ?></li>';
                         }
                         html += '</ul></div>';
                     }
@@ -221,7 +221,7 @@ $(document).ready(function() {
             },
             error: function(xhr, status, error) {
                 progressDiv.hide();
-                resultsContent.html('<div class="alert alert-danger"><i class="fa fa-times"></i> <?php _e('An error occurred during synchronization', 'cftp_admin'); ?>: ' + escapeHtml(error) + '</div>');
+                resultsContent.html('<div class="alert alert-danger"><i class="fa fa-times"></i> <?php echo json_encode(__('An error occurred during synchronization', 'cftp_admin')); ?>: ' + escapeHtml(error) + '</div>');
                 resultsDiv.show();
                 dryRunBtn.prop('disabled', false);
                 runBtn.prop('disabled', false);
@@ -246,7 +246,7 @@ $(document).ready(function() {
     });
 
     $('#run_sync').click(function() {
-        if (confirm('<?php _e('Are you sure you want to synchronize users from LDAP? This will create new users and update existing LDAP users.', 'cftp_admin'); ?>')) {
+        if (confirm(<?php echo json_encode(__('Are you sure you want to synchronize users from LDAP? This will create new users and update existing LDAP users.', 'cftp_admin')); ?>)) {
             runSync(false);
         }
     });
