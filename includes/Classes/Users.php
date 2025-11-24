@@ -1057,6 +1057,11 @@ class Users
 
     private function limitUploadToSave($clients_ids = [])
     {
+        // Ensure $clients_ids is always an array
+        if (!is_array($clients_ids)) {
+            $clients_ids = [];
+        }
+
         // Check if current user can manage upload restrictions
         if (!current_user_can('edit_users')) {
             return;
