@@ -6,6 +6,17 @@ $name_placeholder = __("Will be visible on the client's file list", 'cftp_admin'
 
 $clients_can_select_group = get_option('clients_can_select_group');
 
+// Check if this is an LDAP user and if password changes are disabled
+$is_ldap_user = false;
+$hide_password_field = false;
+if (isset($client_arguments['id']) && !empty($client_arguments['id'])) {
+    $check_ldap_user = new \ProjectSend\Classes\Users($client_arguments['id']);
+    $is_ldap_user = $check_ldap_user->isLdapUser();
+    if ($is_ldap_user && get_option('ldap_disable_password_change', null, 'true') === 'true') {
+        $hide_password_field = true;
+    }
+}
+
 switch ($clients_form_type) {
         /** User is creating a new client */
     case 'new_client':
@@ -82,6 +93,17 @@ switch ($clients_form_type) {
         </div>
     </div>
 
+    <?php if ($hide_password_field): ?>
+    <div class="form-group row">
+        <label class="col-sm-4 control-label"><?php _e('Password', 'cftp_admin'); ?></label>
+        <div class="col-sm-8">
+            <div class="alert alert-info mb-0">
+                <i class="fa fa-info-circle"></i>
+                <?php _e('This is an LDAP user. Password must be changed through your organization\'s directory service (e.g., Active Directory).', 'cftp_admin'); ?>
+            </div>
+        </div>
+    </div>
+    <?php else: ?>
     <div class="form-group row">
         <label for="password" class="col-sm-4 control-label"><?php _e('Password', 'cftp_admin'); ?></label>
         <div class="col-sm-8">
@@ -92,6 +114,7 @@ switch ($clients_form_type) {
             <?php echo password_notes(); ?>
         </div>
     </div>
+    <?php endif; ?>
 
     <div class="form-group row">
         <label for="email" class="col-sm-4 control-label"><?php _e('E-mail', 'cftp_admin'); ?></label>

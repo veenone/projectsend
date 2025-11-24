@@ -34,6 +34,17 @@ switch ($user_form_type) {
 		$require_pass = false;
 		break;
 }
+
+// Check if this is an LDAP user and if password changes are disabled
+$is_ldap_user = false;
+$hide_password_field = false;
+if (isset($user_arguments['id']) && !empty($user_arguments['id'])) {
+    $check_ldap_user = new \ProjectSend\Classes\Users($user_arguments['id']);
+    $is_ldap_user = $check_ldap_user->isLdapUser();
+    if ($is_ldap_user && get_option('ldap_disable_password_change', null, 'true') === 'true') {
+        $hide_password_field = true;
+    }
+}
 ?>
 <form action="<?php echo html_output($form_action); ?>" name="user_form" id="user_form" method="post" class="form-horizontal" data-form-type="<?php echo $user_form_type; ?>">
     <?php addCsrf(); ?>
@@ -52,6 +63,17 @@ switch ($user_form_type) {
 		</div>
 	</div>
 
+	<?php if ($hide_password_field): ?>
+	<div class="form-group row">
+		<label class="col-sm-4 control-label"><?php _e('Password','cftp_admin'); ?></label>
+		<div class="col-sm-8">
+			<div class="alert alert-info mb-0">
+				<i class="fa fa-info-circle"></i>
+				<?php _e('This is an LDAP user. Password must be changed through your organization\'s directory service (e.g., Active Directory).','cftp_admin'); ?>
+			</div>
+		</div>
+	</div>
+	<?php else: ?>
 	<div class="form-group row">
 		<label for="password" class="col-sm-4 control-label"><?php _e('Password','cftp_admin'); ?></label>
 		<div class="col-sm-8">
@@ -62,6 +84,7 @@ switch ($user_form_type) {
 			<?php echo password_notes(); ?>
 		</div>
 	</div>
+	<?php endif; ?>
 
 	<div class="form-group row">
 		<label for="email" class="col-sm-4 control-label"><?php _e('E-mail','cftp_admin'); ?></label>

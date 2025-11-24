@@ -755,6 +755,17 @@ class Users
                                     can_upload_public = :can_upload_public
                                     ";
 
+        /** Block password change for LDAP users if configured */
+        if (!empty($this->password) && $this->isLdapUser()) {
+            $ldap_disable_password = get_option('ldap_disable_password_change', null, 'true');
+            if ($ldap_disable_password === 'true') {
+                return [
+                    'status' => 'error',
+                    'message' => __('LDAP users cannot change their password locally. Please use your organization\'s password management system.', 'cftp_admin')
+                ];
+            }
+        }
+
         /** Add the password to the query if it's not the dummy value '' */
         if (!empty($this->password)) {
             $query .= ", password = :password";
@@ -1139,6 +1150,14 @@ class Users
 
         if (empty($password)) {
             return false;
+        }
+
+        // Block password change for LDAP users if configured
+        if ($this->isLdapUser()) {
+            $ldap_disable_password = get_option('ldap_disable_password_change', null, 'true');
+            if ($ldap_disable_password === 'true') {
+                return false;
+            }
         }
 
         if (!$this->validatePassword($password)) {

@@ -129,6 +129,24 @@ $form_sections = [
                     </div>
                     <?php
                 }
+            ],
+            [
+                'type' => 'custom',
+                'name' => 'ldap_disable_password_change',
+                'render_callback' => function($field) {
+                    ?>
+                    <div class="form-group row">
+                        <label for="ldap_disable_password_change" class="col-sm-4 control-label"><?php _e('Disable local password change','cftp_admin'); ?></label>
+                        <div class="col-sm-8">
+                            <select class="form-select" name="ldap_disable_password_change" id="ldap_disable_password_change">
+                                <option value="true" <?php echo (get_option('ldap_disable_password_change', null, 'true') == 'true') ? 'selected="selected"' : ''; ?>><?php _e('Yes','cftp_admin'); ?></option>
+                                <option value="false" <?php echo (get_option('ldap_disable_password_change', null, 'true') == 'false') ? 'selected="selected"' : ''; ?>><?php _e('No','cftp_admin'); ?></option>
+                            </select>
+                            <small class="form-text text-muted"><?php _e('When enabled, LDAP users cannot change their password locally. They must use the LDAP system (e.g., Active Directory) to change their password.','cftp_admin'); ?></small>
+                        </div>
+                    </div>
+                    <?php
+                }
             ]
         ],
         'html_after' => '</div>'
