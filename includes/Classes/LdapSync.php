@@ -125,7 +125,7 @@ class LdapSync
     private function searchLdapUsers($ldap)
     {
         $ldap_search_base = get_option('ldap_search_base');
-        $sync_filter = get_option('ldap_sync_filter', null, '(objectClass=person)');
+        $sync_filter = get_option('ldap_sync_filter', null, LDAP_DEFAULT_SYNC_FILTER);
 
         if (empty($ldap_search_base)) {
             throw new \Exception(__('LDAP search base is not configured.', 'cftp_admin'));

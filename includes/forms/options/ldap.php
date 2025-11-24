@@ -246,8 +246,8 @@ $(document).ready(function() {
                 'type' => 'text',
                 'name' => 'ldap_sync_filter',
                 'label' => __('User sync filter', 'cftp_admin'),
-                'placeholder' => '(objectClass=person)',
-                'value' => get_option('ldap_sync_filter', null, '(objectClass=person)'),
+                'placeholder' => LDAP_DEFAULT_SYNC_FILTER,
+                'value' => get_option('ldap_sync_filter', null, LDAP_DEFAULT_SYNC_FILTER),
                 'note' => '<small class="form-text text-muted">' . __('LDAP filter to select users for bulk synchronization', 'cftp_admin') . '</small>'
             ],
             [

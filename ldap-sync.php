@@ -43,7 +43,7 @@ $ldap_enabled = get_option('ldap_signin_enabled') === 'true';
                             <ul class="mb-0">
                                 <li><strong><?php _e('LDAP Server:', 'cftp_admin'); ?></strong> <?php echo html_output(get_option('ldap_hosts')); ?></li>
                                 <li><strong><?php _e('Search Base:', 'cftp_admin'); ?></strong> <?php echo html_output(get_option('ldap_search_base')); ?></li>
-                                <li><strong><?php _e('Sync Filter:', 'cftp_admin'); ?></strong> <?php echo html_output(get_option('ldap_sync_filter', null, '(objectClass=person)')); ?></li>
+                                <li><strong><?php _e('Sync Filter:', 'cftp_admin'); ?></strong> <?php echo html_output(get_option('ldap_sync_filter', null, LDAP_DEFAULT_SYNC_FILTER)); ?></li>
                                 <li><strong><?php _e('Default Role:', 'cftp_admin'); ?></strong>
                                     <?php
                                     $default_role_id = get_option('ldap_default_role');
