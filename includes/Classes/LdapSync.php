@@ -298,19 +298,19 @@ class LdapSync
             $entries = $this->searchLdapUsers($ldap);
             $this->stats['total_found'] = $entries['count'];
 
-            // Sync each user
-            for ($i = 0; $i < $entries['count']; $i++) {
-                try {
-                    $this->syncUser($entries[$i]);
-                } catch (\Exception $e) {
-                    $this->stats['errors']++;
-                    $this->errors[] = $e->getMessage();
+            // Sync each user and ensure LDAP connection is closed
+            try {
+                for ($i = 0; $i < $entries['count']; $i++) {
+                    try {
+                        $this->syncUser($entries[$i]);
+                    } catch (\Exception $e) {
+                        $this->stats['errors']++;
+                        $this->errors[] = $e->getMessage();
+                    }
                 }
+            } finally {
+                ldap_close($ldap);
             }
-
-            // Close LDAP connection
-            ldap_close($ldap);
-
             // Log the sync operation
             if (!$dry_run) {
                 $this->logger->addEntry([
