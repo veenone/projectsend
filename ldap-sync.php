@@ -49,7 +49,11 @@ $ldap_enabled = get_option('ldap_signin_enabled') === 'true';
                                     $default_role_id = get_option('ldap_default_role');
                                     if ($default_role_id) {
                                         $role = \ProjectSend\Classes\Roles::getRoleById($default_role_id);
-                                        echo html_output($role['name']);
+                                        if ($role && isset($role['name'])) {
+                                            echo html_output($role['name']);
+                                        } else {
+                                            _e('Client', 'cftp_admin');
+                                        }
                                     } else {
                                         _e('Client', 'cftp_admin');
                                     }
