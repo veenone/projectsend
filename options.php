@@ -138,6 +138,13 @@ if ($section == 'branding' && !empty($_GET['clear']) && $_GET['clear'] == 'favic
     ps_redirect(BASE_URI . 'options.php?section=branding');
 }
 
+// Clear navbar logo
+if ($section == 'branding' && !empty($_GET['clear']) && $_GET['clear'] == 'navbar_logo') {
+    save_option('navbar_brand_logo', null);
+    $flash->success(__('Options updated successfully.', 'cftp_admin'));
+    ps_redirect(BASE_URI . 'options.php?section=branding');
+}
+
 /** Form sent */
 if ($_POST) {
     /**
@@ -202,6 +209,7 @@ if ($_POST) {
         'ip_blacklist',
         'cron_email_summary_address_to',
         'upload_directory_path',
+        'navbar_brand_url',
     ];
 
     foreach ($checkboxes as $checkbox) {
@@ -244,6 +252,14 @@ if ($_POST) {
         $upload_favicon = option_file_upload($_FILES['select_favicon'], 'image', 'favicon_filename', 30);
         if ($upload_favicon['status'] != 'success') {
             $flash->error($upload_favicon['message']);
+        }
+    }
+
+    // If uploading a navbar brand logo on the branding page
+    if (isset($_FILES['navbar_brand_logo_upload']) && !empty($_FILES['navbar_brand_logo_upload']['name'])) {
+        $upload_navbar_logo = option_file_upload($_FILES['navbar_brand_logo_upload'], 'image', 'navbar_brand_logo', 48);
+        if ($upload_navbar_logo['status'] != 'success') {
+            $flash->error($upload_navbar_logo['message']);
         }
     }
 

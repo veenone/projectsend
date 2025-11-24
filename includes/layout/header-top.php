@@ -10,9 +10,32 @@
 
         <div class="navbar-header ms-3 me-auto">
             <span class="navbar-brand">
-                <a href="<?php echo SYSTEM_URI; ?>" target="_blank">
-                    <?php include_once ROOT_DIR.'/assets/img/ps-icon.svg'; ?>
-                </a> <?php echo html_output(get_option('this_install_title')); ?></span>
+                <?php
+                $navbar_brand = get_navbar_brand_info();
+                $brand_url = !empty($navbar_brand['link_url']) ? $navbar_brand['link_url'] : null;
+                $brand_title = html_output($navbar_brand['title']);
+
+                // Start link if URL is configured
+                if ($brand_url) {
+                    echo '<a href="' . html_output($brand_url) . '">';
+                }
+
+                // Show logo or icon
+                if ($navbar_brand['logo_exists']) {
+                    echo '<img src="' . $navbar_brand['logo_url'] . '" alt="' . $brand_title . '" class="navbar-brand-logo" style="max-height: 40px; width: auto; vertical-align: middle;">';
+                } else {
+                    include_once ROOT_DIR.'/assets/img/ps-icon.svg';
+                }
+
+                // Close link if URL is configured
+                if ($brand_url) {
+                    echo '</a>';
+                }
+
+                // Show title
+                echo ' ' . $brand_title;
+                ?>
+            </span>
         </div>
 
         <ul class="nav pull-right nav_account">

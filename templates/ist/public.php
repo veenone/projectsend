@@ -240,13 +240,26 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                 <!-- Logo/Title -->
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <?php if ($logo_file_info && $logo_file_info['exists']): ?>
-                            <img src="<?php echo $logo_file_info['url']; ?>" alt="<?php echo get_option('this_install_title'); ?>" class="h-10 w-auto">
-                        <?php else: ?>
-                            <h1 class="text-xl font-bold text-white">
-                                <?php echo html_output(get_option('this_install_title')); ?>
-                            </h1>
-                        <?php endif; ?>
+                        <?php
+                        $navbar_brand = get_navbar_brand_info();
+                        $brand_url = !empty($navbar_brand['link_url']) ? $navbar_brand['link_url'] : null;
+
+                        // Start link wrapper if URL configured
+                        if ($brand_url) {
+                            echo '<a href="' . html_output($brand_url) . '">';
+                        }
+
+                        if ($navbar_brand['logo_exists']) {
+                            echo '<img src="' . $navbar_brand['logo_url'] . '" alt="' . html_output($navbar_brand['title']) . '" class="h-10 w-auto">';
+                        } else {
+                            echo '<h1 class="text-xl font-bold text-white">' . html_output($navbar_brand['title']) . '</h1>';
+                        }
+
+                        // Close link wrapper
+                        if ($brand_url) {
+                            echo '</a>';
+                        }
+                        ?>
                     </div>
                     <div class="ml-4 px-3 py-1 bg-white bg-opacity-20 text-white text-sm font-medium rounded-full">
                         <?php echo __('Public Access', 'ist_template'); ?>

@@ -1809,6 +1809,43 @@ function generate_logo_url()
 }
 
 /**
+ * Get the navbar brand logo URL and link
+ * Returns array with logo info and link URL for use in navigation bars
+ *
+ * @return array ['logo_url' => string|null, 'logo_exists' => bool, 'link_url' => string|null, 'title' => string]
+ */
+function get_navbar_brand_info()
+{
+    $brand = [];
+
+    // Get navbar-specific logo or fall back to main logo
+    $navbar_logo = get_option('navbar_brand_logo');
+    if (!empty($navbar_logo)) {
+        $logo_path = ADMIN_UPLOADS_DIR . DS . $navbar_logo;
+        if (file_exists($logo_path)) {
+            $brand['logo_url'] = ADMIN_UPLOADS_URI . $navbar_logo;
+            $brand['logo_exists'] = true;
+        } else {
+            // Fall back to main logo if navbar logo doesn't exist
+            $logo_info = generate_logo_url();
+            $brand['logo_url'] = $logo_info['exists'] ? $logo_info['url'] : null;
+            $brand['logo_exists'] = $logo_info['exists'];
+        }
+    } else {
+        // Use main logo
+        $logo_info = generate_logo_url();
+        $brand['logo_url'] = $logo_info['exists'] ? $logo_info['url'] : null;
+        $brand['logo_exists'] = $logo_info['exists'];
+    }
+
+    // Get brand link URL
+    $brand['link_url'] = get_option('navbar_brand_url');
+    $brand['title'] = get_option('this_install_title');
+
+    return $brand;
+}
+
+/**
  * Returns the corresponding layout to show an image tag or the svg contents
  * of the current uploaded logo file.
  */

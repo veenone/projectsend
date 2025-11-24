@@ -15,6 +15,7 @@ $favicon_filename = get_option('favicon_filename');
 // Define sections for navigation (titles only, actual rendering is below)
 $form_sections = [
     ['title' => __('Company Logo', 'cftp_admin')],
+    ['title' => __('Navbar Brand Link', 'cftp_admin')],
     ['title' => __('Website Favicon', 'cftp_admin')],
     ['title' => __('System Theme', 'cftp_admin')],
 ];
@@ -92,6 +93,79 @@ $form_sections = [
                 </a>
             </div>
         <?php } ?>
+    </div>
+</div>
+
+<div class="options_divide"></div>
+
+<!-- Navbar Brand Link Section -->
+<div class="form-group row">
+    <div class="col-sm-12">
+        <h3 id="section-navbar-brand-link"><?php _e('Navbar Brand Link', 'cftp_admin'); ?></h3>
+        <p class="text-muted"><?php _e('Configure where the logo/brand in the navigation bar links to and optionally use a different logo for the navbar.', 'cftp_admin'); ?></p>
+    </div>
+</div>
+
+<div class="form-group row">
+    <label for="navbar_brand_url" class="col-sm-4 control-label"><?php _e('Brand Link URL', 'cftp_admin'); ?></label>
+    <div class="col-sm-8">
+        <input type="text"
+               name="navbar_brand_url"
+               id="navbar_brand_url"
+               class="form-control"
+               value="<?php echo html_output(get_option('navbar_brand_url')); ?>"
+               placeholder="https://example.com" />
+        <p class="field_note text-muted mt-2">
+            <i class="fa fa-info-circle"></i>
+            <?php _e('The URL to navigate to when clicking the logo/brand. Examples:', 'cftp_admin'); ?>
+            <br><strong>• <?php echo BASE_URI; ?></strong> <?php _e('(Dashboard)', 'cftp_admin'); ?>
+            <br><strong>• https://yourcompany.com</strong> <?php _e('(Your website)', 'cftp_admin'); ?>
+            <br><strong>• <?php _e('Leave empty', 'cftp_admin'); ?></strong> <?php _e('to make the logo non-clickable', 'cftp_admin'); ?>
+        </p>
+    </div>
+</div>
+
+<div class="form-group row">
+    <label for="navbar_brand_logo_upload" class="col-sm-4 control-label"><?php _e('Alternative Navbar Logo', 'cftp_admin'); ?></label>
+    <div class="col-sm-8">
+        <label for="navbar_brand_logo_upload" class="file-upload-label">
+            <div class="file-upload-area">
+                <i class="fa fa-cloud-upload text-primary mb-2" style="font-size: 2rem;"></i>
+                <p class="mb-1"><?php _e('Upload navbar-specific logo (optional)', 'cftp_admin'); ?></p>
+                <small class="text-muted"><?php _e('If not set, uses main logo.', 'cftp_admin'); ?></small>
+            </div>
+            <input type="file" name="navbar_brand_logo_upload" id="navbar_brand_logo_upload" class="file-upload-input" accept=".jpg,.jpeg,.jpe,.gif,.png,.svg" />
+        </label>
+
+        <?php
+        $navbar_logo = get_option('navbar_brand_logo');
+        if (!empty($navbar_logo)) {
+            $navbar_logo_path = ADMIN_UPLOADS_DIR . DS . $navbar_logo;
+            if (file_exists($navbar_logo_path)) {
+        ?>
+            <div class="mt-3">
+                <div class="alert alert-info mb-2">
+                    <strong><?php _e('Current navbar logo:', 'cftp_admin'); ?></strong>
+                </div>
+                <img src="<?php echo ADMIN_UPLOADS_URI . $navbar_logo; ?>" alt="Navbar Logo" class="img-thumbnail" style="max-height: 50px; background: #f8f9fa;">
+            </div>
+            <div class="mt-2">
+                <a class="btn btn-outline-danger btn-sm confirm_generic" href="<?php echo BASE_URI . 'options.php?section=branding&clear=navbar_logo'; ?>">
+                    <i class="fa fa-trash me-1"></i>
+                    <?php _e('Remove Navbar Logo', 'cftp_admin'); ?>
+                </a>
+            </div>
+        <?php
+            }
+        }
+        ?>
+
+        <p class="field_note text-muted mt-2">
+            <i class="fa fa-info-circle"></i>
+            <strong><?php _e('Recommended size:', 'cftp_admin'); ?></strong> 200×50 pixels or similar horizontal dimensions.
+            <br><?php _e('Use this if you want a different logo in the navbar (e.g., smaller or horizontal version). If not set, the main company logo will be used.', 'cftp_admin'); ?>
+            <br><strong><?php _e('Accepted formats:', 'cftp_admin'); ?></strong> JPG, PNG, GIF, SVG
+        </p>
     </div>
 </div>
 
