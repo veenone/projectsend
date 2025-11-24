@@ -297,6 +297,9 @@ define('EMAIL_TEMPLATE_2FA_CODE', '2fa-code.html');
 define('HASH_COST_LOG2', 8);
 define('HASH_PORTABLE', false);
 
+/** LDAP */
+define('LDAP_DEFAULT_SYNC_FILTER', '(objectClass=person)');
+
 /** ZIP files */
 define('ZIP_TMP_EXPIRATION_TIME', 172800); // Delete zip files from the temp folder older than this value (in seconds)
 
