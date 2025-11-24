@@ -182,6 +182,11 @@ function encrypt_option_value($value)
 /**
  * Get or generate the master encryption key for options
  */
+/**
+ * Get or generate the master encryption key for options.
+ *
+ * @return string|null The master encryption key as binary data, or null if no key is available.
+ */
 function get_option_master_key()
 {
     // Check if master key exists in config
