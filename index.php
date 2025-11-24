@@ -71,7 +71,7 @@ if ($_POST) {
             recaptcha2_validate_request();
 
             $remember_me = !empty($_POST['remember_me']) && $_POST['remember_me'] === '1';
-            $login = json_decode($auth->loginLdap($_POST['ldap_email'], $_POST['ldap_password'], $_POST['language'] ?? null, $remember_me));
+            $login = json_decode($auth->loginLdap($_POST['ldap_username'], $_POST['ldap_password'], $_POST['language'] ?? null, $remember_me));
             if ($login->status == 'success') {
                 $user = new \ProjectSend\Classes\Users($login->user_id);
                 ps_redirect($login->location);

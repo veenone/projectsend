@@ -42,6 +42,9 @@ class Users
     public $require_password_change;
     public $limit_upload_to;
 
+    // LDAP auto-create flag - bypasses permission checks when creating users via LDAP
+    private $is_ldap_auto_create = false;
+
     // Uploaded files
     public $files;
 
@@ -512,23 +515,26 @@ class Users
      */
     public function create()
     {
-        // Check permissions based on account type
-        if ($this->isClient()) {
-            // Allow self-registration if not logged in and clients_can_register is enabled
-            $is_self_registration = ($this->validation_type == 'new_client' && !user_is_logged_in() && get_option('clients_can_register') == '1');
+        // Skip permission checks for LDAP auto-create
+        if (!$this->is_ldap_auto_create) {
+            // Check permissions based on account type
+            if ($this->isClient()) {
+                // Allow self-registration if not logged in and clients_can_register is enabled
+                $is_self_registration = ($this->validation_type == 'new_client' && !user_is_logged_in() && get_option('clients_can_register') == '1');
 
-            if (!$is_self_registration && !\current_user_can('create_clients')) {
-                return [
-                    'status' => 'error',
-                    'message' => __('You do not have permission to create clients.', 'cftp_admin')
-                ];
-            }
-        } else {
-            if (!\current_user_can('create_users')) {
-                return [
-                    'status' => 'error',
-                    'message' => __('You do not have permission to create users.', 'cftp_admin')
-                ];
+                if (!$is_self_registration && !\current_user_can('create_clients')) {
+                    return [
+                        'status' => 'error',
+                        'message' => __('You do not have permission to create clients.', 'cftp_admin')
+                    ];
+                }
+            } else {
+                if (!\current_user_can('create_users')) {
+                    return [
+                        'status' => 'error',
+                        'message' => __('You do not have permission to create users.', 'cftp_admin')
+                    ];
+                }
             }
         }
 
@@ -1158,8 +1164,21 @@ class Users
     public function createFromLdap($ldap_attributes, $email, $password = null)
     {
         // Extract user information from LDAP attributes
-        $name = $this->extractLdapAttribute($ldap_attributes, ['displayName', 'cn', 'name'], $email);
-        $username = $this->generateUsernameFromEmail($email);
+        $name = $this->extractLdapAttribute($ldap_attributes, ['displayname', 'cn', 'name'], $email);
+
+        // Extract username from sAMAccountName (AD) or uid (OpenLDAP), fallback to email-based
+        // Note: LDAP attributes are returned in lowercase
+        $username = $this->extractLdapAttribute($ldap_attributes, ['samaccountname', 'uid', 'userprincipalname'], null);
+        if (empty($username)) {
+            $username = $this->generateUsernameFromEmail($email);
+        }
+        // If username contains @, extract just the username part (for userPrincipalName)
+        if (strpos($username, '@') !== false) {
+            $username = substr($username, 0, strpos($username, '@'));
+        }
+
+        // Mark this as an LDAP auto-create to bypass permission checks
+        $this->is_ldap_auto_create = true;
         
         // Generate a random password since LDAP users authenticate via LDAP
         if (empty($password)) {
