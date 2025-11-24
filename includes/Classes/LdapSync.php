@@ -227,19 +227,17 @@ class LdapSync
 
             // Update user from LDAP
             $user = new \ProjectSend\Classes\Users($user_id);
-            if ($user->isLdapUser()) {
-                $user->syncFromLdap($entry);
-                $this->stats['updated']++;
-                $this->stats['users'][] = [
-                    'email' => $email,
-                    'action' => 'updated',
-                    'id' => $user_id
-                ];
-            } else {
-                $this->stats['skipped']++;
-                $this->errors[] = sprintf(__('Skipped %s: User exists but is not an LDAP user', 'cftp_admin'), $email);
-                return false;
+            if (!$user->isLdapUser()) {
+                // Convert existing user to LDAP user
+                save_user_meta($user_id, 'auth_method', 'ldap');
             }
+            $user->syncFromLdap($entry);
+            $this->stats['updated']++;
+            $this->stats['users'][] = [
+                'email' => $email,
+                'action' => 'updated',
+                'id' => $user_id
+            ];
         } else {
             // User doesn't exist - create new
             if ($this->dry_run) {

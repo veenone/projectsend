@@ -3,6 +3,7 @@ namespace ProjectSend\Classes\Layout;
 
 class Pagination {
     private $template;
+    private $query;
 
     public function __construct()
     {
