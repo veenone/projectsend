@@ -273,7 +273,9 @@ class LdapSync
                 ]);
             } else {
                 $this->stats['errors']++;
-                $this->errors[] = sprintf(__('Error creating user %s from LDAP', 'cftp_admin'), $email);
+                $validation_errors = method_exists($new_user, 'getValidationErrors') ? $new_user->getValidationErrors() : [];
+                $error_details = !empty($validation_errors) ? ': ' . implode(', ', $validation_errors) : '';
+                $this->errors[] = sprintf(__('Error creating user %s from LDAP%s', 'cftp_admin'), $email, $error_details);
                 return false;
             }
         }
