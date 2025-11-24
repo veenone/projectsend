@@ -88,6 +88,11 @@ function decrypt_option_value($value)
     $iv_length = openssl_cipher_iv_length($algorithm);
     $tag_length = 16; // GCM tag is 16 bytes
 
+    if (strlen($encrypted_data) < ($iv_length + $tag_length)) {
+        error_log('WARNING: Encrypted option value is too short');
+        return '';
+    }
+
     // Extract IV, encrypted data, and tag
     $iv = substr($encrypted_data, 0, $iv_length);
     $encrypted_with_tag = substr($encrypted_data, $iv_length);
