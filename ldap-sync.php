@@ -221,7 +221,7 @@ $(document).ready(function() {
             },
             error: function(xhr, status, error) {
                 progressDiv.hide();
-                resultsContent.html('<div class="alert alert-danger"><i class="fa fa-times"></i> <?php echo json_encode(__('An error occurred during synchronization', 'cftp_admin')); ?>: ' + escapeHtml(error) + '</div>');
+                resultsContent.html('<div class="alert alert-danger"><i class="fa fa-times"></i> <?php echo json_encode(__('An error occurred during synchronization', 'cftp_admin')); ?> : ' + escapeHtml(error) + '</div>');
                 resultsDiv.show();
                 dryRunBtn.prop('disabled', false);
                 runBtn.prop('disabled', false);
