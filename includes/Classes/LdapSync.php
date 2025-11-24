@@ -12,6 +12,8 @@ class LdapSync
     private $stats;
     private $errors;
     private $dry_run;
+    private $batch_size;
+    private $max_detailed_results;
 
     public function __construct(PDO $dbh = null)
     {
@@ -21,6 +23,8 @@ class LdapSync
 
         $this->dbh = $dbh;
         $this->logger = new \ProjectSend\Classes\ActionsLog;
+        $this->batch_size = (int)get_option('ldap_sync_batch_size', null, '100');
+        $this->max_detailed_results = (int)get_option('ldap_sync_max_detailed_results', null, '1000');
         $this->resetStats();
     }
 
@@ -46,6 +50,22 @@ class LdapSync
     public function setDryRun($dry_run = true)
     {
         $this->dry_run = $dry_run;
+    }
+
+    /**
+     * Set batch size for processing users
+     */
+    public function setBatchSize($batch_size)
+    {
+        $this->batch_size = max(1, (int)$batch_size);
+    }
+
+    /**
+     * Set maximum number of detailed results to store
+     */
+    public function setMaxDetailedResults($max_results)
+    {
+        $this->max_detailed_results = max(0, (int)$max_results);
     }
 
     /**
@@ -218,11 +238,11 @@ class LdapSync
             // User exists - update if needed
             if ($this->dry_run) {
                 $this->stats['updated']++;
-                $this->stats['users'][] = [
+                $this->addUserToResults([
                     'email' => $email,
                     'action' => 'update',
                     'id' => $user_id
-                ];
+                ]);
                 return true;
             }
 
@@ -231,11 +251,11 @@ class LdapSync
             if ($user->isLdapUser()) {
                 $user->syncFromLdap($entry);
                 $this->stats['updated']++;
-                $this->stats['users'][] = [
+                $this->addUserToResults([
                     'email' => $email,
                     'action' => 'updated',
                     'id' => $user_id
-                ];
+                ]);
             } else {
                 $this->stats['skipped']++;
                 $this->errors[] = sprintf(__('Skipped %s: User exists but is not an LDAP user', 'cftp_admin'), $email);
@@ -245,10 +265,10 @@ class LdapSync
             // User doesn't exist - create new
             if ($this->dry_run) {
                 $this->stats['created']++;
-                $this->stats['users'][] = [
+                $this->addUserToResults([
                     'email' => $email,
                     'action' => 'create'
-                ];
+                ]);
                 return true;
             }
 
@@ -258,11 +278,11 @@ class LdapSync
 
             if (!empty($create_result['id'])) {
                 $this->stats['created']++;
-                $this->stats['users'][] = [
+                $this->addUserToResults([
                     'email' => $email,
                     'action' => 'created',
                     'id' => $create_result['id']
-                ];
+                ]);
 
                 // Log the action
                 $this->logger->addEntry([
@@ -283,6 +303,16 @@ class LdapSync
     }
 
     /**
+     * Add user to detailed results if under limit
+     */
+    private function addUserToResults($user_data)
+    {
+        if (count($this->stats['users']) < $this->max_detailed_results) {
+            $this->stats['users'][] = $user_data;
+        }
+    }
+
+    /**
      * Sync all users from LDAP
      */
     public function syncAllUsers($dry_run = false)
@@ -298,13 +328,30 @@ class LdapSync
             $entries = $this->searchLdapUsers($ldap);
             $this->stats['total_found'] = $entries['count'];
 
-            // Sync each user
-            for ($i = 0; $i < $entries['count']; $i++) {
-                try {
-                    $this->syncUser($entries[$i]);
-                } catch (\Exception $e) {
-                    $this->stats['errors']++;
-                    $this->errors[] = $e->getMessage();
+            // Process users in batches to avoid memory exhaustion and timeouts
+            $batch_start = 0;
+            $total_users = $entries['count'];
+            
+            while ($batch_start < $total_users) {
+                $batch_end = min($batch_start + $this->batch_size, $total_users);
+                
+                // Process batch
+                for ($i = $batch_start; $i < $batch_end; $i++) {
+                    try {
+                        $this->syncUser($entries[$i]);
+                    } catch (\Exception $e) {
+                        $this->stats['errors']++;
+                        $this->errors[] = $e->getMessage();
+                    }
+                }
+                
+                // Move to next batch
+                $batch_start = $batch_end;
+                
+                // Yield control to prevent timeouts on long operations
+                if ($batch_start < $total_users) {
+                    // Allow PHP to process other tasks and reset execution timer
+                    usleep(100000); // 100ms pause between batches
                 }
             }
 
@@ -332,6 +379,100 @@ class LdapSync
                 'status' => 'success',
                 'stats' => $this->stats,
                 'errors' => $this->errors,
+                'dry_run' => $dry_run
+            ];
+
+        } catch (\Exception $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'stats' => $this->stats,
+                'errors' => $this->errors
+            ];
+        }
+    }
+
+    /**
+     * Sync a specific batch of users from LDAP
+     * This method enables resumable synchronization for large datasets
+     * 
+     * @param int $offset Starting position (0-based)
+     * @param int $limit Number of users to process in this batch (0 = use default batch_size)
+     * @param bool $dry_run Whether to run in dry-run mode
+     * @return array Sync results including progress information
+     */
+    public function syncUserBatch($offset = 0, $limit = 0, $dry_run = false)
+    {
+        $this->setDryRun($dry_run);
+        
+        // Use default batch size if limit is 0
+        if ($limit <= 0) {
+            $limit = $this->batch_size;
+        }
+
+        try {
+            // Connect to LDAP
+            $ldap = $this->connectLdap();
+
+            // Search for users
+            $entries = $this->searchLdapUsers($ldap);
+            $total_users = $entries['count'];
+            
+            // Validate offset
+            if ($offset >= $total_users) {
+                ldap_close($ldap);
+                return [
+                    'status' => 'success',
+                    'stats' => $this->stats,
+                    'errors' => $this->errors,
+                    'progress' => [
+                        'offset' => $offset,
+                        'limit' => $limit,
+                        'total' => $total_users,
+                        'processed' => 0,
+                        'remaining' => 0,
+                        'complete' => true
+                    ],
+                    'dry_run' => $dry_run
+                ];
+            }
+
+            // Calculate batch boundaries
+            $batch_end = min($offset + $limit, $total_users);
+            $processed_count = 0;
+            
+            // Process batch
+            for ($i = $offset; $i < $batch_end; $i++) {
+                try {
+                    $this->syncUser($entries[$i]);
+                    $processed_count++;
+                } catch (\Exception $e) {
+                    $this->stats['errors']++;
+                    $this->errors[] = $e->getMessage();
+                }
+            }
+
+            // Close LDAP connection
+            ldap_close($ldap);
+
+            // Calculate progress
+            $next_offset = $batch_end;
+            $remaining = $total_users - $next_offset;
+            $is_complete = ($next_offset >= $total_users);
+
+            return [
+                'status' => 'success',
+                'stats' => $this->stats,
+                'errors' => $this->errors,
+                'progress' => [
+                    'offset' => $offset,
+                    'next_offset' => $next_offset,
+                    'limit' => $limit,
+                    'total' => $total_users,
+                    'processed' => $processed_count,
+                    'remaining' => $remaining,
+                    'complete' => $is_complete
+                ],
                 'dry_run' => $dry_run
             ];
 
