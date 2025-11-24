@@ -107,6 +107,11 @@ define('UPDATE_CHANNEL', 'stable');
  * IMPORTANT: Do not change this value after installation, as it will
  * invalidate all encrypted data (like LDAP passwords).
  *
+ * If the salt is ever compromised or needs to be changed for security reasons,
+ * you must migrate all encrypted data to use the new salt before updating this value.
+ * Consider implementing a versioned encryption scheme in your application to allow
+ * for graceful key rotation and migration of encrypted data.
+ *
  * Example: define('HASH_SALT', 'your-random-string-here');
  */
 define('HASH_SALT', 'ps_' . md5('projectsend' . DB_NAME . DB_HOST));
