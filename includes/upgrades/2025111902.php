@@ -6,9 +6,9 @@
  * to secure sensitive LDAP credentials. Any existing plaintext passwords will be
  * encrypted automatically during this upgrade.
  *
- * @version 2025111901
+ * @version 2025111902
  */
-function upgrade_2025111901()
+function upgrade_2025111902()
 {
     global $dbh;
 
