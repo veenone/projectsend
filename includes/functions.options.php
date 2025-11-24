@@ -61,6 +61,7 @@ function get_option($name, $escape = false, $default = null)
  * @return string The decrypted value, or empty string if decryption fails.
  */
 function decrypt_option_value($value)
+{
     if (empty($value)) {
         return '';
     }
@@ -154,6 +155,7 @@ function save_option($name, $value)
  * @return string The encrypted value with 'ENC:' prefix, or the original value if encryption fails.
  */
 function encrypt_option_value($value)
+{
     if (empty($value)) {
         return '';
     }
