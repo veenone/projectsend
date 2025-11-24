@@ -3,8 +3,8 @@
     <input type="hidden" name="do" value="login_ldap">
     <fieldset>
         <div class="mb-3">
-            <label for="ldap_email"><?php _e('E-mail','cftp_admin'); ?></label>
-            <input type="email" name="ldap_email" id="ldap_email" value="<?php if (isset($ldap_email)) { echo htmlspecialchars($ldap_email); } ?>" class="form-control" autofocus placeholder="<?php _e('Enter your email address', 'cftp_admin'); ?>" />
+            <label for="ldap_username"><?php _e('Username or E-mail','cftp_admin'); ?></label>
+            <input type="text" name="ldap_username" id="ldap_username" value="<?php if (isset($ldap_username)) { echo htmlspecialchars($ldap_username); } ?>" class="form-control" autofocus placeholder="<?php _e('Enter your username or email address', 'cftp_admin'); ?>" />
         </div>
 
         <div class="mb-3">
@@ -55,5 +55,5 @@
 </form>
 
 <p class="login_notes">
-    <i class="fa fa-info-circle"></i> <?php _e('Use your organization email and password to sign in via LDAP/Active Directory.', 'cftp_admin'); ?>
+    <i class="fa fa-info-circle"></i> <?php _e('Use your organization username or email and password to sign in via LDAP/Active Directory.', 'cftp_admin'); ?>
 </p>
