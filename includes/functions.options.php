@@ -143,10 +143,12 @@ function save_option($name, $value)
 }
 
 /**
- * Encrypt an option value for secure storage
+ * Encrypt an option value for secure storage.
+ *
+ * @param string $value The value to encrypt.
+ * @return string The encrypted value with 'ENC:' prefix, or the original value if encryption fails.
  */
 function encrypt_option_value($value)
-{
     if (empty($value)) {
         return '';
     }
