@@ -107,11 +107,14 @@ define('UPDATE_CHANNEL', 'stable');
  * IMPORTANT: Do not change this value after installation, as it will
  * invalidate all encrypted data (like LDAP passwords).
  *
- * If the salt is ever compromised or needs to be changed for security reasons,
- * you must migrate all encrypted data to use the new salt before updating this value.
- * Consider implementing a versioned encryption scheme in your application to allow
- * for graceful key rotation and migration of encrypted data.
+ * This MUST be a random string unique to your installation.
+ * The default formula below is predictable and should NOT be used in production.
+ * Generate a secure random string (e.g., using `openssl rand -hex 32`) and set it here.
+ * IMPORTANT: Do not change this value after installation, as it will
+ * invalidate all encrypted data (like LDAP passwords).
  *
  * Example: define('HASH_SALT', 'your-random-string-here');
+ * Default (NOT recommended for production):
+ * define('HASH_SALT', 'ps_' . hash('sha256', 'projectsend' . DB_NAME . DB_HOST));
  */
-define('HASH_SALT', 'ps_' . md5('projectsend' . DB_NAME . DB_HOST));
+define('HASH_SALT', 'ps_' . hash('sha256', 'projectsend' . DB_NAME . DB_HOST));
