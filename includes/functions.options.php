@@ -55,10 +55,12 @@ function get_option($name, $escape = false, $default = null)
 }
 
 /**
- * Decrypt an option value
+ * Decrypt an option value.
+ *
+ * @param string $value The encrypted value to decrypt.
+ * @return string The decrypted value, or empty string if decryption fails.
  */
 function decrypt_option_value($value)
-{
     if (empty($value)) {
         return '';
     }
