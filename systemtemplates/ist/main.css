@@ -410,9 +410,10 @@ body.dark-mode .folder-item .badge {
     color: var(--ist-text-primary);
 }
 
-.table thead th {
+.table thead th,
+.footable thead th {
     background-color: var(--ist-primary);
-    color: var(--ist-text-on-primary);
+    color: #ffffff !important;
     border-color: var(--ist-primary-dark);
     font-weight: 600;
 }
@@ -429,6 +430,8 @@ body.dark-mode .folder-item .badge {
 .table th {
     border-color: var(--ist-border-color);
 }
+ 
+
 
 /* ============================================
    FORMS
