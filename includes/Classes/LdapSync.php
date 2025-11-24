@@ -7,6 +7,9 @@ use \PDO;
 
 class LdapSync
 {
+    // Batch processing constants
+    const BATCH_PAUSE_MICROSECONDS = 100000; // 100ms pause between batches
+    
     private $dbh;
     private $logger;
     private $stats;
@@ -23,8 +26,8 @@ class LdapSync
 
         $this->dbh = $dbh;
         $this->logger = new \ProjectSend\Classes\ActionsLog;
-        $this->batch_size = (int)get_option('ldap_sync_batch_size', null, '100');
-        $this->max_detailed_results = (int)get_option('ldap_sync_max_detailed_results', null, '1000');
+        $this->batch_size = (int)get_option('ldap_sync_batch_size', false, '100');
+        $this->max_detailed_results = (int)get_option('ldap_sync_max_detailed_results', false, '1000');
         $this->resetStats();
     }
 
@@ -351,7 +354,7 @@ class LdapSync
                 // Yield control to prevent timeouts on long operations
                 if ($batch_start < $total_users) {
                     // Allow PHP to process other tasks and reset execution timer
-                    usleep(100000); // 100ms pause between batches
+                    usleep(self::BATCH_PAUSE_MICROSECONDS);
                 }
             }
 

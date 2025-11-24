@@ -64,7 +64,7 @@ $ldap_enabled = get_option('ldap_signin_enabled') === 'true';
                                     }
                                     ?>
                                 </li>
-                                <li><strong><?php _e('Batch Size:', 'cftp_admin'); ?></strong> <?php echo html_output(get_option('ldap_sync_batch_size', null, '100')); ?> <?php _e('users per batch', 'cftp_admin'); ?></li>
+                                <li><strong><?php _e('Batch Size:', 'cftp_admin'); ?></strong> <?php echo html_output(get_option('ldap_sync_batch_size', false, '100')); ?> <?php _e('users per batch', 'cftp_admin'); ?></li>
                             </ul>
                             <a href="options.php?section=ldap" class="btn btn-sm btn-secondary mt-2">
                                 <i class="fa fa-cog"></i> <?php _e('Change Settings', 'cftp_admin'); ?>
@@ -119,6 +119,8 @@ $ldap_enabled = get_option('ldap_signin_enabled') === 'true';
 <?php if ($ldap_enabled): ?>
 <script>
 $(document).ready(function() {
+    var maxDetailedResults = <?php echo (int)get_option('ldap_sync_max_detailed_results', false, '1000'); ?>;
+    
     function runSync(dryRun) {
         var progressDiv = $('#sync_progress');
         var resultsDiv = $('#sync_results');
@@ -172,10 +174,10 @@ $(document).ready(function() {
                         
                         // Show note if results were truncated server-side
                         var totalProcessed = stats.created + stats.updated;
-                        if (totalProcessed > stats.users.length && stats.users.length >= 1000) {
+                        if (totalProcessed > stats.users.length && stats.users.length >= maxDetailedResults) {
                             html += '<div class="alert alert-info mb-2">';
                             html += '<i class="fa fa-info-circle"></i> ';
-                            html += '<?php _e('Note: Displaying first 1000 processed users. Full statistics are shown above.', 'cftp_admin'); ?>';
+                            html += '<?php _e('Note: Displaying first', 'cftp_admin'); ?> ' + maxDetailedResults + ' <?php _e('processed users. Full statistics are shown above.', 'cftp_admin'); ?>';
                             html += '</div>';
                         }
                         
