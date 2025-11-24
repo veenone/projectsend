@@ -99,3 +99,22 @@ define('DEBUG', false);
  * Default: 'stable'
  */
 define('UPDATE_CHANNEL', 'stable');
+
+/**
+ * Encryption salt for secure password hashing and option encryption
+ * This should be a random string unique to your installation.
+ * You can generate a secure random string or use the default formula below.
+ * IMPORTANT: Do not change this value after installation, as it will
+ * invalidate all encrypted data (like LDAP passwords).
+ *
+ * This MUST be a random string unique to your installation.
+ * The default formula below is predictable and should NOT be used in production.
+ * Generate a secure random string (e.g., using `openssl rand -hex 32`) and set it here.
+ * IMPORTANT: Do not change this value after installation, as it will
+ * invalidate all encrypted data (like LDAP passwords).
+ *
+ * Example: define('HASH_SALT', 'your-random-string-here');
+ * Default (NOT recommended for production):
+ * define('HASH_SALT', 'ps_' . hash('sha256', 'projectsend' . DB_NAME . DB_HOST));
+ */
+define('HASH_SALT', 'ps_' . hash('sha256', 'projectsend' . DB_NAME . DB_HOST));
