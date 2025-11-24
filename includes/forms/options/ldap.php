@@ -272,7 +272,7 @@ $(document).ready(function() {
                 'type' => 'custom',
                 'name' => 'ldap_sync_link',
                 'render_callback' => function($field) {
-                    if (current_role_can('manage_users')) {
+                    if (current_role_in(['System Administrator', 'Account Manager'])) {
                         ?>
                         <div class="form-group row">
                             <div class="col-sm-4"></div>
