@@ -314,7 +314,7 @@ class LdapSync
             // Log the sync operation
             if (!$dry_run) {
                 $this->logger->addEntry([
-                    'action' => 47, // New action for LDAP bulk sync
+                    'action' => 49, // Unique action for LDAP bulk sync
                     'owner_id' => CURRENT_USER_ID,
                     'owner_user' => CURRENT_USER_USERNAME,
                     'details' => sprintf(
