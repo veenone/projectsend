@@ -37,6 +37,11 @@ $ldap_enabled = get_option('ldap_signin_enabled') === 'true';
                     <div class="mb-4">
                         <h4><?php _e('Bulk User Synchronization', 'cftp_admin'); ?></h4>
                         <p><?php _e('This tool allows you to synchronize multiple users from your LDAP server to the local database. Users will be created with the default role specified in LDAP settings.', 'cftp_admin'); ?></p>
+                        <p class="text-muted">
+                            <small><i class="fa fa-info-circle"></i> 
+                            <?php _e('Users are processed in batches to handle large organizations efficiently. This prevents timeout and memory issues when synchronizing thousands of users.', 'cftp_admin'); ?>
+                            </small>
+                        </p>
 
                         <div class="alert alert-info">
                             <h5><?php _e('Current Settings:', 'cftp_admin'); ?></h5>
@@ -59,6 +64,7 @@ $ldap_enabled = get_option('ldap_signin_enabled') === 'true';
                                     }
                                     ?>
                                 </li>
+                                <li><strong><?php _e('Batch Size:', 'cftp_admin'); ?></strong> <?php echo html_output(get_option('ldap_sync_batch_size', null, '100')); ?> <?php _e('users per batch', 'cftp_admin'); ?></li>
                             </ul>
                             <a href="options.php?section=ldap" class="btn btn-sm btn-secondary mt-2">
                                 <i class="fa fa-cog"></i> <?php _e('Change Settings', 'cftp_admin'); ?>
@@ -87,7 +93,16 @@ $ldap_enabled = get_option('ldap_signin_enabled') === 'true';
 
                     <div id="sync_progress" class="mb-4" style="display: none;">
                         <div class="alert alert-info">
-                            <i class="fa fa-cog fa-spin"></i> <?php _e('Synchronization in progress...', 'cftp_admin'); ?>
+                            <i class="fa fa-cog fa-spin"></i> <span id="sync_progress_text"><?php _e('Synchronization in progress...', 'cftp_admin'); ?></span>
+                        </div>
+                        <div class="progress" style="height: 30px;">
+                            <div id="sync_progress_bar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                                 role="progressbar" style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                                0%
+                            </div>
+                        </div>
+                        <div class="mt-2 text-muted">
+                            <small><span id="sync_progress_details"></span></small>
                         </div>
                     </div>
 
@@ -154,6 +169,16 @@ $(document).ready(function() {
                     // Show user list if available
                     if (stats.users && stats.users.length > 0) {
                         html += '<div class="table-responsive mt-3">';
+                        
+                        // Show note if results were truncated server-side
+                        var totalProcessed = stats.created + stats.updated;
+                        if (totalProcessed > stats.users.length && stats.users.length >= 1000) {
+                            html += '<div class="alert alert-info mb-2">';
+                            html += '<i class="fa fa-info-circle"></i> ';
+                            html += '<?php _e('Note: Displaying first 1000 processed users. Full statistics are shown above.', 'cftp_admin'); ?>';
+                            html += '</div>';
+                        }
+                        
                         html += '<table class="table table-sm table-bordered">';
                         html += '<thead><tr>';
                         html += '<th><?php _e('Email', 'cftp_admin'); ?></th>';
