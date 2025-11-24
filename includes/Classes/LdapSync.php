@@ -139,8 +139,7 @@ class LdapSync
             'telephoneNumber',
             'mobile',
             'streetAddress',
-            'postalAddress',
-            'dn'
+            'postalAddress'
         ];
 
         // Search for users
