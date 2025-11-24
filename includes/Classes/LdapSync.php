@@ -163,7 +163,7 @@ class LdapSync
             'mobile',
             'streetAddress',
             'postalAddress',
-            'dn'
+            'dn' // Distinguished Name - used for error reporting and debugging
         ];
 
         // Search for users
