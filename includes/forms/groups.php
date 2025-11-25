@@ -39,7 +39,14 @@ switch ($groups_form_type) {
 			<select class="form-select select2" multiple="multiple" id="members" name="members[]" data-placeholder="<?php _e('Select one or more options. Type to search.', 'cftp_admin');?>">
 				<?php
 					try {
-						$sql = $dbh->prepare("SELECT u.id, u.name, u.username, r.name as role_name FROM " . TABLE_USERS . " u LEFT JOIN " . TABLE_ROLES . " r ON u.role_id = r.id WHERE u.active = 1 ORDER BY r.name ASC, u.name ASC");
+						// Get users excluding System Administrators and Account Managers
+						// Groups are meant for Clients, Internal Users, and similar roles that need file access
+						$sql = $dbh->prepare("SELECT u.id, u.name, u.user, r.name as role_name
+						                      FROM " . TABLE_USERS . " u
+						                      LEFT JOIN " . TABLE_ROLES . " r ON u.role_id = r.id
+						                      WHERE u.active = 1
+						                      AND r.name NOT IN ('System Administrator', 'Account Manager')
+						                      ORDER BY r.name ASC, u.name ASC");
 						$sql->execute();
 						$sql->setFetchMode(PDO::FETCH_ASSOC);
 						while ( $row = $sql->fetch() ) {
