@@ -39,6 +39,11 @@ $found_groups = $get_groups->getGroupsByClient([
     'return' => 'list',
 ]);
 
+// Debug: Log groups for troubleshooting
+if (defined('DEBUG') && DEBUG) {
+    error_log("User ID: " . $client_info['id'] . " - Found Groups: " . $found_groups);
+}
+
 /**
  * Define the arrays so they can't be empty
  */
@@ -57,19 +62,26 @@ while ($row_files = $files_sql->fetch()) {
 }
 
 /**
- * Get files assigned directly to the client
+ * Get files assigned directly to the client or their groups
  * Construct the query first.
  */
 $files_query = "SELECT id, file_id, client_id, group_id FROM " . TABLE_FILES_RELATIONS . " WHERE (client_id = :id";
-if (!empty($found_groups)) {
+// Check if user has any groups - $found_groups is a comma-separated string
+if (!empty($found_groups) && $found_groups !== '') {
     $files_query .= " OR FIND_IN_SET(group_id, :groups)";
 }
 $files_query .= ") AND hidden = '0'";
 
+// Debug logging
+if (defined('DEBUG') && DEBUG) {
+    error_log("Files Query: " . $files_query);
+    error_log("User ID: " . $client_info['id'] . ", Groups: '" . $found_groups . "'");
+}
+
 $files_sql = $dbh->prepare($files_query);
 
 $files_sql->bindParam(':id', $client_info['id'], PDO::PARAM_INT);
-if (!empty($found_groups)) {
+if (!empty($found_groups) && $found_groups !== '') {
     $files_sql->bindParam(':groups', $found_groups);
 }
 
