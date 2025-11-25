@@ -15,5 +15,5 @@ $template_config = [
     'description' => 'Professional business template with IST brand colors',
 ];
 
-// Load main template functionality from default template
-$use_base_template = true;
+// Use the default template as base
+require_once ROOT_DIR . '/templates/default/template.php';

@@ -728,7 +728,6 @@ class Auth
         header("Cache-control: private");
 		$_SESSION = [];
         session_destroy();
-        session_regenerate_id(true);
         
         global $hybridauth;
         if (!empty($hybridauth)) {

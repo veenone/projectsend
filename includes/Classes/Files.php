@@ -12,6 +12,7 @@ class Files
 {
     public $id;
     public $user_id;
+    public $name;
     public $title;
     public $description;
     public $uploaded_by;
@@ -34,6 +35,7 @@ class Files
     public $size;
     public $size_formatted;
     public $public;
+    public $is_public;
     public $public_token;
     public $public_url;
     public $location;
