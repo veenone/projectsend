@@ -17,7 +17,7 @@ class Emails
     private $email_body;
     private $groups_list;
     private $username;
-    private$password;
+    private $password;
     private $name;
     private $token;
     private $memberships;
@@ -33,6 +33,7 @@ class Emails
     private $addresses;
     private $set_bcc;
     private $debug_result;
+    private $client_id;
 
     function __construct()
     {

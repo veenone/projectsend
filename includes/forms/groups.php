@@ -37,14 +37,11 @@ switch ($groups_form_type) {
 		<div class="col-sm-8">
 			<select class="select2 none" multiple="multiple" id="members" name="members[]" data-placeholder="<?php _e('Select one or more options. Type to search.', 'cftp_admin');?>">
 				<?php
-					$sql = $dbh->prepare("SELECT u.id, u.name, u.username, r.name as role_name
-					                      FROM " . TABLE_USERS . " u
-					                      LEFT JOIN " . TABLE_ROLES . " r ON u.role_id = r.id
-					                      WHERE u.active = 1
-					                      ORDER BY r.name ASC, u.name ASC");
+					$sql = $dbh->prepare("SELECT u.id, u.name, u.username, r.name as role_name FROM " . TABLE_USERS . " u LEFT JOIN " . TABLE_ROLES . " r ON u.role_id = r.id WHERE u.active = 1 ORDER BY r.name ASC, u.name ASC");
 					$sql->execute();
 					$sql->setFetchMode(PDO::FETCH_ASSOC);
 					while ( $row = $sql->fetch() ) {
+						$role_display = !empty($row["role_name"]) ? $row["role_name"] : 'User';
 				?>
 						<option value="<?php echo $row["id"]; ?>"
 							<?php
@@ -56,7 +53,7 @@ switch ($groups_form_type) {
                                     }
 								}
 							?>
-						><?php echo html_output($row["name"]); ?> (<?php echo html_output($row["role_name"]); ?>)</option>
+						><?php echo html_output($row["name"]); ?> (<?php echo html_output($role_display); ?>)</option>
 				<?php
 					}
 				?>
