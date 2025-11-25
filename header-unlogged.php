@@ -40,7 +40,7 @@ else {
      * So even logged in users can access it.
      */
     if (!isset($dont_redirect_if_logged)) {
-        if (current_role_in(['Client'])) {
+        if (current_role_in(['Client', 'Internal User'])) {
             ps_redirect(CLIENT_VIEW_FILE_LIST_URL);
         }
 
