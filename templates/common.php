@@ -289,13 +289,14 @@ if (!empty($found_all_files_array)) {
 
             // Leaving this here in case a  custom template is using this array
             $pathinfo = pathinfo($data['url']);
+            $file_extension = isset($pathinfo['extension']) && !empty($pathinfo['extension']) ? strtolower($pathinfo['extension']) : '';
 
             $my_files[$f] = [
                 //'origin' => $origin,
                 'id' => $data['id'],
                 'url' => $data['url'],
                 'save_as' => (!empty($data['original_url'])) ? $data['original_url'] : $data['url'],
-                'extension' => strtolower($pathinfo['extension']),
+                'extension' => $file_extension,
                 'name' => $data['filename'],
                 'description' => $data['description'],
                 'timestamp' => $data['timestamp'],
