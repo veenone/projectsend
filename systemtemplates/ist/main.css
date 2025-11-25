@@ -161,7 +161,7 @@ span.alert {
 }
 
 a {
-    color: var(--ist-primary) !important;
+    color: var(--ist-text-primary) !important;
     transition: color 0.2s ease;
 }
 
@@ -410,10 +410,9 @@ body.dark-mode .folder-item .badge {
     color: var(--ist-text-primary);
 }
 
-.table thead th,
-.footable thead th {
+.table thead th {
     background-color: var(--ist-primary);
-    color: #ffffff !important;
+    color: var(--ist-text-on-primary);
     border-color: var(--ist-primary-dark);
     font-weight: 600;
 }
