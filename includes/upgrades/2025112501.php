@@ -28,7 +28,7 @@ function upgrade_2025112501()
 
     if ($row = $statement->fetch(PDO::FETCH_ASSOC)) {
         // Role already exists, skip creation
-        $internal_user_role_id = $row['id'];
+        $internal_user_role_id = (int)$row['id'];
     } else {
         // Create the Internal User role
         $insert_role_sql = "INSERT INTO " . TABLE_ROLES . "
@@ -39,7 +39,13 @@ function upgrade_2025112501()
             'name' => 'Internal User',
             'description' => 'Internal employees with file access and limited upload capabilities'
         ]);
-        $internal_user_role_id = $dbh->lastInsertId();
+        $internal_user_role_id = (int)$dbh->lastInsertId();
+    }
+
+    // Validate role ID
+    if (empty($internal_user_role_id) || $internal_user_role_id <= 0) {
+        error_log("Internal User role ID is invalid: " . $internal_user_role_id);
+        return; // Skip permission setup if role ID is invalid
     }
 
     // Step 2: Check if role_permissions table exists
@@ -64,16 +70,21 @@ function upgrade_2025112501()
     $statement = $dbh->prepare($delete_perms_sql);
     $statement->execute(['role_id' => $internal_user_role_id]);
 
-    // Insert permissions
-    $insert_perm_sql = "INSERT INTO " . TABLE_ROLE_PERMISSIONS . " (role_id, permission, granted)
+    // Insert permissions using INSERT IGNORE to handle duplicates gracefully
+    $insert_perm_sql = "INSERT IGNORE INTO " . TABLE_ROLE_PERMISSIONS . " (role_id, permission, granted)
                        VALUES (:role_id, :permission, 1)";
     $statement = $dbh->prepare($insert_perm_sql);
 
     foreach ($default_permissions as $permission) {
-        $statement->execute([
-            'role_id' => $internal_user_role_id,
-            'permission' => $permission
-        ]);
+        try {
+            $statement->execute([
+                'role_id' => $internal_user_role_id,
+                'permission' => $permission
+            ]);
+        } catch (PDOException $e) {
+            // Log but continue with other permissions
+            error_log("Failed to insert permission '$permission' for role ID $internal_user_role_id: " . $e->getMessage());
+        }
     }
 
     // Step 4: Add LDAP default role option if it doesn't exist
