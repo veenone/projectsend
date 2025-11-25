@@ -7,6 +7,7 @@
              * Modal: show a public file's URL
              */
             $('body').on('click', '.public_link', function (e) {
+                e.preventDefault();
                 var type = $(this).data('type');
                 var file_title = $(this).data('title');
                 var public_url = $(this).data('public-url');
@@ -48,6 +49,8 @@
 
             /** Used on the public link modal on both manage files and the upload results */
             $(document).on('click', '.public_link_copy', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 var text = $(this).data('copy-text');
                 copyTextToClipboard(text);
             });
