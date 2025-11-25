@@ -41,7 +41,8 @@ class GroupsMemberships
         );
 
         foreach ( $client_ids as $client_id ) {
-            $statement = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,client_id,group_id) VALUES (:admin, :id, :group)");
+            // Insert into both user_id and client_id for backward compatibility
+            $statement = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,user_id,client_id,group_id) VALUES (:admin, :id, :id, :group)");
             $statement->bindParam(':admin', $added_by);
             $statement->bindParam(':id', $client_id, PDO::PARAM_INT);
             $statement->bindParam(':group', $group_id, PDO::PARAM_INT);
@@ -80,9 +81,10 @@ class GroupsMemberships
         );
 
         foreach ( $client_ids as $client_id ) {
-            $statement = $this->dbh->prepare("DELETE FROM " . TABLE_MEMBERS . " WHERE client_id = :client AND group_id = :group");
+            // Delete using user_id or client_id for backward compatibility
+            $statement = $this->dbh->prepare("DELETE FROM " . TABLE_MEMBERS . " WHERE (user_id = :client OR client_id = :client) AND group_id = :group");
             $statement->bindParam(':client', $client_id, PDO::PARAM_INT);
-            $statement->bindParam(':group_id', $group_id, PDO::PARAM_INT);
+            $statement->bindParam(':group', $group_id, PDO::PARAM_INT);
             $status = $statement->execute();
             
             if ( $status ) {
@@ -104,7 +106,8 @@ class GroupsMemberships
         $return_type = !empty( $arguments['return'] ) ? $arguments['return'] : 'array';
 
         $found_groups = [];
-        $statement = $this->dbh->prepare("SELECT DISTINCT group_id FROM " . TABLE_MEMBERS . " WHERE client_id=:id");
+        // Use user_id if available (post-upgrade), fallback to client_id for backward compatibility
+        $statement = $this->dbh->prepare("SELECT DISTINCT group_id FROM " . TABLE_MEMBERS . " WHERE COALESCE(user_id, client_id)=:id");
         $statement->bindParam(':id', $client_id, PDO::PARAM_INT);
         $statement->execute();
         $count_groups = $statement->rowCount();
@@ -142,7 +145,8 @@ class GroupsMemberships
             ];
     
             foreach ( $group_ids as $group_id ) {
-                $statement = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,client_id,group_id) VALUES (:admin, :id, :group)");
+                // Insert into both user_id and client_id for backward compatibility
+                $statement = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,user_id,client_id,group_id) VALUES (:admin, :id, :id, :group)");
                 $statement->bindParam(':admin', $added_by);
                 $statement->bindParam(':id', $client_id, PDO::PARAM_INT);
                 $statement->bindParam(':group', $group_id, PDO::PARAM_INT);
@@ -176,7 +180,8 @@ class GroupsMemberships
             ];
 
             $found_groups = [];
-            $sql_groups = $this->dbh->prepare("SELECT DISTINCT group_id FROM " . TABLE_MEMBERS . " WHERE client_id=:id");
+            // Use user_id if available (post-upgrade), fallback to client_id for backward compatibility
+            $sql_groups = $this->dbh->prepare("SELECT DISTINCT group_id FROM " . TABLE_MEMBERS . " WHERE COALESCE(user_id, client_id)=:id");
             $sql_groups->bindParam(':id', $client_id, PDO::PARAM_INT);
             $sql_groups->execute();
             $count_groups = $sql_groups->rowCount();
@@ -196,7 +201,8 @@ class GroupsMemberships
 
             if ( !empty( $remove_groups) ) {
                 $delete_ids = implode( ',', $remove_groups );
-                $statement = $this->dbh->prepare("DELETE FROM " . TABLE_MEMBERS . " WHERE client_id=:client_id AND FIND_IN_SET(group_id, :delete)");
+                // Delete using user_id or client_id for backward compatibility
+                $statement = $this->dbh->prepare("DELETE FROM " . TABLE_MEMBERS . " WHERE (user_id=:client_id OR client_id=:client_id) AND FIND_IN_SET(group_id, :delete)");
                 $statement->bindParam(':client_id', $client_id, PDO::PARAM_INT);
                 $statement->bindParam(':delete', $delete_ids);
                 $statement->execute();
@@ -398,9 +404,9 @@ class GroupsMemberships
              */
             $requests_to_remove = [];
             if ( in_array( $request, $approve ) ) {
-                /** Insert into memberships */
-                $statement = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,client_id,group_id)"
-                                                    ." VALUES (:added_by, :client_id, :group_id)");
+                /** Insert into memberships - insert into both user_id and client_id for backward compatibility */
+                $statement = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,user_id,client_id,group_id)"
+                                                    ." VALUES (:added_by, :client_id, :client_id, :group_id)");
                 $statement->bindValue(':added_by', CURRENT_USER_USERNAME);
                 $statement->bindValue(':client_id', $client_id, PDO::PARAM_INT);
                 $statement->bindValue(':group_id', $request, PDO::PARAM_INT);

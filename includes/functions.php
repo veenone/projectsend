@@ -2452,7 +2452,8 @@ function file_editor_get_groups_by_members($clients_ids = [])
 
     $groups_find_in = [];
     $clients_ids = implode(',', $clients_ids);
-    $statement = $dbh->prepare("SELECT DISTINCT group_id FROM " . TABLE_MEMBERS . " WHERE FIND_IN_SET(client_id, :clients_ids)");
+    // Use user_id if available (post-upgrade), fallback to client_id for backward compatibility
+    $statement = $dbh->prepare("SELECT DISTINCT group_id FROM " . TABLE_MEMBERS . " WHERE FIND_IN_SET(COALESCE(user_id, client_id), :clients_ids)");
     $statement->bindParam(':clients_ids', $clients_ids);
     $statement->execute();
     $statement->setFetchMode(PDO::FETCH_ASSOC);

@@ -105,14 +105,15 @@ class Groups
         }
 
         /* Get group members IDs */
-        $statement = $this->dbh->prepare("SELECT client_id FROM " . TABLE_MEMBERS . " WHERE group_id = :id");
+        // Use user_id if available (post-upgrade), fallback to client_id for backward compatibility
+        $statement = $this->dbh->prepare("SELECT COALESCE(user_id, client_id) as member_id FROM " . TABLE_MEMBERS . " WHERE group_id = :id");
         $statement->bindParam(':id', $this->id, PDO::PARAM_INT);
         $statement->execute();
-        
+
         if ( $statement->rowCount() > 0) {
             $statement->setFetchMode(PDO::FETCH_ASSOC);
             while ($member = $statement->fetch() ) {
-                $this->members[] = $member['client_id'];
+                $this->members[] = $member['member_id'];
             }
         }
 
@@ -245,8 +246,9 @@ class Groups
         /** Create the members records */
         if ( !empty( $this->members ) ) {
             foreach ($this->members as $member) {
-                $sql_member = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,client_id,group_id)"
-                                                        ." VALUES (:admin, :member, :id)");
+                // Insert into both user_id and client_id for backward compatibility
+                $sql_member = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,user_id,client_id,group_id)"
+                                                        ." VALUES (:admin, :member, :member, :id)");
                 $sql_member->bindParam(':admin', $this->created_by);
                 $sql_member->bindParam(':member', $member, PDO::PARAM_INT);
                 $sql_member->bindParam(':id', $this->id, PDO::PARAM_INT);
@@ -354,8 +356,9 @@ class Groups
 		/** Create the members records */
 		if (!empty($this->members)) {
 			foreach ($this->members as $member) {
-				$sql_member = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,client_id,group_id)"
-														." VALUES (:admin, :member, :id)");
+				// Insert into both user_id and client_id for backward compatibility
+				$sql_member = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,user_id,client_id,group_id)"
+														." VALUES (:admin, :member, :member, :id)");
 				$sql_member->bindParam(':admin', $editing_user);
 				$sql_member->bindParam(':member', $member, PDO::PARAM_INT);
 				$sql_member->bindParam(':id', $this->id, PDO::PARAM_INT);
