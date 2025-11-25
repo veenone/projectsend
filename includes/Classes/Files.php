@@ -459,21 +459,25 @@ class Files
             return null;
         }
 
-        if ($this->isImage()) {
+        // Images - check mime type first (works for S3), fallback to file check
+        if (strpos($this->mime_type, 'image/') === 0 || $this->isImage()) {
             $this->embeddable = true;
             $this->embeddable_type = 'image';
         }
 
-        // Video
-        $embeddable = ['mp4', 'ogg', 'webm'];
-        if (file_is_video($this->full_path) && in_array($this->extension, $embeddable)) {
+        // Video - check mime type first (works for S3), then extension
+        $embeddable_video = ['mp4', 'ogg', 'webm'];
+        if (strpos($this->mime_type, 'video/') === 0 ||
+            (file_is_video($this->full_path) && in_array($this->extension, $embeddable_video))) {
             $this->embeddable = true;
             $this->embeddable_type = 'video';
         }
 
-        // Audio
-        $embeddable = ['mp3', 'wav'];
-        if (file_is_audio($this->full_path) || in_array($this->extension, $embeddable)) {
+        // Audio - check mime type first (works for S3), then extension or file check
+        $embeddable_audio = ['mp3', 'wav'];
+        if (strpos($this->mime_type, 'audio/') === 0 ||
+            file_is_audio($this->full_path) ||
+            in_array($this->extension, $embeddable_audio)) {
             $this->embeddable = true;
             $this->embeddable_type = 'audio';
         }
@@ -1104,6 +1108,8 @@ class Files
         // Set mime type if available
         if (isset($metadata['content_type'])) {
             $this->mime_type = $metadata['content_type'];
+            // Set embeddable type now that we have mime type
+            $this->setEmbeddableType();
         }
 
         // Preserve original upload date from S3 metadata if available
