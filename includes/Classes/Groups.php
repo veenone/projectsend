@@ -248,9 +248,10 @@ class Groups
             foreach ($this->members as $member) {
                 // Insert into both user_id and client_id for backward compatibility
                 $sql_member = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,user_id,client_id,group_id)"
-                                                        ." VALUES (:admin, :member, :member, :id)");
+                                                        ." VALUES (:admin, :user_id, :client_id, :id)");
                 $sql_member->bindParam(':admin', $this->created_by);
-                $sql_member->bindParam(':member', $member, PDO::PARAM_INT);
+                $sql_member->bindParam(':user_id', $member, PDO::PARAM_INT);
+                $sql_member->bindParam(':client_id', $member, PDO::PARAM_INT);
                 $sql_member->bindParam(':id', $this->id, PDO::PARAM_INT);
                 $sql_member->execute();
             }
@@ -358,9 +359,10 @@ class Groups
 			foreach ($this->members as $member) {
 				// Insert into both user_id and client_id for backward compatibility
 				$sql_member = $this->dbh->prepare("INSERT INTO " . TABLE_MEMBERS . " (added_by,user_id,client_id,group_id)"
-														." VALUES (:admin, :member, :member, :id)");
+														." VALUES (:admin, :user_id, :client_id, :id)");
 				$sql_member->bindParam(':admin', $editing_user);
-				$sql_member->bindParam(':member', $member, PDO::PARAM_INT);
+				$sql_member->bindParam(':user_id', $member, PDO::PARAM_INT);
+			$sql_member->bindParam(':client_id', $member, PDO::PARAM_INT);
 				$sql_member->bindParam(':id', $this->id, PDO::PARAM_INT);
 				$sql_member->execute();
 			}
