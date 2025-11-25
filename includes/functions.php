@@ -1065,6 +1065,200 @@ function get_file_assignations($file_id)
 }
 
 /**
+ * Batch version of get_file_assignations for improved performance
+ * Loads assignments for multiple files in a single query
+ *
+ * @param array $file_ids Array of file IDs
+ * @return array Associative array with file IDs as keys
+ */
+function get_files_assignations_batch($file_ids)
+{
+    if (empty($file_ids) || !is_array($file_ids)) {
+        return [];
+    }
+
+    // Filter to numeric IDs only
+    $file_ids = array_filter($file_ids, 'is_numeric');
+
+    if (empty($file_ids)) {
+        return [];
+    }
+
+    global $dbh;
+
+    // Create placeholders for IN clause
+    $placeholders = implode(',', array_fill(0, count($file_ids), '?'));
+
+    $statement = $dbh->prepare("SELECT * FROM " . TABLE_FILES_RELATIONS . " WHERE file_id IN ($placeholders)");
+    $statement->execute($file_ids);
+    $statement->setFetchMode(PDO::FETCH_ASSOC);
+
+    $return = [];
+
+    // Initialize return structure for all file IDs
+    foreach ($file_ids as $file_id) {
+        $return[$file_id] = [
+            'clients' => [],
+            'groups' => [],
+        ];
+    }
+
+    // Group assignments by file ID
+    while ($row = $statement->fetch()) {
+        $file_id = $row['file_id'];
+
+        if (!empty($row['client_id'])) {
+            $return[$file_id]['clients'][$row['client_id']] = [
+                'hidden' => $row['hidden'],
+            ];
+        }
+
+        if (!empty($row['group_id'])) {
+            $return[$file_id]['groups'][$row['group_id']] = [
+                'hidden' => $row['hidden'],
+            ];
+        }
+    }
+
+    return $return;
+}
+
+/**
+ * Batch version for loading file categories
+ * Loads categories for multiple files in a single query
+ *
+ * @param array $file_ids Array of file IDs
+ * @return array Associative array with file IDs as keys, each containing array of category names
+ */
+function get_files_categories_batch($file_ids)
+{
+    if (empty($file_ids) || !is_array($file_ids)) {
+        return [];
+    }
+
+    // Filter to numeric IDs only
+    $file_ids = array_filter($file_ids, 'is_numeric');
+
+    if (empty($file_ids)) {
+        return [];
+    }
+
+    global $dbh;
+
+    // Create placeholders for IN clause
+    $placeholders = implode(',', array_fill(0, count($file_ids), '?'));
+
+    $statement = $dbh->prepare("SELECT c.name as category_name, c.id as category_id, r.file_id, r.id as rel_id
+                                FROM " . TABLE_CATEGORIES_RELATIONS . " r
+                                INNER JOIN " . TABLE_CATEGORIES . " c ON r.cat_id = c.id
+                                WHERE r.file_id IN ($placeholders)");
+    $statement->execute($file_ids);
+    $statement->setFetchMode(PDO::FETCH_ASSOC);
+
+    $return = [];
+
+    // Initialize return structure for all file IDs
+    foreach ($file_ids as $file_id) {
+        $return[$file_id] = [];
+    }
+
+    // Group categories by file ID
+    while ($row = $statement->fetch()) {
+        $file_id = $row['file_id'];
+        $return[$file_id][] = $row['category_name'];
+    }
+
+    return $return;
+}
+
+/**
+ * Get cached file count for pagination
+ * Caches the total count to avoid SQL_CALC_FOUND_ROWS overhead with large datasets
+ *
+ * @param string $cache_key Unique key for this query (based on filters)
+ * @param callable $count_callback Function that returns the actual count
+ * @param int $ttl Cache time-to-live in seconds (default: 300 = 5 minutes)
+ * @return int The file count
+ */
+function get_cached_file_count($cache_key, $count_callback, $ttl = 300)
+{
+    global $dbh;
+
+    // Generate a unique cache key based on the query parameters
+    $full_cache_key = 'file_count_' . md5($cache_key);
+
+    // Try to get from cache
+    $cached_value = get_option($full_cache_key);
+    $cached_time = get_option($full_cache_key . '_time');
+
+    // Check if cache is valid
+    if ($cached_value !== false && $cached_time !== false) {
+        $age = time() - (int)$cached_time;
+        if ($age < $ttl) {
+            return (int)$cached_value;
+        }
+    }
+
+    // Cache miss or expired - calculate the count
+    $count = $count_callback();
+
+    // Store in cache
+    save_option($full_cache_key, $count);
+    save_option($full_cache_key . '_time', time());
+
+    return $count;
+}
+
+/**
+ * Invalidate file count cache
+ * Call this when files are added, deleted, or modified in ways that affect counts
+ *
+ * @param string|null $cache_key Specific cache key to invalidate, or null for all
+ */
+function invalidate_file_count_cache($cache_key = null)
+{
+    global $dbh;
+
+    if ($cache_key !== null) {
+        $full_cache_key = 'file_count_' . md5($cache_key);
+        delete_option($full_cache_key);
+        delete_option($full_cache_key . '_time');
+    } else {
+        // Invalidate all file count caches
+        $statement = $dbh->prepare("DELETE FROM " . TABLE_OPTIONS . "
+            WHERE name LIKE 'file_count_%'");
+        $statement->execute();
+    }
+}
+
+/**
+ * Get optimized file count without SQL_CALC_FOUND_ROWS
+ * Uses a separate optimized COUNT query that's faster for large datasets
+ *
+ * @param string $query The SELECT query (without LIMIT)
+ * @param array $params Query parameters
+ * @return int The total count
+ */
+function get_optimized_file_count($query, $params)
+{
+    global $dbh;
+
+    // Convert SELECT query to COUNT query
+    // Remove SQL_CALC_FOUND_ROWS if present
+    $count_query = preg_replace('/^SELECT\s+SQL_CALC_FOUND_ROWS\s+.*?\s+FROM/is', 'SELECT COUNT(*) FROM', $query);
+    $count_query = preg_replace('/^SELECT\s+.*?\s+FROM/is', 'SELECT COUNT(*) FROM', $count_query);
+
+    // Remove ORDER BY clause (not needed for COUNT)
+    $count_query = preg_replace('/\s+ORDER\s+BY\s+.*$/is', '', $count_query);
+
+    // Execute count query
+    $statement = $dbh->prepare($count_query);
+    $statement->execute($params);
+
+    return (int)$statement->fetchColumn();
+}
+
+/**
  * Standard footer mark up and information generated on this function to
  * prevent code repetition.
  * Used on the default template, log in page, install page and the back-end

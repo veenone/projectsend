@@ -177,7 +177,9 @@ if (isset($_POST['action'])) {
                     }
                 }
 
+                // Invalidate file count cache after deletions
                 if ($delete_results['success'] > 0) {
+                    invalidate_file_count_cache();
                     $flash->success(__('The selected files were deleted.', 'cftp_admin'));
                 }
                 if ($delete_results['errors'] > 0) {
@@ -197,6 +199,18 @@ if (isset($_POST['action'])) {
 
 // Global form action
 $query_table_files = true;
+
+// Performance monitoring for large datasets
+$perf_start_time = microtime(true);
+$perf_metrics = [];
+
+function perf_log($label) {
+    global $perf_start_time, $perf_metrics;
+    $current_time = microtime(true);
+    $elapsed = $current_time - $perf_start_time;
+    $perf_metrics[$label] = round($elapsed * 1000, 2); // Convert to milliseconds
+    return $elapsed;
+}
 
 // Folders
 $current_folder = (isset($_GET['folder_id'])) ? (int)$_GET['folder_id'] : null;
@@ -272,6 +286,8 @@ if ($query_table_files === true) {
         $add_user_to_query = "AND user_id = :user_id";
         $params[':user_id'] = $this_id;
     }
+    // For large datasets, we'll use separate COUNT query instead of SQL_CALC_FOUND_ROWS
+    // This is more efficient as SQL_CALC_FOUND_ROWS scans all rows even with LIMIT
     $cq = "SELECT files.*, ( SELECT COUNT(file_id) FROM " . TABLE_DOWNLOADS . " WHERE " . TABLE_DOWNLOADS . ".file_id=files.id " . $add_user_to_query . ") as download_count FROM " . TABLE_FILES . " files";
 
     if (isset($search_on) && !empty($gotten_files)) {
@@ -375,13 +391,31 @@ if ($query_table_files === true) {
      */
     $cq .= sql_add_order(TABLE_FILES, 'timestamp', 'desc');
 
-    // Pre-query to count the total results
-    $count_sql = $dbh->prepare($cq);
-    $count_sql->execute($params);
-    $count_for_pagination = $count_sql->rowCount();
+    // Performance optimization: Use keyset pagination for large offsets (experimental)
+    // Keyset pagination is faster than OFFSET for large datasets
+    // Format: ?keyset_id=123&keyset_dir=next
+    $use_keyset = isset($_GET['keyset_id']) && is_numeric($_GET['keyset_id']);
 
-    // Repeat the query but this time, limited by pagination
-    $cq .= " LIMIT :limit_start, :limit_number";
+    if ($use_keyset) {
+        $keyset_id = (int)$_GET['keyset_id'];
+        $keyset_dir = isset($_GET['keyset_dir']) && $_GET['keyset_dir'] === 'prev' ? 'prev' : 'next';
+
+        // Add keyset condition to WHERE clause
+        if ($keyset_dir === 'next') {
+            // Get files with ID < keyset_id (for descending order by timestamp)
+            $conditions[] = "id < :keyset_id";
+        } else {
+            // Get files with ID > keyset_id (for previous page)
+            $conditions[] = "id > :keyset_id";
+        }
+        $params[':keyset_id'] = $keyset_id;
+
+        // No OFFSET needed with keyset pagination
+        $cq .= " LIMIT :limit_number";
+    } else {
+        // Traditional offset pagination
+        $cq .= " LIMIT :limit_start, :limit_number";
+    }
     $sql = $dbh->prepare($cq);
 
     // Handle per page override via URL parameter
@@ -393,17 +427,49 @@ if ($query_table_files === true) {
     $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
     $pagination_start = ($pagination_page - 1) * $results_per_page;
 
+    // Performance optimization: Warn about large offsets
+    // LIMIT with large offset is slow (MySQL has to scan and skip all rows)
+    $large_offset_threshold = 10000;
+    if ($pagination_start > $large_offset_threshold) {
+        // For very large offsets, show performance warning
+        $flash->warning(__('You are viewing a page far from the beginning. Consider using filters or search to narrow down results for better performance.', 'cftp_admin'));
+    }
+
     // Bind non-LIMIT parameters first
     foreach ($params as $key => $value) {
         $sql->bindValue($key, $value);
     }
 
     // Bind LIMIT parameters as integers
-    $sql->bindValue(':limit_start', (int)$pagination_start, PDO::PARAM_INT);
-    $sql->bindValue(':limit_number', (int)$results_per_page, PDO::PARAM_INT);
+    if ($use_keyset) {
+        // Keyset pagination only needs limit_number
+        $sql->bindValue(':limit_number', (int)$results_per_page, PDO::PARAM_INT);
+    } else {
+        // Traditional pagination needs both start and number
+        $sql->bindValue(':limit_start', (int)$pagination_start, PDO::PARAM_INT);
+        $sql->bindValue(':limit_number', (int)$results_per_page, PDO::PARAM_INT);
+    }
 
     $sql->execute();
     $count = $sql->rowCount();
+    perf_log('query_execute');
+
+    // Get total count using optimized method with caching for large datasets
+    // Build cache key based on query parameters
+    $cache_key_parts = [
+        isset($search_on) ? $search_on : 'all',
+        isset($this_id) ? $this_id : 'none',
+        isset($_GET['search']) ? $_GET['search'] : '',
+        isset($_GET['uploader']) ? $_GET['uploader'] : '',
+        isset($_GET['hidden']) ? $_GET['hidden'] : '',
+        $current_folder ?? 'null',
+    ];
+    $cache_key = implode('_', $cache_key_parts);
+
+    // Use cached count for better performance (5 minute TTL)
+    $count_for_pagination = get_cached_file_count($cache_key, function() use ($cq, $params, $dbh) {
+        return get_optimized_file_count($cq, $params);
+    }, 300);
 
     // Debug output (remove after testing) - commented out
     // error_log("LIMIT DEBUG: start=" . $pagination_start . ", per_page=" . $results_per_page . ", actual_count=" . $count . ", total=" . $count_for_pagination);
@@ -808,9 +874,22 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
 
                     $table->thead($thead_columns);
 
-                    // Files
+                    // Files - Fetch all results for batch processing
                     $sql->setFetchMode(PDO::FETCH_ASSOC);
-                    while ($row = $sql->fetch()) {
+                    $files_data = $sql->fetchAll();
+
+                    // Batch load assignments and categories for all files to avoid N+1 query problem
+                    $file_ids = array_column($files_data, 'id');
+                    perf_log('data_fetch');
+
+                    $all_assignations = get_files_assignations_batch($file_ids);
+                    perf_log('batch_assignments');
+
+                    $all_categories = get_files_categories_batch($file_ids);
+                    perf_log('batch_categories');
+
+                    // Process each file
+                    foreach ($files_data as $row) {
                         $table->addRow([
                             'class' => 'file_draggable',
                             'attributes' => [
@@ -823,8 +902,8 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
                         ]);
                         $file = new \ProjectSend\Classes\Files($row['id']);
 
-                        // Visibility is only available when filtering by client or group.
-                        $assignations = get_file_assignations($file->id);
+                        // Get pre-loaded assignments instead of querying for each file
+                        $assignations = isset($all_assignations[$file->id]) ? $all_assignations[$file->id] : ['clients' => [], 'groups' => []];
 
                         $count_assignations = 0;
                         if (!empty($assignations['clients'])) {
@@ -851,8 +930,10 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
                         if (file_is_image($file->full_path)) {
                             $thumbnail = make_thumbnail($file->full_path, 'proportional', 300, 300, 90);
                             if (!empty($thumbnail['thumbnail']['url'])) {
+                                // Use lazy loading with data attribute and placeholder
+                                $placeholder = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'300\' height=\'300\'%3E%3Crect width=\'300\' height=\'300\' fill=\'%23f0f0f0\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' dominant-baseline=\'middle\' text-anchor=\'middle\' font-family=\'Arial\' font-size=\'18\' fill=\'%23999\'%3ELoading...%3C/text%3E%3C/svg%3E';
                                 $preview_cell = '<a href="#" class="get-preview" data-url="' . BASE_URI . 'process.php?do=get_preview&file_id=' . $file->id . '">
-                                            <img alt="" src="' . $thumbnail['thumbnail']['url'] . '" class="thumbnail" />
+                                            <img alt="" src="' . $placeholder . '" data-thumbnail="' . $thumbnail['thumbnail']['url'] . '" class="thumbnail lazy-thumbnail" />
                                         </a>';
                             }
                         }
@@ -913,18 +994,9 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
                             }
                         }
 
-                        // Categories
-                        $categories = [];
+                        // Categories - Use pre-loaded batch data
+                        $categories = isset($all_categories[$file->id]) ? $all_categories[$file->id] : [];
                         $categories_list = '';
-                        $statement = $dbh->prepare("SELECT c.name as category_name, c.id as category_id, r.id as rel_id FROM ". TABLE_CATEGORIES_RELATIONS." r INNER JOIN " . TABLE_CATEGORIES . " c on r.cat_id = c.id WHERE file_id = :file_id");
-                        $statement->bindParam(':file_id', $file->id, PDO::PARAM_INT);
-                        $statement->execute();
-                        if ($statement->rowCount() > 0) {
-                            $statement->setFetchMode(PDO::FETCH_ASSOC);
-                            while ($crow = $statement->fetch()) {
-                                $categories[] = $crow['category_name'];
-                            }
-                        }
                         if (!empty($categories)) {
                             $categories_list = '<ul class="ms-3 p-0">';
                             foreach ($categories as $category) {
@@ -1111,6 +1183,22 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
                     }
 
                     echo $table->render();
+
+                    // Performance monitoring output (only for admins with debug enabled)
+                    perf_log('render_complete');
+                    if (current_role_in(['System Administrator']) && get_option('debug_mode') == '1') {
+                        echo '<div class="alert alert-info" style="margin-top: 20px;">';
+                        echo '<strong>Performance Metrics:</strong><br>';
+                        echo 'Query execution: ' . ($perf_metrics['query_execute'] ?? 0) . 'ms<br>';
+                        echo 'Data fetch: ' . ($perf_metrics['data_fetch'] ?? 0) . 'ms<br>';
+                        echo 'Batch assignments: ' . (isset($perf_metrics['batch_assignments']) ? ($perf_metrics['batch_assignments'] - $perf_metrics['data_fetch']) : 0) . 'ms<br>';
+                        echo 'Batch categories: ' . (isset($perf_metrics['batch_categories']) ? ($perf_metrics['batch_categories'] - $perf_metrics['batch_assignments']) : 0) . 'ms<br>';
+                        echo 'Total render time: ' . ($perf_metrics['render_complete'] ?? 0) . 'ms<br>';
+                        echo 'Files processed: ' . count($files_data ?? []) . '<br>';
+                        echo 'Total files: ' . number_format($count_for_pagination ?? 0) . '<br>';
+                        echo 'Memory peak: ' . round(memory_get_peak_usage(true) / 1024 / 1024, 2) . ' MB';
+                        echo '</div>';
+                    }
                 }
             ?>
         </div>
@@ -1152,6 +1240,62 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
         </div>
     </div>
 </div>
+
+<script>
+// Lazy loading for thumbnails using IntersectionObserver
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if IntersectionObserver is supported
+    if ('IntersectionObserver' in window) {
+        const imageObserver = new IntersectionObserver(function(entries, observer) {
+            entries.forEach(function(entry) {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const thumbnailUrl = img.getAttribute('data-thumbnail');
+
+                    if (thumbnailUrl) {
+                        // Create a new image to preload
+                        const tempImg = new Image();
+                        tempImg.onload = function() {
+                            img.src = thumbnailUrl;
+                            img.classList.remove('lazy-thumbnail');
+                            img.classList.add('lazy-loaded');
+                        };
+                        tempImg.onerror = function() {
+                            // If thumbnail fails to load, show error placeholder
+                            img.alt = 'Failed to load thumbnail';
+                            img.classList.remove('lazy-thumbnail');
+                        };
+                        tempImg.src = thumbnailUrl;
+
+                        // Stop observing this image
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        }, {
+            // Load images when they are within 200px of the viewport
+            rootMargin: '200px',
+            threshold: 0.01
+        });
+
+        // Observe all lazy thumbnail images
+        const lazyImages = document.querySelectorAll('img.lazy-thumbnail');
+        lazyImages.forEach(function(img) {
+            imageObserver.observe(img);
+        });
+    } else {
+        // Fallback for browsers that don't support IntersectionObserver
+        const lazyImages = document.querySelectorAll('img.lazy-thumbnail');
+        lazyImages.forEach(function(img) {
+            const thumbnailUrl = img.getAttribute('data-thumbnail');
+            if (thumbnailUrl) {
+                img.src = thumbnailUrl;
+                img.classList.remove('lazy-thumbnail');
+            }
+        });
+    }
+});
+</script>
 
 <?php
 include_once ADMIN_VIEWS_DIR . DS . 'footer.php';
