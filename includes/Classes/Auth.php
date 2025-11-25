@@ -82,10 +82,13 @@ class Auth
             $this->user = $user;
             $this->login($user);
 
+            // Determine redirect location based on user role
+            // Clients and Internal Users go to file list, Admins go to dashboard
+            $redirect_to_files = $user->isClient() || $user->hasRole('Internal User');
             $results = [
                 'status' => 'success',
                 'user_id' => $user->id,
-                'location' => $user->isClient() ? CLIENT_VIEW_FILE_LIST_URL : BASE_URI."dashboard.php",
+                'location' => $redirect_to_files ? CLIENT_VIEW_FILE_LIST_URL : BASE_URI."dashboard.php",
             ];
             
             return json_encode($results);
@@ -151,10 +154,13 @@ class Auth
                         }
                     }
 
+					// Determine redirect location based on user role
+					// Clients and Internal Users go to file list, Admins go to dashboard
+					$redirect_to_files = $user->isClient() || $user->hasRole('Internal User');
 					$results = [
                         'status' => 'success',
                         'user_id' => $user->id,
-                        'location' => $user->isClient() ? CLIENT_VIEW_FILE_LIST_URL : BASE_URI."dashboard.php",
+                        'location' => $redirect_to_files ? CLIENT_VIEW_FILE_LIST_URL : BASE_URI."dashboard.php",
 					];
                     
                     return json_encode($results);
@@ -480,10 +486,13 @@ class Auth
                                     'details' => 'LDAP authentication successful'
                                 ]);
                                 
+                                // Determine redirect location based on user role
+                                // Clients and Internal Users go to file list, Admins go to dashboard
+                                $redirect_to_files = $user->isClient() || $user->hasRole('Internal User');
                                 $return = [
                                     'status' => 'success',
                                     'user_id' => $user->id,
-                                    'location' => $user->isClient() ? CLIENT_VIEW_FILE_LIST_URL : BASE_URI."dashboard.php",
+                                    'location' => $redirect_to_files ? CLIENT_VIEW_FILE_LIST_URL : BASE_URI."dashboard.php",
                                 ];
                     
                                 return json_encode($return);
@@ -519,10 +528,13 @@ class Auth
                                         }
                                     }
                                     
+                                    // Determine redirect location based on user role
+                                    // Clients and Internal Users go to file list, Admins go to dashboard
+                                    $redirect_to_files = $user->isClient() || $user->hasRole('Internal User');
                                     $return = [
                                         'status' => 'success',
                                         'user_id' => $user->id,
-                                        'location' => $user->isClient() ? CLIENT_VIEW_FILE_LIST_URL : BASE_URI."dashboard.php",
+                                        'location' => $redirect_to_files ? CLIENT_VIEW_FILE_LIST_URL : BASE_URI."dashboard.php",
                                     ];
                         
                                     return json_encode($return);
