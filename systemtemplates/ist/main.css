@@ -132,6 +132,8 @@ body.dark-mode #header.navbar {
     border-radius: 4px;
 }
 
+
+
 /* ============================================
    TYPOGRAPHY
    ============================================ */
@@ -163,6 +165,10 @@ span.alert {
 a {
     color: var(--ist-text-primary) !important;
     transition: color 0.2s ease;
+}
+
+#header .theme-toggle {
+  color: #ffffff !important;
 }
 
 a:hover {
@@ -218,8 +224,16 @@ body.dark-mode .btn-primary:focus {
 }
 
 /* Button text links */
-a.btn {
+.btn-outline-secondary {
+    color: var(--ist-primary) !important; 
+}
+
+.btn-sm {
     color: #ffffff !important;
+}
+
+.btn-primary { 
+    color: #ffffff !important; 
 }
 
 a.btn:hover {
@@ -251,9 +265,15 @@ a.btn.btn-outline-primary:hover {
    ============================================ */
 
 
+#folders_nav .folder{
+  background-color: var(--ist-primary-lighter);
+  color: var(--ist-primary-darker);
+}
+
 #folders_nav .folder a,
 #folders_nav .folder a {
     color: #ffffff;
+    background-color: var(--ist-primary-lighter);
 }
 
 
@@ -275,7 +295,7 @@ div.folder,
 .folder-card {
     background-color: var(--ist-primary-lighter);
     border: 1px solid var(--ist-primary-light);
-    color: var(--ist-text-primary) !important;
+    /*color: var(--ist-text-primary) !important;*/
 }
 
 .folder:hover,
