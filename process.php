@@ -95,7 +95,7 @@ switch ($_GET['do']) {
                 exit_with_error_code(403);
             }
             $file = new \ProjectSend\Classes\Files($_GET['file_id']);
-            if ($file->existsOnDisk() && $file->embeddable) {
+            if ($file->existsInStorage() && $file->embeddable) {
                 $return = json_decode($file->getEmbedData());
             }
         }
