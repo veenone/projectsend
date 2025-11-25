@@ -39,10 +39,10 @@
                     allowOutsideClick: true,
                     allowEscapeKey: true,
                     showClass: {
-                        popup: 'animate__animated animated__fast animate__fadeInUp'
+                        popup: 'animate__animated animate__fast animate__fadeInUp'
                     },
                     hideClass: {
-                        popup: 'animate__animated animated__fast animate__fadeOutDown'
+                        popup: 'animate__animated animate__fast animate__fadeOutDown'
                     }
                 }).then((result) => {});
             });
