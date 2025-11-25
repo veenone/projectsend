@@ -65,7 +65,7 @@ function upgrade_2025112501()
     $statement->execute(['role_id' => $internal_user_role_id]);
 
     // Insert permissions
-    $insert_perm_sql = "INSERT INTO " . TABLE_ROLE_PERMISSIONS . " (role_id, permission, allowed)
+    $insert_perm_sql = "INSERT INTO " . TABLE_ROLE_PERMISSIONS . " (role_id, permission, granted)
                        VALUES (:role_id, :permission, 1)";
     $statement = $dbh->prepare($insert_perm_sql);
 
