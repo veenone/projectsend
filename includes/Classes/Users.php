@@ -372,6 +372,17 @@ class Users
     }
 
     /**
+     * Check if user has a specific role by name
+     * @param string $role_name Role name to check (e.g., 'Internal User', 'Client')
+     * @return bool
+     */
+    public function hasRole($role_name)
+    {
+        $current_role_name = $this->getRoleName();
+        return $current_role_name === $role_name;
+    }
+
+    /**
      * Check if a user can edit this user account
      * @param int $user_id User ID to check (defaults to current user)
      * @return bool
