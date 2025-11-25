@@ -425,6 +425,16 @@ class Roles
     }
 
     /**
+     * Get Internal User role ID
+     * @return int|null Role ID or null if not found
+     */
+    public static function getInternalUserRoleId()
+    {
+        $internal_user_role = self::getRoleByName('Internal User');
+        return $internal_user_role ? $internal_user_role['id'] : null;
+    }
+
+    /**
      * Get role hierarchy (ordered by ID)
      * @return array
      */
