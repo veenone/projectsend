@@ -32,9 +32,11 @@
                 Swal.fire({
                     title: json_strings.translations.public_url,
                     html: modal_content,
-                    showCloseButton: false,
+                    showCloseButton: true,
                     showCancelButton: false,
                     showConfirmButton: false,
+                    allowOutsideClick: true,
+                    allowEscapeKey: true,
                     showClass: {
                         popup: 'animate__animated animated__fast animate__fadeInUp'
                     },
