@@ -1243,13 +1243,15 @@ function get_optimized_file_count($query, $params)
 {
     global $dbh;
 
-    // Convert SELECT query to COUNT query
     // Remove SQL_CALC_FOUND_ROWS if present
-    $count_query = preg_replace('/^SELECT\s+SQL_CALC_FOUND_ROWS\s+.*?\s+FROM/is', 'SELECT COUNT(*) FROM', $query);
-    $count_query = preg_replace('/^SELECT\s+.*?\s+FROM/is', 'SELECT COUNT(*) FROM', $count_query);
+    $query = preg_replace('/SQL_CALC_FOUND_ROWS\s+/is', '', $query);
 
     // Remove ORDER BY clause (not needed for COUNT)
-    $count_query = preg_replace('/\s+ORDER\s+BY\s+.*$/is', '', $count_query);
+    $query = preg_replace('/\s+ORDER\s+BY\s+.*$/is', '', $query);
+
+    // Wrap the original query in a subquery to count results
+    // This handles complex queries with subqueries, joins, etc.
+    $count_query = "SELECT COUNT(*) FROM ({$query}) as count_wrapper";
 
     // Execute count query
     $statement = $dbh->prepare($count_query);
