@@ -2,6 +2,7 @@
 /**
  * Contains the form that is used when adding or editing groups.
  */
+global $dbh;
 
 switch ($groups_form_type) {
 	case 'new_group':
@@ -35,26 +36,30 @@ switch ($groups_form_type) {
 	<div class="form-group row assigns">
 		<label for="members" class="col-sm-4 control-label"><?php _e('Members','cftp_admin'); ?></label>
 		<div class="col-sm-8">
-			<select class="select2 none" multiple="multiple" id="members" name="members[]" data-placeholder="<?php _e('Select one or more options. Type to search.', 'cftp_admin');?>">
+			<select class="form-select select2" multiple="multiple" id="members" name="members[]" data-placeholder="<?php _e('Select one or more options. Type to search.', 'cftp_admin');?>">
 				<?php
-					$sql = $dbh->prepare("SELECT u.id, u.name, u.username, r.name as role_name FROM " . TABLE_USERS . " u LEFT JOIN " . TABLE_ROLES . " r ON u.role_id = r.id WHERE u.active = 1 ORDER BY r.name ASC, u.name ASC");
-					$sql->execute();
-					$sql->setFetchMode(PDO::FETCH_ASSOC);
-					while ( $row = $sql->fetch() ) {
-						$role_display = !empty($row["role_name"]) ? $row["role_name"] : 'User';
-				?>
-						<option value="<?php echo $row["id"]; ?>"
-							<?php
-								if ($groups_form_type == 'edit_group') {
-                                    if (!empty($group_arguments['members'])) {
-									    if (in_array($row["id"], $group_arguments['members'])) {
-										    echo ' selected="selected"';
-                                        }
-                                    }
-								}
-							?>
-						><?php echo html_output($row["name"]); ?> (<?php echo html_output($role_display); ?>)</option>
-				<?php
+					try {
+						$sql = $dbh->prepare("SELECT u.id, u.name, u.username, r.name as role_name FROM " . TABLE_USERS . " u LEFT JOIN " . TABLE_ROLES . " r ON u.role_id = r.id WHERE u.active = 1 ORDER BY r.name ASC, u.name ASC");
+						$sql->execute();
+						$sql->setFetchMode(PDO::FETCH_ASSOC);
+						while ( $row = $sql->fetch() ) {
+							$role_display = !empty($row["role_name"]) ? $row["role_name"] : 'User';
+					?>
+							<option value="<?php echo $row["id"]; ?>"
+								<?php
+									if ($groups_form_type == 'edit_group') {
+										if (!empty($group_arguments['members'])) {
+											if (in_array($row["id"], $group_arguments['members'])) {
+												echo ' selected="selected"';
+											}
+										}
+									}
+								?>
+							><?php echo html_output($row["name"]); ?> (<?php echo html_output($role_display); ?>)</option>
+					<?php
+						}
+					} catch (Exception $e) {
+						error_log("Error loading group members: " . $e->getMessage());
 					}
 				?>
 			</select>
