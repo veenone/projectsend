@@ -104,7 +104,7 @@ $temp_files_query = "SELECT * FROM " . TABLE_FILES . " WHERE (FIND_IN_SET(id,:se
 $files_folders = $dbh->prepare($temp_files_query);
 $files_folders->execute([':search_ids' => $found_unique_files_ids]);
 $folder_id_in = [];
-while ($f = $files_sql->fetch()) {
+while ($f = $files_folders->fetch()) {
     if (!empty($f['folder_id'])) {
         $folder_id_in[] = $f['folder_id'];
     }

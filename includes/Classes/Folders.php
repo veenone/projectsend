@@ -69,14 +69,14 @@ class Folders
         // Get client access level if not provided
         if (!isset($arguments['role']) && isset($arguments['user_id'])) {
             $arguments['role'] = $this->getUserRole($arguments['user_id']);
-            if ($arguments['role'] === 'Client' && !isset($arguments['client_id'])) {
+            if (in_array($arguments['role'], ['Client', 'Internal User']) && !isset($arguments['client_id'])) {
                 $arguments['client_id'] = $arguments['user_id'];
             }
         }
-    
+
         $query = "SELECT DISTINCT f.* FROM " . TABLE_FOLDERS . " f";
         $params = [];
-        if (isset($arguments['role']) && $arguments['role'] === 'Client' && isset($arguments['client_id'])) {
+        if (isset($arguments['role']) && in_array($arguments['role'], ['Client', 'Internal User']) && isset($arguments['client_id'])) {
             $query .= " WHERE (
             -- Folders created by the client
             f.user_id = :client_created
@@ -100,11 +100,11 @@ class Folders
                     -- Direct client assignment
                     fr.client_id = :client_id
                     OR
-                    -- Group assignment
+                    -- Group assignment (check both user_id and client_id for backward compatibility)
                     fr.group_id IN (
                         SELECT group_id
                         FROM " . TABLE_MEMBERS . "
-                        WHERE client_id = :client_id_groups
+                        WHERE COALESCE(user_id, client_id) = :client_id_groups
                     )
                 )
             )
@@ -124,7 +124,7 @@ class Folders
                         fr.group_id IN (
                             SELECT group_id
                             FROM " . TABLE_MEMBERS . "
-                            WHERE client_id = :client_id_groups_hierarchy
+                            WHERE COALESCE(user_id, client_id) = :client_id_groups_hierarchy
                         )
                     )
                     UNION ALL

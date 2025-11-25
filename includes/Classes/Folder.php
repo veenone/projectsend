@@ -170,7 +170,34 @@ class Folder
             return true;
         }
 
-        return $this->userCanEdit($user_id);
+        // Check if user can edit (created the folder or is admin)
+        if ($this->userCanEdit($user_id)) {
+            return true;
+        }
+
+        // Check if user has files in this folder via direct assignment or group membership
+        $query = "SELECT COUNT(*) as count FROM " . TABLE_FILES . " f
+                  JOIN " . TABLE_FILES_RELATIONS . " fr ON f.id = fr.file_id
+                  WHERE f.folder_id = :folder_id
+                  AND fr.hidden = 0
+                  AND (
+                      fr.client_id = :user_id
+                      OR fr.group_id IN (
+                          SELECT group_id
+                          FROM " . TABLE_MEMBERS . "
+                          WHERE COALESCE(user_id, client_id) = :user_id_groups
+                      )
+                  )";
+
+        $stmt = $this->dbh->prepare($query);
+        $stmt->execute([
+            ':folder_id' => $this->id,
+            ':user_id' => $user_id,
+            ':user_id_groups' => $user_id
+        ]);
+        $result = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return $result['count'] > 0;
     }
 
     public function userCanDelete($user_id)
