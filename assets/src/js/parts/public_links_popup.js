@@ -37,14 +37,8 @@
                     showCancelButton: false,
                     showConfirmButton: false,
                     allowOutsideClick: true,
-                    allowEscapeKey: true,
-                    showClass: {
-                        popup: 'animate__animated animate__fast animate__fadeInUp'
-                    },
-                    hideClass: {
-                        popup: 'animate__animated animate__fast animate__fadeOutDown'
-                    }
-                }).then((result) => {});
+                    allowEscapeKey: true
+                });
             });
 
             /** Used on the public link modal on both manage files and the upload results */
