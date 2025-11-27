@@ -132,6 +132,10 @@ body.dark-mode #header.navbar {
     border-radius: 4px;
 }
 
+::after, ::before {
+    color: var(--ist-dark-1) !important;
+}
+
 
 
 /* ============================================
@@ -225,7 +229,8 @@ body.dark-mode .btn-primary:focus {
 
 /* Button text links */
 .btn-outline-secondary {
-    color: var(--ist-primary) !important; 
+    color: var(--ist-primary-dark) !important; 
+    background-color: var(--ist-primary-dark);
 }
 
 .btn-sm {
@@ -265,9 +270,11 @@ a.btn.btn-outline-primary:hover {
    ============================================ */
 
 
+
+
 #folders_nav .folder{
-  background-color: var(--ist-primary-lighter);
-  color: var(--ist-primary-darker);
+  background-color: var(--ist-primary);
+  color: var(--ist-primary);
 }
 
 #folders_nav .folder a,
@@ -355,15 +362,17 @@ body.dark-mode .folder-item .badge {
 .main_menu .nav_top_level {
     color: var(--ist-text-primary);
     transition: all 0.2s ease;
+
 }
 
 .main_menu .nav_top_level:hover,
 .main_menu .current_nav > .nav_top_level {
-    background-color: var(--ist-bg-hover);
-    color: var(--ist-primary);
+    background-color: var(--ist-primary);
+    color: var(--ist-light-1);
 }
 
-.main_menu .dropdown_content {
+
+.main_menu .dropdown_content {s
     background-color: var(--ist-bg-tertiary);
 }
 
@@ -376,6 +385,8 @@ body.dark-mode .folder-item .badge {
     background-color: var(--ist-primary-lighter);
     color: var(--ist-primary-darker);
 }
+
+
 
 /* ============================================
    HEADER
@@ -521,7 +532,7 @@ body.dark-mode .folder-item .badge {
 
 .nav-tabs .nav-link.active {
     color: var(--ist-primary);
-    background-color: var(--ist-bg-primary);
+      background-color: var(--ist- );
     border-color: var(--ist-border-color) var(--ist-border-color) var(--ist-bg-primary);
     font-weight: 600;
 }
@@ -698,4 +709,14 @@ hr {
 /* Loading states */
 .spinner-border {
     color: var(--ist-primary);
+}
+
+/* Badge */
+span[class*="bg-"], .badge, .badge span, 
+span.label, span.alert {
+  color: white !important;
+}
+
+.btn-pslight {
+  background-color: var(--ist-light-2);  
 }

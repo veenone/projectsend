@@ -1846,7 +1846,7 @@ function file_is_image($full_path)
 function file_is_video($full_path)
 {
     $mimeType = get_file_type_by_mime($full_path);
-    if (explode('/', $mimeType)[0] == 'video') {
+    if ($mimeType != null && explode('/', $mimeType)[0] == 'video') {
         return true;
     }
 
@@ -1856,7 +1856,7 @@ function file_is_video($full_path)
 function file_is_audio($full_path)
 {
     $mimeType = get_file_type_by_mime($full_path);
-    if (explode('/', $mimeType)[0] == 'audio') {
+    if ($mimeType != null && explode('/', $mimeType)[0] == 'audio') {
         return true;
     }
 

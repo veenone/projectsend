@@ -72,6 +72,92 @@ $form_sections = [
                 'name' => 'public_listing_home_show_link',
                 'label' => __('Show a link to the public page under the log in form', 'cftp_admin')
             ]
+        ]
+    ],
+    [
+        'title' => __('File Metadata Display', 'cftp_admin'),
+        'description' => __('Configure which metadata fields are shown in the file information modal for public and internal users.', 'cftp_admin'),
+        'fields' => [
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_created_by',
+                'label' => __('Show "Created By"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_created_by_email',
+                'label' => __('Show "Creator Email"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_created_by_title',
+                'label' => __('Show "Creator Title"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_modified_by',
+                'label' => __('Show "Modified By"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_modified_date',
+                'label' => __('Show "Modified Date"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_is_versioned',
+                'label' => __('Show "Versioned"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_is_current_version',
+                'label' => __('Show "Current Version"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_version_id',
+                'label' => __('Show "Version ID"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_content_type',
+                'label' => __('Show "Content Type"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_crawl_depth',
+                'label' => __('Show "Crawl Depth"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_discovered_from',
+                'label' => __('Show "Discovered From"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_enriched_files',
+                'label' => __('Show "Enriched Files"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_enriched_version_label',
+                'label' => __('Show "Enriched Version Label"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_sharepoint_file_size',
+                'label' => __('Show "SharePoint File Size"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_sharepoint_url',
+                'label' => __('Show "SharePoint URL"', 'cftp_admin')
+            ],
+            [
+                'type' => 'checkbox',
+                'name' => 'metadata_show_version_url',
+                'label' => __('Show "Version URL"', 'cftp_admin')
+            ]
         ],
         'divider' => false // No divider at the end
     ]

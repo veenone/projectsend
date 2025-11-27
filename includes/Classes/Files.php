@@ -455,48 +455,69 @@ class Files
 
     public function setEmbeddableType()
     {
-        if (empty($this->mime_type)) {
-            return null;
-        }
-
-        // Images - check mime type first (works for S3), fallback to file check
-        if (strpos($this->mime_type, 'image/') === 0 || $this->isImage()) {
+        // Images - check mime type first (works for S3), fallback to file check or extension
+        $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+        if ((!empty($this->mime_type) && strpos($this->mime_type, 'image/') === 0) ||
+            $this->isImage() ||
+            in_array(strtolower($this->extension), $image_extensions)) {
             $this->embeddable = true;
             $this->embeddable_type = 'image';
         }
 
         // Video - check mime type first (works for S3), then extension
         $embeddable_video = ['mp4', 'ogg', 'webm'];
-        if (strpos($this->mime_type, 'video/') === 0 ||
-            (file_is_video($this->full_path) && in_array($this->extension, $embeddable_video))) {
+        if ((!empty($this->mime_type) && strpos($this->mime_type, 'video/') === 0) ||
+            (file_is_video($this->full_path) && in_array(strtolower($this->extension), $embeddable_video)) ||
+            in_array(strtolower($this->extension), $embeddable_video)) {
             $this->embeddable = true;
             $this->embeddable_type = 'video';
         }
 
         // Audio - check mime type first (works for S3), then extension or file check
         $embeddable_audio = ['mp3', 'wav'];
-        if (strpos($this->mime_type, 'audio/') === 0 ||
+        if ((!empty($this->mime_type) && strpos($this->mime_type, 'audio/') === 0) ||
             file_is_audio($this->full_path) ||
-            in_array($this->extension, $embeddable_audio)) {
+            in_array(strtolower($this->extension), $embeddable_audio)) {
             $this->embeddable = true;
             $this->embeddable_type = 'audio';
         }
 
-        // PDF
-        if ($this->mime_type == 'application/pdf') {
+        // PDF - check mime type or extension
+        if ($this->mime_type == 'application/pdf' || strtolower($this->extension) == 'pdf') {
             $this->embeddable = true;
             $this->embeddable_type = 'pdf';
         }
     }
 
+    /**
+     * Check if file is embeddable (can be previewed)
+     * This method provides direct access to the embeddable property
+     * without going through the __get() magic method
+     * @return bool
+     */
+    public function isEmbeddable()
+    {
+        return $this->embeddable === true;
+    }
+
     public function getEmbedData()
     {
         if ($this->embeddable) {
-            $file_url = str_replace(ROOT_DIR, BASE_URI, $this->full_path);
-
-            if ($this->isImage()) {
-                $file_url = make_thumbnail( $this->full_path, 'proportional', 500 )['thumbnail']['url'];
+            // For images, try to generate thumbnail
+            if ($this->isImage() && file_exists($this->full_path)) {
+                $file_url = make_thumbnail($this->full_path, 'proportional', 500)['thumbnail']['url'];
+            } elseif ($this->embeddable_type == 'pdf') {
+                // For PDFs, use the download link with inline parameter
+                // Decode HTML entities and add inline parameter
+                $file_url = html_entity_decode($this->download_link) . '&inline=1';
+            } elseif (file_exists($this->full_path)) {
+                // For other files that exist on disk, use direct path
+                $file_url = str_replace(ROOT_DIR, BASE_URI, $this->full_path);
+            } else {
+                // Fallback to download link for files not on local disk
+                $file_url = html_entity_decode($this->download_link) . '&inline=1';
             }
+
             $return = [
                 'name' => $this->filename_original,
                 'file_url' => $file_url,
@@ -724,6 +745,14 @@ class Files
     public function setExtension()
     {
         $this->extension = pathinfo($this->filename_on_disk, PATHINFO_EXTENSION);
+
+        // If extension is empty, try to get it from external_path or original filename
+        if (empty($this->extension) && !empty($this->external_path)) {
+            $this->extension = pathinfo($this->external_path, PATHINFO_EXTENSION);
+        }
+        if (empty($this->extension) && !empty($this->filename_original)) {
+            $this->extension = pathinfo($this->filename_original, PATHINFO_EXTENSION);
+        }
     }
 
     public function getExtension()

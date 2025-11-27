@@ -22,7 +22,7 @@ class Download
         $this->logger = new \ProjectSend\Classes\ActionsLog;
     }
 
-    public function download($file_id)
+    public function download($file_id, $inline = false)
     {
         if (!$file_id || !user_can_download_file(CURRENT_USER_ID, $file_id)) {
             exit_with_error_code(403);
@@ -41,16 +41,16 @@ class Download
 
         // Handle external files differently
         if ($file->storage_type !== 'local' && !empty($file->integration_id)) {
-            $this->downloadExternalFile($file);
+            $this->downloadExternalFile($file, $inline);
         } else {
-            $this->downloadFile($file->filename_on_disk, $file->filename_unfiltered, $file->id);
+            $this->downloadFile($file->filename_on_disk, $file->filename_unfiltered, $file->id, $inline);
         }
     }
 
     /**
      * Handle downloads for external storage files
      */
-    private function downloadExternalFile($file)
+    private function downloadExternalFile($file, $inline = false)
     {
         // Get the integration and create storage instance
         $integrations_handler = new \ProjectSend\Classes\Integrations();
@@ -82,7 +82,8 @@ class Download
         ]);
 
         // For S3 and similar services, redirect to presigned URL for direct download
-        if (method_exists($storage, 'getPresignedUrl')) {
+        // But for inline preview, always stream through PHP to avoid mixed content issues
+        if (!$inline && method_exists($storage, 'getPresignedUrl')) {
             // Generate a presigned URL with 1 hour expiration
             $presigned_url = $storage->getPresignedUrl($file->external_path, 3600);
             if ($presigned_url) {
@@ -94,22 +95,75 @@ class Download
             }
         }
 
-        // Fallback: Stream the file through PHP (slower but more compatible)
-        $download_result = $storage->downloadFile($file->external_path, tempnam(sys_get_temp_dir(), 'ps_download_'));
-        if ($download_result['success']) {
-            $temp_file = $download_result['local_path'];
+        // Stream the file through PHP (required for inline preview to avoid mixed content issues)
+        // Create temp file path
+        $temp_file = tempnam(sys_get_temp_dir(), 'ps_download_');
 
-            // Serve the temporary file
-            $alias = $this->getAlias($file);
-            $this->serveFile($temp_file, $file->filename_original, $alias, $file);
+        $download_result = $storage->downloadFile($file->external_path, $temp_file);
 
-            // Clean up temporary file
-            unlink($temp_file);
-            exit;
+        // Check if download succeeded and file has content
+        if (!$download_result['success']) {
+            error_log('S3 download failed: ' . ($download_result['message'] ?? 'Unknown error'));
+            if (file_exists($temp_file)) unlink($temp_file);
+            exit_with_error_code(500);
         }
 
-        // If all else fails, return 404
-        exit_with_error_code(404);
+        if (!file_exists($temp_file)) {
+            error_log('S3 download: temp file does not exist: ' . $temp_file);
+            exit_with_error_code(500);
+        }
+
+        $file_size = filesize($temp_file);
+        if ($file_size == 0) {
+            error_log('S3 download: temp file is empty. Path: ' . $temp_file . ', External path: ' . $file->external_path);
+            unlink($temp_file);
+            exit_with_error_code(500);
+        }
+
+        // Register cleanup to run after script ends
+        register_shutdown_function(function() use ($temp_file) {
+            if (file_exists($temp_file)) {
+                unlink($temp_file);
+            }
+        });
+
+        // Serve the temporary file using PHP streaming
+        // We must use PHP method directly because:
+        // 1. External storage files are not encrypted locally
+        // 2. X-Accel/X-Sendfile can't work with temp files in /tmp
+        session_write_close();
+        while (ob_get_level()) ob_end_clean();
+
+        $save_as = $file->filename_original;
+        $disposition = $inline ? 'inline' : 'attachment';
+
+        // Get mime type from extension
+        $extension = strtolower(pathinfo($save_as, PATHINFO_EXTENSION));
+        $mime_types = [
+            'pdf' => 'application/pdf',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'gif' => 'image/gif',
+            'webp' => 'image/webp',
+            'svg' => 'image/svg+xml',
+            'mp4' => 'video/mp4',
+            'webm' => 'video/webm',
+            'ogg' => 'video/ogg',
+            'mp3' => 'audio/mpeg',
+            'wav' => 'audio/wav',
+        ];
+        $content_type = $mime_types[$extension] ?? 'application/octet-stream';
+
+        header("Pragma: public");
+        header("Expires: -1");
+        header("Cache-Control: public, must-revalidate, post-check=0, pre-check=0");
+        header('Content-Disposition: ' . $disposition . '; filename="' . basename($save_as) . '"');
+        header('Content-Type: ' . $content_type);
+        header('Content-Length: ' . $file_size);
+
+        readfile($temp_file);
+        exit;
     }
 
     /**
@@ -241,7 +295,7 @@ class Download
      *
      * @return void
      */
-    private function downloadFile($filename, $save_as, $file_id)
+    private function downloadFile($filename, $save_as, $file_id, $inline = false)
     {
         $file = new \ProjectSend\Classes\Files($file_id);
         $file_location = $file->full_path;
@@ -266,7 +320,7 @@ class Download
             $save_file_as = UPLOADED_FILES_DIR . DS . $save_as;
 
             $alias=$this->getAlias($file);
-            $this->serveFile($file_location, $save_file_as, $alias, $file);
+            $this->serveFile($file_location, $save_file_as, $alias, $file, $inline);
             exit;
         }
         else {
@@ -299,9 +353,10 @@ class Download
      * @param string $save_as original filename
      * @param string $xaccel optional xaccel path
      * @param object $file optional file object (for encryption metadata)
+     * @param bool $inline whether to serve inline (for preview) or as attachment
      * @return void
      */
-    public function serveFile($file_location, $save_as, $xaccel = null, $file = null)
+    public function serveFile($file_location, $save_as, $xaccel = null, $file = null, $inline = false)
     {
         if (file_exists($file_location)) {
             session_write_close();
@@ -318,10 +373,46 @@ class Download
                 }
             }
 
+            // Determine content disposition
+            $disposition = $inline ? 'inline' : 'attachment';
+
+            // Get mime type for inline display
+            $content_type = 'application/octet-stream';
+            if ($inline) {
+                // First try to get mime type from file extension (more reliable for temp files)
+                $extension = strtolower(pathinfo($save_as, PATHINFO_EXTENSION));
+                $mime_types = [
+                    'pdf' => 'application/pdf',
+                    'jpg' => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png' => 'image/png',
+                    'gif' => 'image/gif',
+                    'webp' => 'image/webp',
+                    'svg' => 'image/svg+xml',
+                    'mp4' => 'video/mp4',
+                    'webm' => 'video/webm',
+                    'ogg' => 'video/ogg',
+                    'mp3' => 'audio/mpeg',
+                    'wav' => 'audio/wav',
+                ];
+
+                if (isset($mime_types[$extension])) {
+                    $content_type = $mime_types[$extension];
+                } else {
+                    // Fallback to finfo detection
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $detected_type = finfo_file($finfo, $file_location);
+                    finfo_close($finfo);
+                    if ($detected_type) {
+                        $content_type = $detected_type;
+                    }
+                }
+            }
+
             switch (get_option('download_method')) {
                 default:
                 case 'php':
-					$this->downloadPHP($file_location, $save_as, $file_key);
+					$this->downloadPHP($file_location, $save_as, $file_key, $inline);
                 break;
                 case 'apache_xsendfile':
                 case 'nginx_xaccel':
@@ -347,12 +438,12 @@ class Download
 
                     if (get_option('download_method') == 'apache_xsendfile') {
                         header("X-Sendfile: $file_location");
-                        header('Content-Type: application/octet-stream');
-                        header('Content-Disposition: attachment; filename='.basename($save_as));
+                        header('Content-Type: ' . $content_type);
+                        header('Content-Disposition: ' . $disposition . '; filename='.basename($save_as));
                     } else {
                         header("X-Accel-Redirect: $xaccel");
-                        header('Content-Type: application/octet-stream');
-                        header('Content-Disposition: attachment; filename='.basename($save_as));
+                        header('Content-Type: ' . $content_type);
+                        header('Content-Disposition: ' . $disposition . '; filename='.basename($save_as));
                     }
                 break;
             }
@@ -372,9 +463,10 @@ class Download
      * @param string $file_location absolute full path to the file on disk
      * @param string $save_as original filename
      * @param string|false $file_key optional binary file key for decryption
+     * @param bool $inline whether to serve inline (for preview) or as attachment
      * @return void
      */
-	public function downloadPHP($file_location, $save_as, $file_key = false)
+	public function downloadPHP($file_location, $save_as, $file_key = false, $inline = false)
 	{
 		$path_parts = pathinfo($file_location);
 		$file_name = $path_parts['basename'];
@@ -386,6 +478,40 @@ class Download
 		// make sure the file exists
 		if (is_file($file_location))
 		{
+            // Determine content type and disposition
+            $disposition = $inline ? 'inline' : 'attachment';
+            $content_type = 'application/octet-stream';
+            if ($inline) {
+                // First try to get mime type from file extension (more reliable for temp files)
+                $extension = strtolower(pathinfo($save_as, PATHINFO_EXTENSION));
+                $mime_types = [
+                    'pdf' => 'application/pdf',
+                    'jpg' => 'image/jpeg',
+                    'jpeg' => 'image/jpeg',
+                    'png' => 'image/png',
+                    'gif' => 'image/gif',
+                    'webp' => 'image/webp',
+                    'svg' => 'image/svg+xml',
+                    'mp4' => 'video/mp4',
+                    'webm' => 'video/webm',
+                    'ogg' => 'video/ogg',
+                    'mp3' => 'audio/mpeg',
+                    'wav' => 'audio/wav',
+                ];
+
+                if (isset($mime_types[$extension])) {
+                    $content_type = $mime_types[$extension];
+                } else {
+                    // Fallback to finfo detection
+                    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+                    $detected_type = finfo_file($finfo, $file_location);
+                    finfo_close($finfo);
+                    if ($detected_type) {
+                        $content_type = $detected_type;
+                    }
+                }
+            }
+
             // If file is encrypted, use streaming decryption
             if ($file_key !== false) {
                 try {
@@ -395,8 +521,8 @@ class Download
                     header("Pragma: public");
                     header("Expires: -1");
                     header("Cache-Control: public, must-revalidate, post-check=0, pre-check=0");
-                    header('Content-Disposition: attachment; filename='.basename($save_as));
-                    header('Content-Type: application/octet-stream');
+                    header('Content-Disposition: ' . $disposition . '; filename='.basename($save_as));
+                    header('Content-Type: ' . $content_type);
 
                     // Note: We cannot provide accurate Content-Length for encrypted files without decrypting first
                     // Also, range requests are not supported for encrypted files
@@ -429,8 +555,8 @@ class Download
 				header("Pragma: public");
 				header("Expires: -1");
 				header("Cache-Control: public, must-revalidate, post-check=0, pre-check=0");
-                header('Content-Disposition: attachment; filename='.basename($save_as));
-                header('Content-Type: application/octet-stream');
+                header('Content-Disposition: ' . $disposition . '; filename='.basename($save_as));
+                header('Content-Type: ' . $content_type);
 
 				//check if http_range is sent by browser (or download manager)
 				if(isset($_SERVER['HTTP_RANGE']))

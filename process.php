@@ -6,8 +6,17 @@ use ProjectSend\Classes\ActionsLog;
 /** Process an action */
 require_once 'bootstrap.php';
 
-// Allow get_public_file_info without login requirement
-if (!isset($_GET['do']) || $_GET['do'] !== 'get_public_file_info') {
+// Allow certain actions without login requirement
+$public_actions = ['get_public_file_info', 'get_file_metadata'];
+
+// For get_file_metadata, suppress any output before JSON
+if (isset($_GET['do']) && $_GET['do'] === 'get_file_metadata') {
+    @ini_set('display_errors', 0);
+    error_reporting(0);
+    ob_start();
+}
+
+if (!isset($_GET['do']) || !in_array($_GET['do'], $public_actions)) {
     redirect_if_not_logged_in();
 }
 
@@ -95,7 +104,7 @@ switch ($_GET['do']) {
                 exit_with_error_code(403);
             }
             $file = new \ProjectSend\Classes\Files($_GET['file_id']);
-            if ($file->existsInStorage() && $file->embeddable) {
+            if ($file->embeddable) {
                 $return = json_decode($file->getEmbedData());
             }
         }
@@ -103,9 +112,109 @@ switch ($_GET['do']) {
         echo json_encode($return);
         exit;
         break;
+    case 'get_file_metadata':
+        // Clean any buffered output and set JSON header
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+        header('Content-Type: application/json');
+
+        $return = ['success' => false];
+
+        try {
+            if (!empty($_GET['file_id'])) {
+                // Check if user can access this file (either logged in with access, or file is public)
+                $file = new \ProjectSend\Classes\Files($_GET['file_id']);
+                $can_access = false;
+
+                // Check if file is public (property is 'public' not 'public_allow')
+                if ($file->public == '1') {
+                    $can_access = true;
+                }
+                // Check if user is logged in and can download
+                elseif (defined('CURRENT_USER_ID') && CURRENT_USER_ID && user_can_download_file(CURRENT_USER_ID, $_GET['file_id'])) {
+                    $can_access = true;
+                }
+
+                if (!$can_access) {
+                    echo json_encode(['success' => false, 'error' => 'Access denied']);
+                    exit;
+                }
+
+                // Get basic file info
+                $return = [
+                    'success' => true,
+                    'title' => $file->title,
+                    'filename' => $file->filename_original,
+                    'description' => $file->description,
+                    'size' => $file->size_formatted,
+                    'type' => strtoupper($file->extension),
+                    'upload_date' => format_date($file->uploaded_date),
+                    'expiry' => ($file->expires == '1') ? format_date($file->expiry_date) : __('Never', 'cftp_admin'),
+                    's3_metadata' => []
+                ];
+
+                // Get S3 metadata if file is stored externally
+                if ($file->storage_type !== 'local' && !empty($file->integration_id) && !empty($file->external_path)) {
+                    $integrations_handler = new \ProjectSend\Classes\Integrations();
+                    $integration = $integrations_handler->getById($file->integration_id);
+
+                    if ($integration) {
+                        $storage = $integrations_handler->createStorageInstance($integration);
+                        if ($storage && method_exists($storage, 'getFileMetadata')) {
+                            $s3_meta = $storage->getFileMetadata($file->external_path);
+                            if ($s3_meta && isset($s3_meta['metadata'])) {
+                                // Filter metadata based on system settings
+                                $filtered_metadata = [];
+                                $metadata_settings = [
+                                    'created-by' => get_option('metadata_show_created_by'),
+                                    'created-by-email' => get_option('metadata_show_created_by_email'),
+                                    'created-by-title' => get_option('metadata_show_created_by_title'),
+                                    'modified-by' => get_option('metadata_show_modified_by'),
+                                    'modified-date' => get_option('metadata_show_modified_date'),
+                                    'is-versioned' => get_option('metadata_show_is_versioned'),
+                                    'is-current-version' => get_option('metadata_show_is_current_version'),
+                                    'version-id' => get_option('metadata_show_version_id'),
+                                    'content-type' => get_option('metadata_show_content_type'),
+                                    'crawl-depth' => get_option('metadata_show_crawl_depth'),
+                                    'discovered-from' => get_option('metadata_show_discovered_from'),
+                                    'enriched-files' => get_option('metadata_show_enriched_files'),
+                                    'enriched-version-label' => get_option('metadata_show_enriched_version_label'),
+                                    'sharepoint-file-size' => get_option('metadata_show_sharepoint_file_size'),
+                                    'sharepoint-url' => get_option('metadata_show_sharepoint_url'),
+                                    'version-url' => get_option('metadata_show_version_url'),
+                                ];
+
+                                foreach ($s3_meta['metadata'] as $key => $value) {
+                                    // Check if this metadata field has a setting
+                                    if (isset($metadata_settings[$key])) {
+                                        // Only include if setting is enabled (1) or not set (default to show)
+                                        if ($metadata_settings[$key] === '1' || $metadata_settings[$key] === null) {
+                                            $filtered_metadata[$key] = $value;
+                                        }
+                                    } else {
+                                        // For unknown metadata keys, always include them
+                                        $filtered_metadata[$key] = $value;
+                                    }
+                                }
+
+                                $return['s3_metadata'] = $filtered_metadata;
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception $e) {
+            $return = ['success' => false, 'error' => $e->getMessage()];
+        }
+
+        echo json_encode($return);
+        exit;
+        break;
     case 'download':
         $download = new Download;
-        $download->download($_GET['id']);
+        $inline = isset($_GET['inline']) && $_GET['inline'] == '1';
+        $download->download($_GET['id'], $inline);
         break;
     case 'dismiss_upgraded_notice':
         redirect_if_not_logged_in();

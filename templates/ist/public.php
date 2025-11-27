@@ -500,18 +500,43 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                             <span><?php echo format_date($file->uploaded_date); ?></span>
                         </div>
 
-                    <!-- Action Buttons -->
-                    <div class="flex gap-2">
-                        <!-- View Details Button -->
-                        <a href="<?php echo BASE_URI; ?>download.php?id=<?php echo $file->id; ?>&token=<?php echo $file->public_token; ?>"
-                           class="flex-1 flex items-center justify-center px-3 py-1.5 border border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
-                            <i class="fas fa-eye mr-1.5 text-xs"></i>
-                            <span class="uppercase tracking-wider"><?php echo __('View', 'ist_template'); ?></span>
-                        </a>
+                    <!-- Action Buttons - 2 rows layout -->
+                    <div class="space-y-2">
+                        <!-- Row 1: Info and Preview/View -->
+                        <div class="flex gap-2">
+                            <!-- Info Button -->
+                            <button type="button"
+                               class="get-info flex items-center justify-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                               data-file-id="<?php echo $file->id; ?>"
+                               title="<?php echo __('File Info', 'ist_template'); ?>">
+                                <i class="fas fa-info-circle mr-1.5 text-xs"></i>
+                                <span class="uppercase tracking-wider"><?php echo __('Info', 'ist_template'); ?></span>
+                            </button>
 
-                        <!-- Download Button -->
+                            <?php if ($file->embeddable): ?>
+                            <!-- Preview Button -->
+                            <button type="button"
+                               class="get-preview flex-1 flex items-center justify-center px-3 py-1.5 border border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                               data-file-id="<?php echo $file->id; ?>"
+                               data-file-name="<?php echo html_output($file->filename_original); ?>"
+                               data-file-type="<?php echo $file->embeddable_type; ?>"
+                               data-file-url="<?php echo html_entity_decode($file->download_link) . '&inline=1'; ?>">
+                                <i class="fas fa-eye mr-1.5 text-xs"></i>
+                                <span class="uppercase tracking-wider"><?php echo __('Preview', 'ist_template'); ?></span>
+                            </button>
+                            <?php else: ?>
+                            <!-- View Details Button (for non-previewable files) -->
+                            <a href="<?php echo BASE_URI; ?>download.php?id=<?php echo $file->id; ?>&token=<?php echo $file->public_token; ?>"
+                               class="flex-1 flex items-center justify-center px-3 py-1.5 border border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                                <i class="fas fa-eye mr-1.5 text-xs"></i>
+                                <span class="uppercase tracking-wider"><?php echo __('View', 'ist_template'); ?></span>
+                            </a>
+                            <?php endif; ?>
+                        </div>
+
+                        <!-- Row 2: Download (full width) -->
                         <a href="<?php echo $file->download_link; ?>"
-                           class="flex-1 flex items-center justify-center px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+                           class="w-full flex items-center justify-center px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
                             <i class="fas fa-download mr-1.5 text-xs"></i>
                             <span class="uppercase tracking-wider"><?php echo __('Download', 'ist_template'); ?></span>
                         </a>
@@ -597,6 +622,421 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
     </script>
 
     <?php render_custom_assets('body_bottom'); ?>
+
+    <!-- Preview Modal -->
+    <div id="preview_modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div id="preview_modal_overlay" class="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 transition-opacity"></div>
+
+            <!-- Modal panel -->
+            <div id="preview_modal_panel" class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle" style="width: 600px; max-width: 90vw;">
+                <div class="bg-white dark:bg-gray-800" style="height: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 id="preview_modal_title" class="text-lg font-medium text-gray-900 dark:text-white truncate pr-4"></h3>
+                        <div class="flex items-center space-x-2">
+                            <button type="button" id="preview_fullscreen_toggle" class="p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700" title="<?php echo __('Toggle Fullscreen', 'ist_template'); ?>">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                            <button type="button" id="preview_modal_close" class="p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Body -->
+                    <div id="preview_modal_body" class="flex-1 overflow-auto p-0">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Preview Modal Styles */
+        #preview_modal.fullscreen #preview_modal_panel {
+            width: 100% !important;
+            max-width: 100% !important;
+            height: 100vh !important;
+            max-height: 100vh !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+        }
+        #preview_modal.fullscreen #preview_modal_panel > div {
+            height: 100vh !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+        }
+        #preview_modal .pdf-preview-container,
+        #preview_modal .pdf-preview-container object,
+        #preview_modal .pdf-preview-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        #preview_modal_body img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+        #preview_modal_body video,
+        #preview_modal_body audio {
+            width: 100%;
+        }
+    </style>
+
+    <!-- Info Modal -->
+    <div id="info_modal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="info-modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <!-- Background overlay -->
+            <div id="info_modal_overlay" class="fixed inset-0 bg-gray-500 bg-opacity-75 dark:bg-gray-900 dark:bg-opacity-75 transition-opacity"></div>
+
+            <!-- Modal panel -->
+            <div class="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white dark:bg-gray-800">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white flex items-center">
+                            <i class="fas fa-info-circle mr-2 text-primary-500"></i>
+                            <?php echo __('File Information', 'ist_template'); ?>
+                        </h3>
+                        <button type="button" id="info_modal_close" class="p-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <!-- Body -->
+                    <div class="px-6 py-4 max-h-[70vh] overflow-y-auto">
+                        <!-- Loading indicator -->
+                        <div id="info_loading" class="text-center py-8">
+                            <i class="fas fa-spinner fa-spin text-2xl text-primary-500"></i>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400"><?php echo __('Loading...', 'ist_template'); ?></p>
+                        </div>
+
+                        <!-- Content -->
+                        <div id="info_content" class="hidden">
+                            <dl class="space-y-4">
+                                <!-- Basic Info Section -->
+                                <div class="pb-3 border-b border-gray-200 dark:border-gray-700">
+                                    <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3"><?php echo __('Basic Information', 'ist_template'); ?></h4>
+                                    <div class="space-y-3">
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Title', 'ist_template'); ?></dt>
+                                            <dd id="info_file_title" class="mt-1 text-sm text-gray-900 dark:text-white font-semibold"></dd>
+                                        </div>
+                                        <div>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Filename', 'ist_template'); ?></dt>
+                                            <dd id="info_file_name" class="mt-1 text-sm text-gray-900 dark:text-white break-all"></dd>
+                                        </div>
+                                        <div id="info_description_row">
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Description', 'ist_template'); ?></dt>
+                                            <dd id="info_file_description" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('File Type', 'ist_template'); ?></dt>
+                                                <dd id="info_file_type" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
+                                            </div>
+                                            <div>
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('File Size', 'ist_template'); ?></dt>
+                                                <dd id="info_file_size" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
+                                            </div>
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Upload Date', 'ist_template'); ?></dt>
+                                                <dd id="info_file_date" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
+                                            </div>
+                                            <div>
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Expires', 'ist_template'); ?></dt>
+                                                <dd id="info_file_expiry" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- S3 Metadata Section -->
+                                <div id="info_s3_section" class="hidden">
+                                    <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3"><?php echo __('Document Metadata', 'ist_template'); ?></h4>
+                                    <div id="info_s3_metadata" class="space-y-3">
+                                        <!-- S3 metadata will be populated here -->
+                                    </div>
+                                </div>
+                            </dl>
+                        </div>
+                    </div>
+                    <!-- Footer -->
+                    <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600 flex justify-end">
+                        <button type="button" id="info_modal_close_btn" class="px-4 py-2 bg-primary-500 hover:bg-primary-600 text-white rounded-lg font-medium transition-colors duration-200">
+                            <?php echo __('Close', 'ist_template'); ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Preview Modal
+        const modal = document.getElementById('preview_modal');
+        const modalPanel = document.getElementById('preview_modal_panel');
+        const modalTitle = document.getElementById('preview_modal_title');
+        const modalBody = document.getElementById('preview_modal_body');
+        const modalClose = document.getElementById('preview_modal_close');
+        const modalOverlay = document.getElementById('preview_modal_overlay');
+        const fullscreenToggle = document.getElementById('preview_fullscreen_toggle');
+
+        // Info Modal
+        const infoModal = document.getElementById('info_modal');
+        const infoModalOverlay = document.getElementById('info_modal_overlay');
+        const infoModalClose = document.getElementById('info_modal_close');
+        const infoModalCloseBtn = document.getElementById('info_modal_close_btn');
+        const infoLoading = document.getElementById('info_loading');
+        const infoContent = document.getElementById('info_content');
+
+        // S3 metadata key labels
+        const metadataLabels = {
+            'created-by': '<?php echo __('Created By', 'ist_template'); ?>',
+            'created-by-email': '<?php echo __('Creator Email', 'ist_template'); ?>',
+            'created-by-title': '<?php echo __('Creator Title', 'ist_template'); ?>',
+            'modified-by': '<?php echo __('Modified By', 'ist_template'); ?>',
+            'modified-date': '<?php echo __('Modified Date', 'ist_template'); ?>',
+            'is-versioned': '<?php echo __('Versioned', 'ist_template'); ?>',
+            'is-current-version': '<?php echo __('Current Version', 'ist_template'); ?>',
+            'version-id': '<?php echo __('Version ID', 'ist_template'); ?>',
+            'content-type': '<?php echo __('Content Type', 'ist_template'); ?>',
+            'crawl-depth': '<?php echo __('Crawl Depth', 'ist_template'); ?>',
+            'discovered-from': '<?php echo __('Discovered From', 'ist_template'); ?>',
+            'enriched-files': '<?php echo __('Enriched Files', 'ist_template'); ?>',
+            'enriched-version-label': '<?php echo __('Enriched Version Label', 'ist_template'); ?>',
+            'sharepoint-file-size': '<?php echo __('SharePoint File Size', 'ist_template'); ?>',
+            'sharepoint-url': '<?php echo __('SharePoint URL', 'ist_template'); ?>',
+            'version-url': '<?php echo __('Version URL', 'ist_template'); ?>'
+        };
+
+        // Open info modal and fetch data
+        function openInfoModal(fileId) {
+            // Show modal with loading state
+            infoLoading.classList.remove('hidden');
+            infoContent.classList.add('hidden');
+            infoModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+
+            // Fetch file metadata
+            fetch(window.base_url + 'process.php?do=get_file_metadata&file_id=' + fileId)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Populate basic info
+                        document.getElementById('info_file_title').textContent = data.title || '-';
+                        document.getElementById('info_file_name').textContent = data.filename || '-';
+                        document.getElementById('info_file_description').textContent = data.description || '-';
+                        document.getElementById('info_file_type').textContent = data.type || '-';
+                        document.getElementById('info_file_size').textContent = data.size || '-';
+                        document.getElementById('info_file_date').textContent = data.upload_date || '-';
+                        document.getElementById('info_file_expiry').textContent = data.expiry || '-';
+
+                        // Hide description row if empty
+                        const descRow = document.getElementById('info_description_row');
+                        if (!data.description || data.description === '') {
+                            descRow.style.display = 'none';
+                        } else {
+                            descRow.style.display = 'block';
+                        }
+
+                        // Populate S3 metadata if available
+                        const s3Section = document.getElementById('info_s3_section');
+                        const s3Container = document.getElementById('info_s3_metadata');
+                        s3Container.innerHTML = '';
+
+                        if (data.s3_metadata && Object.keys(data.s3_metadata).length > 0) {
+                            s3Section.classList.remove('hidden');
+
+                            // Define display order for metadata
+                            const displayOrder = ['created-by', 'created-by-email', 'created-by-title', 'modified-by', 'modified-date', 'is-versioned', 'is-current-version', 'version-id', 'content-type', 'crawl-depth', 'discovered-from', 'enriched-files', 'enriched-version-label', 'sharepoint-file-size', 'sharepoint-url', 'version-url'];
+
+                            // First add ordered items
+                            displayOrder.forEach(key => {
+                                if (data.s3_metadata[key] !== undefined) {
+                                    addMetadataRow(s3Container, key, data.s3_metadata[key]);
+                                }
+                            });
+
+                            // Then add any remaining items not in the order list
+                            Object.keys(data.s3_metadata).forEach(key => {
+                                if (!displayOrder.includes(key)) {
+                                    addMetadataRow(s3Container, key, data.s3_metadata[key]);
+                                }
+                            });
+                        } else {
+                            s3Section.classList.add('hidden');
+                        }
+
+                        // Show content, hide loading
+                        infoLoading.classList.add('hidden');
+                        infoContent.classList.remove('hidden');
+                    } else {
+                        closeInfoModal();
+                        alert('<?php echo __('Failed to load file information', 'ist_template'); ?>');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching file metadata:', error);
+                    closeInfoModal();
+                    alert('<?php echo __('Failed to load file information', 'ist_template'); ?>');
+                });
+        }
+
+        // Helper function to add metadata row
+        function addMetadataRow(container, key, value) {
+            const label = metadataLabels[key] || formatMetadataKey(key);
+            const displayValue = formatMetadataValue(key, value);
+
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">${label}</dt>
+                <dd class="mt-1 text-sm text-gray-900 dark:text-white">${displayValue}</dd>
+            `;
+            container.appendChild(div);
+        }
+
+        // Format metadata key to readable label
+        function formatMetadataKey(key) {
+            return key.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        // Format metadata value
+        function formatMetadataValue(key, value) {
+            if (value === 'true' || value === true) return '<?php echo __('Yes', 'ist_template'); ?>';
+            if (value === 'false' || value === false) return '<?php echo __('No', 'ist_template'); ?>';
+            return value || '-';
+        }
+
+        // Close info modal
+        function closeInfoModal() {
+            infoModal.classList.add('hidden');
+            document.body.style.overflow = '';
+            // Reset to loading state for next open
+            infoLoading.classList.remove('hidden');
+            infoContent.classList.add('hidden');
+        }
+
+        // Info modal event listeners
+        document.querySelectorAll('.get-info').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const fileId = this.dataset.fileId;
+                openInfoModal(fileId);
+            });
+        });
+
+        infoModalClose.addEventListener('click', closeInfoModal);
+        infoModalCloseBtn.addEventListener('click', closeInfoModal);
+        infoModalOverlay.addEventListener('click', closeInfoModal);
+
+        // Open preview modal
+        function openModal(fileName, fileType, fileUrl) {
+            modalTitle.textContent = fileName;
+
+            let content = '';
+            switch (fileType) {
+                case 'video':
+                    content = `
+                        <div class="w-full h-full flex items-center justify-center p-4">
+                            <video controls class="max-w-full max-h-full">
+                                <source src="${fileUrl}">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>`;
+                    break;
+                case 'audio':
+                    content = `
+                        <div class="w-full h-full flex items-center justify-center p-4">
+                            <audio controls class="w-full max-w-md">
+                                <source src="${fileUrl}">
+                                Your browser does not support the audio tag.
+                            </audio>
+                        </div>`;
+                    break;
+                case 'pdf':
+                    // Add PDF viewer parameters to disable toolbar (read-only)
+                    const pdfUrl = fileUrl + '#toolbar=0&navpanes=0&scrollbar=1&view=FitH';
+                    content = `
+                        <div class="pdf-preview-container" style="height: 100%;">
+                            <object data="${pdfUrl}" type="application/pdf" style="width: 100%; height: 100%;">
+                                <iframe src="${pdfUrl}" style="width: 100%; height: 100%; border: none;">
+                                    <p>Your browser does not support PDFs. <a href="${fileUrl}" target="_blank">Download the PDF</a>.</p>
+                                </iframe>
+                            </object>
+                        </div>`;
+                    break;
+                case 'image':
+                    content = `
+                        <div class="w-full h-full flex items-center justify-center p-4">
+                            <img src="${fileUrl}" alt="${fileName}" class="max-w-full max-h-full object-contain">
+                        </div>`;
+                    break;
+                default:
+                    content = `<div class="p-4 text-center text-gray-500">Preview not available for this file type.</div>`;
+            }
+
+            modalBody.innerHTML = content;
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close modal
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('fullscreen');
+            fullscreenToggle.querySelector('i').classList.remove('fa-compress');
+            fullscreenToggle.querySelector('i').classList.add('fa-expand');
+            modalBody.innerHTML = '';
+            document.body.style.overflow = '';
+        }
+
+        // Toggle fullscreen
+        function toggleFullscreen() {
+            modal.classList.toggle('fullscreen');
+            const icon = fullscreenToggle.querySelector('i');
+            if (modal.classList.contains('fullscreen')) {
+                icon.classList.remove('fa-expand');
+                icon.classList.add('fa-compress');
+            } else {
+                icon.classList.remove('fa-compress');
+                icon.classList.add('fa-expand');
+            }
+        }
+
+        // Event listeners
+        document.querySelectorAll('.get-preview').forEach(function(btn) {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const fileName = this.dataset.fileName;
+                const fileType = this.dataset.fileType;
+                const fileUrl = this.dataset.fileUrl;
+                openModal(fileName, fileType, fileUrl);
+            });
+        });
+
+        modalClose.addEventListener('click', closeModal);
+        modalOverlay.addEventListener('click', closeModal);
+        fullscreenToggle.addEventListener('click', toggleFullscreen);
+
+        // Close on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (!modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+                if (!infoModal.classList.contains('hidden')) {
+                    closeInfoModal();
+                }
+            }
+        });
+    });
+    </script>
 
 </body>
 </html>

@@ -922,11 +922,9 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
                                 break;
                         }
 
-                        // Preview
+                        // Preview - check if file can be previewed
                         $preview_cell = '';
-                        if ($file->embeddable) {
-                            $preview_cell = '<button class="btn btn-warning btn-sm btn-wide get-preview" data-url="' . BASE_URI . 'process.php?do=get_preview&file_id=' . $file->id . '">' . __('Preview', 'cftp_admin') . '</button>';
-                        }
+                        // For local images, try to create thumbnail
                         if (file_is_image($file->full_path)) {
                             $thumbnail = make_thumbnail($file->full_path, 'proportional', 300, 300, 90);
                             if (!empty($thumbnail['thumbnail']['url'])) {
@@ -936,6 +934,14 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
                                             <img alt="" src="' . $placeholder . '" data-thumbnail="' . $thumbnail['thumbnail']['url'] . '" class="thumbnail lazy-thumbnail" />
                                         </a>';
                             }
+                        }
+                        // For non-image files or S3 files, show preview button if embeddable
+                        // Check both the isEmbeddable method and direct extension check for S3 files
+                        $embeddable_extensions = ['pdf', 'mp4', 'ogg', 'webm', 'mp3', 'wav', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'svg'];
+                        $file_ext = strtolower($file->getExtension());
+                        $is_embeddable = $file->isEmbeddable() || in_array($file_ext, $embeddable_extensions);
+                        if (empty($preview_cell) && $is_embeddable) {
+                            $preview_cell = '<button class="btn btn-warning btn-sm btn-wide get-preview" data-url="' . BASE_URI . 'process.php?do=get_preview&file_id=' . $file->id . '">' . __('Preview', 'cftp_admin') . '</button>';
                         }
 
                         // Is file assigned?

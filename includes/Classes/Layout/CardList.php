@@ -555,6 +555,7 @@ class CardList
             'extension' => '',
             'filename' => '',
             'preview_url' => '',
+            'preview_button' => '',
             'is_image' => false
         ];
 
@@ -593,10 +594,14 @@ class CardList
         $image_extensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'];
         $file_info['is_image'] = in_array($file_info['extension'], $image_extensions);
 
-        // Look for existing preview/thumbnail in original preview data
+        // Look for existing preview/thumbnail or button in original preview data
         if (!empty($data['preview'])) {
             if (preg_match('/<img[^>]+src="([^"]+)"/', $data['preview'], $matches)) {
                 $file_info['preview_url'] = $matches[1];
+            }
+            // Check for preview button (for PDFs, videos, audio files)
+            if (strpos($data['preview'], 'get-preview') !== false) {
+                $file_info['preview_button'] = $data['preview'];
             }
         }
 
@@ -626,15 +631,15 @@ class CardList
                     $preview_html .= '</div>';
                 } else {
                     // Fallback to extension badge for images without thumbnails
-                    $preview_html .= $this->generateExtensionBadge($file_info['extension']);
+                    $preview_html .= $this->generateExtensionBadge($file_info['extension'], $file_info['preview_button']);
                 }
             } else {
                 // No file ID, use extension badge
-                $preview_html .= $this->generateExtensionBadge($file_info['extension']);
+                $preview_html .= $this->generateExtensionBadge($file_info['extension'], $file_info['preview_button']);
             }
         } else {
-            // Non-image files get extension badges
-            $preview_html .= $this->generateExtensionBadge($file_info['extension']);
+            // Non-image files get extension badges with preview button below
+            $preview_html .= $this->generateExtensionBadge($file_info['extension'], $file_info['preview_button']);
         }
 
         $preview_html .= '</div>';
@@ -642,16 +647,25 @@ class CardList
     }
 
     /**
-     * Generate extension badge for non-image files
+     * Generate extension badge for non-image files with optional preview button below
      */
-    private function generateExtensionBadge($extension)
+    private function generateExtensionBadge($extension, $preview_button = '')
     {
         $extension = strtoupper($extension);
         $color_class = $this->getExtensionColorClass($extension);
 
-        return '<div class="extension-badge ' . $color_class . '">' .
-               '<span class="extension-text">' . $extension . '</span>' .
-               '</div>';
+        $html = '<div class="extension-badge-wrapper">';
+        $html .= '<div class="extension-badge ' . $color_class . '">';
+        $html .= '<span class="extension-text">' . $extension . '</span>';
+        $html .= '</div>';
+
+        // Add preview button below the badge if available
+        if (!empty($preview_button)) {
+            $html .= '<div class="preview-button-below">' . $preview_button . '</div>';
+        }
+
+        $html .= '</div>';
+        return $html;
     }
 
     /**

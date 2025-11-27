@@ -697,6 +697,7 @@
     </div> <!-- container -->
 
     <div class="after_form_buttons">
+        <a href="manage-files.php" class="btn btn-wide btn-secondary"><?php _e('Cancel','cftp_admin'); ?></a>
         <button type="submit" name="save" class="btn btn-wide btn-primary" id="upload-continue"><?php _e('Save','cftp_admin'); ?></button>
     </div>
 </form>

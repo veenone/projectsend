@@ -47,6 +47,22 @@ switch ($section) {
             'public_listing_use_download_link',
             'public_listing_enable_preview',
             'public_listing_home_show_link',
+            'metadata_show_created_by',
+            'metadata_show_created_by_email',
+            'metadata_show_created_by_title',
+            'metadata_show_modified_by',
+            'metadata_show_modified_date',
+            'metadata_show_is_versioned',
+            'metadata_show_is_current_version',
+            'metadata_show_version_id',
+            'metadata_show_content_type',
+            'metadata_show_crawl_depth',
+            'metadata_show_discovered_from',
+            'metadata_show_enriched_files',
+            'metadata_show_enriched_version_label',
+            'metadata_show_sharepoint_file_size',
+            'metadata_show_sharepoint_url',
+            'metadata_show_version_url',
         );
         break;
     case 'email':
