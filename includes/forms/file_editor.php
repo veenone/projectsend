@@ -457,18 +457,41 @@
                                                         <label><?php _e('Store in this folder', 'cftp_admin');?>:</label>
                                                         <?php
                                                             $ignore = [];
-                                                            if (current_role_in(['Client'])) {
+                                                            $allowed_folder_ids = [];
+
+                                                            // Filter folders for Client and Internal User roles
+                                                            if (current_role_in(['Client', 'Internal User'])) {
                                                                 $see_public_folders = get_option('clients_files_list_include_public');
+
+                                                                // Get user's group IDs for group-based folder access
+                                                                $user_group_ids = [];
+                                                                $group_stmt = $dbh->prepare("SELECT group_id FROM " . TABLE_MEMBERS . " WHERE COALESCE(user_id, client_id) = :user_id");
+                                                                $group_stmt->execute([':user_id' => CURRENT_USER_ID]);
+                                                                while ($group_row = $group_stmt->fetch(PDO::FETCH_ASSOC)) {
+                                                                    $user_group_ids[] = $group_row['group_id'];
+                                                                }
+
+                                                                // Get all folders and determine which ones user can access
                                                                 $statement = $dbh->prepare("SELECT * FROM " . TABLE_FOLDERS);
                                                                 $statement->execute();
                                                                 if ($statement->rowCount() > 0) {
                                                                     $statement->setFetchMode(PDO::FETCH_ASSOC);
                                                                     while ($folder_row = $statement->fetch()) {
+                                                                        $can_access = false;
+
+                                                                        // User created this folder
                                                                         if ($folder_row['user_id'] == CURRENT_USER_ID) {
-                                                                            continue;
+                                                                            $can_access = true;
                                                                         }
-                                                                        if ($see_public_folders == '1' && $folder_row['public'] != 1) {
+                                                                        // Public folder and user can see public folders
+                                                                        elseif ($see_public_folders == '1' && $folder_row['public'] == 1) {
+                                                                            $can_access = true;
+                                                                        }
+
+                                                                        if (!$can_access) {
                                                                             $ignore[] = $folder_row['id'];
+                                                                        } else {
+                                                                            $allowed_folder_ids[] = $folder_row['id'];
                                                                         }
                                                                     }
                                                                 }
@@ -477,13 +500,18 @@
                                                             $folders = new \ProjectSend\Classes\Folders;
                                                             $folders_arranged = $folders->getAllArranged();
 
-                                                            if (current_role_in(['Client']) && get_option('clients_files_list_include_public')) {
-                                                                $folders_arguments['public_or_client'] = true;
+                                                            // Use upload_to_folder for new files if set, otherwise use file's current folder
+                                                            $selected_folder = $file->folder_id;
+                                                            if (empty($selected_folder) && !empty($upload_to_folder)) {
+                                                                // Verify user can access this folder before pre-selecting
+                                                                if (!in_array($upload_to_folder, $ignore)) {
+                                                                    $selected_folder = $upload_to_folder;
+                                                                }
                                                             }
                                                         ?>
                                                         <select class="form-select select2 none" id="folder_<?php echo $file->id; ?>" name="file[<?php echo $i; ?>][folder_id]" data-type="folder" data-placeholder="<?php _e('Optional. Type to search.', 'cftp_admin');?>">
                                                             <option value=""><?php _e('Root','cftp_admin'); ?></option>
-                                                            <?php echo $folders->renderSelectOptions($folders_arranged, ['selected' => $file->folder_id, 'ignore' => $ignore]); ?>
+                                                            <?php echo $folders->renderSelectOptions($folders_arranged, ['selected' => $selected_folder, 'ignore' => $ignore]); ?>
                                                         </select>
                                                     </div>
                                                     </div>

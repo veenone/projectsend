@@ -258,8 +258,12 @@ class Options
         // Set a page for each status code
         define('STATUS_PAGES_DIR', ADMIN_VIEWS_DIR . DS . 'http_status_pages');
         define('PAGE_STATUS_CODE_URL', BASE_URI . 'error.php');
+        define('PAGE_STATUS_CODE_401', PAGE_STATUS_CODE_URL . '?e=401');
         define('PAGE_STATUS_CODE_403', PAGE_STATUS_CODE_URL . '?e=403');
         define('PAGE_STATUS_CODE_404', PAGE_STATUS_CODE_URL . '?e=404');
+        define('PAGE_STATUS_CODE_500', PAGE_STATUS_CODE_URL . '?e=500');
+        define('PAGE_STATUS_CODE_CSRF', PAGE_STATUS_CODE_URL . '?e=csrf');
+        define('PAGE_STATUS_CODE_DATABASE', PAGE_STATUS_CODE_URL . '?e=database');
         define('PAGE_STATUS_CODE_REQUIREMENTS', PAGE_STATUS_CODE_URL . '?e=requirements');
     }
 }

@@ -15,6 +15,9 @@ $page_id = 'file_editor';
 
 define('CAN_INCLUDE_FILES', true);
 
+// Get upload folder from form (passed from upload.php)
+$upload_to_folder = isset($_POST['upload_to_folder']) && !empty($_POST['upload_to_folder']) ? (int)$_POST['upload_to_folder'] : null;
+
 // Editable
 $editable = [];
 $files = explode(',', $_GET['ids']);
@@ -128,7 +131,8 @@ if (isset($_POST['save'])) {
             }
         }
 
-        foreach ($file['custom_downloads'] as $custom_download) {
+        $custom_downloads = $file['custom_downloads'] ?? [];
+        foreach ($custom_downloads as $custom_download) {
             global $dbh;
 
             if (custom_download_exists($custom_download["link"]) && (!isset($_GET['confirmed']) || !$_GET['confirmed'])) {
@@ -236,7 +240,7 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
 <div class="row">
     <div class="col-12">
         <?php
-        // Saved files
+        // Saved files - Success view
         $saved_files = [];
         if (!empty($_GET['saved'])) {
             foreach ($editable as $file_id) {
@@ -245,87 +249,181 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
                 }
             }
 
-            // Generate the table using the class.
-            $table = new \ProjectSend\Classes\Layout\Table([
-                'id' => 'uploaded_files_tbl',
-                'class' => 'footable table',
-                'origin' => basename(__FILE__),
-            ]);
+            $file_count = count($saved_files);
+        ?>
+            <!-- Success Header -->
+            <div class="upload-success-header mb-4">
+                <div class="d-flex align-items-center justify-content-center flex-column text-center py-4">
+                    <div class="success-icon mb-3">
+                        <i class="fa fa-check-circle text-success" style="font-size: 4rem;"></i>
+                    </div>
+                    <h3 class="mb-2"><?php echo sprintf(_n('%d File Uploaded Successfully', '%d Files Uploaded Successfully', $file_count, 'cftp_admin'), $file_count); ?></h3>
+                    <p class="text-muted mb-0"><?php _e('Your files have been saved and are ready to use.', 'cftp_admin'); ?></p>
+                </div>
+            </div>
 
-            $thead_columns = array(
-                array(
-                    'content' => __('Title', 'cftp_admin'),
-                ),
-                array(
-                    'content' => __('Description', 'cftp_admin'),
-                ),
-                array(
-                    'content' => __('File Name', 'cftp_admin'),
-                ),
-                array(
-                    'content' => __('Public', 'cftp_admin'),
-                    'condition' => (!current_role_in(['Client']) || current_user_can('upload_public')),
-                    'hide' => 'phone',
-                ),
-                array(
-                    'content' => __("Actions", 'cftp_admin'),
-                    'hide' => 'phone',
-                ),
-            );
-            $table->thead($thead_columns);
+            <!-- Quick Actions -->
+            <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+                <a href="upload.php" class="btn btn-primary">
+                    <i class="fa fa-cloud-upload"></i> <?php _e('Upload More Files', 'cftp_admin'); ?>
+                </a>
+                <a href="manage-files.php" class="btn btn-outline-secondary">
+                    <i class="fa fa-folder"></i> <?php _e('Manage Files', 'cftp_admin'); ?>
+                </a>
+                <?php if (current_role_in(['Client'])): ?>
+                <a href="<?php echo CLIENT_VIEW_FILE_LIST_URL; ?>" class="btn btn-outline-secondary">
+                    <i class="fa fa-list"></i> <?php _e('View My Files', 'cftp_admin'); ?>
+                </a>
+                <?php endif; ?>
+            </div>
 
-            foreach ($saved_files as $file_id) {
-                $file = new \ProjectSend\Classes\Files($file_id);
-                if ($file->recordExists()) {
-                    $table->addRow();
-
-                    if ($file->public == '1') {
-                        $col_public = '<a href="javascript:void(0);" class="btn btn-primary btn-sm public_link" data-type="file" data-public-url="'.$file->public_url.'" data-title="'.$file->title.'">'.__('Public', 'cftp_admin').'</a>';
-                    } else {
-                        $col_public = '<a href="javascript:void(0);" class="btn btn-pslight btn-sm disabled" rel="" title="">'.__('Private', 'cftp_admin').'</a>';
+            <!-- Uploaded Files Grid -->
+            <div class="uploaded-files-grid">
+                <h5 class="mb-3"><i class="fa fa-files-o"></i> <?php _e('Uploaded Files', 'cftp_admin'); ?></h5>
+                <div class="row g-3">
+                <?php
+                foreach ($saved_files as $file_id) {
+                    $file = new \ProjectSend\Classes\Files($file_id);
+                    if ($file->recordExists()) {
+                        // Determine file icon based on extension
+                        $ext = strtolower($file->extension);
+                        $icon_class = 'fa-file-o';
+                        $icon_color = 'text-secondary';
+                        if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'])) {
+                            $icon_class = 'fa-file-image-o';
+                            $icon_color = 'text-info';
+                        } elseif (in_array($ext, ['pdf'])) {
+                            $icon_class = 'fa-file-pdf-o';
+                            $icon_color = 'text-danger';
+                        } elseif (in_array($ext, ['doc', 'docx'])) {
+                            $icon_class = 'fa-file-word-o';
+                            $icon_color = 'text-primary';
+                        } elseif (in_array($ext, ['xls', 'xlsx'])) {
+                            $icon_class = 'fa-file-excel-o';
+                            $icon_color = 'text-success';
+                        } elseif (in_array($ext, ['ppt', 'pptx'])) {
+                            $icon_class = 'fa-file-powerpoint-o';
+                            $icon_color = 'text-warning';
+                        } elseif (in_array($ext, ['zip', 'rar', '7z', 'tar', 'gz'])) {
+                            $icon_class = 'fa-file-archive-o';
+                            $icon_color = 'text-warning';
+                        } elseif (in_array($ext, ['mp4', 'avi', 'mov', 'wmv', 'webm'])) {
+                            $icon_class = 'fa-file-video-o';
+                            $icon_color = 'text-purple';
+                        } elseif (in_array($ext, ['mp3', 'wav', 'ogg', 'flac'])) {
+                            $icon_class = 'fa-file-audio-o';
+                            $icon_color = 'text-pink';
+                        } elseif (in_array($ext, ['txt', 'rtf'])) {
+                            $icon_class = 'fa-file-text-o';
+                            $icon_color = 'text-secondary';
+                        } elseif (in_array($ext, ['html', 'css', 'js', 'php', 'py', 'java'])) {
+                            $icon_class = 'fa-file-code-o';
+                            $icon_color = 'text-dark';
+                        }
+                ?>
+                    <div class="col-12 col-md-6 col-xl-4">
+                        <div class="card uploaded-file-card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-start gap-3">
+                                    <div class="file-icon <?php echo $icon_color; ?>">
+                                        <i class="fa <?php echo $icon_class; ?>" style="font-size: 2.5rem;"></i>
+                                    </div>
+                                    <div class="file-details flex-grow-1 min-width-0">
+                                        <h6 class="file-title mb-1 text-truncate" title="<?php echo html_output($file->title); ?>">
+                                            <?php echo html_output($file->title); ?>
+                                        </h6>
+                                        <p class="file-name text-muted small mb-2 text-truncate" title="<?php echo html_output($file->filename_original); ?>">
+                                            <?php echo html_output($file->filename_original); ?>
+                                        </p>
+                                        <div class="file-meta d-flex flex-wrap gap-2 mb-2">
+                                            <span class="badge bg-secondary"><?php echo strtoupper($file->extension); ?></span>
+                                            <span class="badge bg-light text-dark"><?php echo $file->size_formatted; ?></span>
+                                            <?php if ($file->public == '1'): ?>
+                                            <span class="badge bg-success"><?php _e('Public', 'cftp_admin'); ?></span>
+                                            <?php else: ?>
+                                            <span class="badge bg-secondary"><?php _e('Private', 'cftp_admin'); ?></span>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if (!empty($file->description)): ?>
+                                        <p class="file-description text-muted small mb-0 text-truncate-2" title="<?php echo html_output($file->description); ?>">
+                                            <?php echo html_output($file->description); ?>
+                                        </p>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-footer bg-transparent border-top">
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <a href="files-edit.php?ids=<?php echo $file->id; ?>" class="btn btn-sm btn-outline-primary flex-grow-1" title="<?php _e('Edit file', 'cftp_admin'); ?>">
+                                        <i class="fa fa-pencil"></i> <?php _e('Edit', 'cftp_admin'); ?>
+                                    </a>
+                                    <a href="<?php echo $file->download_link; ?>" class="btn btn-sm btn-outline-secondary" target="_blank" title="<?php _e('Download file', 'cftp_admin'); ?>">
+                                        <i class="fa fa-download"></i>
+                                    </a>
+                                    <?php if ($file->public == '1'): ?>
+                                    <button type="button" class="btn btn-sm btn-outline-success public_link" data-type="file" data-public-url="<?php echo $file->public_url; ?>" data-title="<?php echo html_output($file->title); ?>" title="<?php _e('Copy public link', 'cftp_admin'); ?>">
+                                        <i class="fa fa-link"></i>
+                                    </button>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <?php
                     }
-
-                    $col_actions = '<a href="files-edit.php?ids='.$file->id.'" class="btn-primary btn btn-sm">
-                        <i class="fa fa-pencil"></i><span class="button_label">'.__('Edit file', 'cftp_admin').'</span>
-                    </a>';
-
-                    // Show the "My files" button only to clients
-                    if (current_role_in(['Client'])) {
-                        $col_actions .= ' <a href="'. CLIENT_VIEW_FILE_LIST_URL .'" class="btn-primary btn btn-sm">'.__('View my files', 'cftp_admin').'</a>';
-                    }
-
-                    // Add the cells to the row
-                    $tbody_cells = array(
-                        array(
-                            'content' => $file->title,
-                        ),
-                        array(
-                            'content' => htmlentities_allowed($file->description),
-                        ),
-                        array(
-                            'content' => $file->filename_original,
-                        ),
-                        array(
-                            'content' => $col_public,
-                            'condition' => (!current_role_in(['Client']) || current_user_can('upload_public')),
-                            'attributes' => array(
-                                'class' => array('col_visibility'),
-                            ),
-                        ),
-                        array(
-                            'content' => $col_actions,
-                        ),
-                    );
-
-                    foreach ($tbody_cells as $cell) {
-                        $table->addCell($cell);
-                    }
-
-                    $table->end_row();
                 }
-            }
+                ?>
+                </div>
+            </div>
 
-            echo $table->render();
+            <style>
+            .upload-success-header {
+                background: linear-gradient(135deg, rgba(40, 167, 69, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+                border-radius: 12px;
+                border: 1px solid rgba(40, 167, 69, 0.2);
+            }
+            .uploaded-file-card {
+                border-radius: 8px;
+                border: 1px solid var(--border-color, #dee2e6);
+                transition: all 0.2s ease;
+            }
+            .uploaded-file-card:hover {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                transform: translateY(-2px);
+            }
+            .file-icon {
+                flex-shrink: 0;
+                width: 50px;
+                text-align: center;
+            }
+            .file-details {
+                overflow: hidden;
+            }
+            .file-title {
+                font-weight: 600;
+            }
+            .text-truncate-2 {
+                display: -webkit-box;
+                -webkit-line-clamp: 2;
+                -webkit-box-orient: vertical;
+                overflow: hidden;
+            }
+            .min-width-0 {
+                min-width: 0;
+            }
+            [data-theme="dark"] .upload-success-header {
+                background: linear-gradient(135deg, rgba(40, 167, 69, 0.15) 0%, rgba(0, 0, 0, 0) 100%);
+                border-color: rgba(40, 167, 69, 0.3);
+            }
+            [data-theme="dark"] .uploaded-file-card {
+                background: var(--bg-card);
+                border-color: var(--border-color);
+            }
+            [data-theme="dark"] .uploaded-file-card:hover {
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+            </style>
+        <?php
         } else {
             // Generate the table of files ready to be edited
             if (!empty($editable)) {

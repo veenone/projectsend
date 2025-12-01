@@ -150,7 +150,9 @@ switch ($_GET['do']) {
                     'size' => $file->size_formatted,
                     'type' => strtoupper($file->extension),
                     'upload_date' => format_date($file->uploaded_date),
+                    'uploader' => $file->uploaded_by ?? '',
                     'expiry' => ($file->expires == '1') ? format_date($file->expiry_date) : __('Never', 'cftp_admin'),
+                    'download_link' => $file->download_link,
                     's3_metadata' => []
                 ];
 

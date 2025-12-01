@@ -320,11 +320,12 @@
         {
             const url = document.getElementById('folder_context_menu__links').dataset.urlDelete;
             const folder_name = folder.dataset.name;
-            const html = `Delete folder ${folder_name} and all of its contents?`
+            const html = `Delete folder <strong>${folder_name}</strong> and all of its contents?`
 
             Swal.fire({
                 title: 'Delete folder',
                 html: html,
+                icon: 'warning',
                 showCloseButton: false,
                 showCancelButton: true,
                 showConfirmButton: true,
@@ -345,19 +346,42 @@
                 }
             }).then((result) => {
                 if (result.value) {
+                    // Show loading state immediately
+                    Swal.fire({
+                        title: 'Deleting...',
+                        html: 'Please wait while the folder and its contents are being deleted.',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            Swal.showLoading();
+                        }
+                    });
+
                     folder.classList.add('d-none');
 
                     var data = new FormData();
                     data.append('csrf_token', document.getElementById('csrf_token').value);
                     data.append('folder_id', folder.dataset.folderId);
-                    
+
                     axios.post(url, data)
                     .then(function (response) {
                         folder.remove();
+                        Swal.fire({
+                            title: 'Deleted!',
+                            text: 'Folder has been deleted successfully.',
+                            icon: 'success',
+                            timer: 1500,
+                            showConfirmButton: false
+                        });
                     })
                     .catch(function (error) {
                         folder.classList.remove('d-none');
-                        new Toast(error.response.data.error, Toast.TYPE_ERROR, Toast.TIME_NORMAL);
+                        Swal.fire({
+                            title: 'Error',
+                            text: 'Failed to delete folder. Please try again.',
+                            icon: 'error'
+                        });
                     });
                 }
             });

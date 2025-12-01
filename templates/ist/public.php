@@ -17,19 +17,21 @@ if (isset($_GET['per_page']) && in_array($_GET['per_page'], [5, 10, 15, 20, 25, 
 define('TEMPLATE_THUMBNAILS_WIDTH', '120');
 define('TEMPLATE_THUMBNAILS_HEIGHT', '120');
 
-// Flash errors
+// Set inline message for no results (don't use flash to avoid accumulation)
+$no_files_message = null;
+$no_files_message_type = 'warning';
 if (!$count) {
     if (isset($no_results_error)) {
         switch ($no_results_error) {
             case 'search':
-                $flash->error(__('Your search keywords returned no results.', 'ist_template'));
+                $no_files_message = __('Your search keywords returned no results.', 'ist_template');
+                $no_files_message_type = 'error';
                 break;
             case 'filter':
-                $flash->error(__('The filters you selected returned no results.', 'ist_template'));
+                $no_files_message = __('The filters you selected returned no results.', 'ist_template');
+                $no_files_message_type = 'error';
                 break;
         }
-    } else {
-        $flash->warning(__('There are no public files available.', 'ist_template'));
     }
 }
 
@@ -58,6 +60,33 @@ $count_for_pagination = $count;
 
 // Pagination
 $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
+
+// Get folder tree for sidebar navigation
+$current_folder = (isset($_GET['folder_id'])) ? (int)$_GET['folder_id'] : null;
+$folders_obj = new \ProjectSend\Classes\Folders();
+$folder_tree_arguments = [];
+if ($is_logged_in && defined('CURRENT_USER_ROLE_NAME')) {
+    if (current_role_in(['Client', 'Internal User'])) {
+        if (current_user_can('upload_public')) {
+            $folder_tree_arguments['public_or_client'] = true;
+            $folder_tree_arguments['client_id'] = CURRENT_USER_ID;
+        } else {
+            $folder_tree_arguments['user_id'] = CURRENT_USER_ID;
+        }
+        $folder_tree_arguments['role'] = CURRENT_USER_ROLE_NAME;
+        $folder_tree_arguments['client_id'] = CURRENT_USER_ID;
+    }
+}
+// For public view, get all public folders
+$folder_tree_arguments['include_public'] = true;
+$folder_tree = $folders_obj->getFolderTree($folder_tree_arguments, $current_folder);
+$tree_base_url = 'public.php';
+
+// Generate folder breadcrumbs if a folder is selected
+$folder_breadcrumbs = [];
+if (!empty($current_folder)) {
+    $folder_breadcrumbs = $folders_obj->makeFolderBreadcrumbs($current_folder, BASE_URI . 'public.php');
+}
 
 ?>
 <!DOCTYPE html>
@@ -152,6 +181,10 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
             color: var(--ist-text-primary) !important;
         }
 
+        .dark span {
+            color: #ffffff !important;
+        }
+
         /* Keep badge and utility class colors */
         span[class*="text-"],
         span[class*="bg-"],
@@ -169,14 +202,30 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
             color: var(--ist-text-secondary) !important;
         }
 
+        .dark .file-card h3 {
+            color: #ffffff !important;
+        }
+
+        .dark .file-card p {
+            color: #e5e7eb !important;
+        }
+
         /* Headings */
         h1, h2, h3, h4, h5, h6 {
             color: var(--ist-text-primary) !important;
         }
 
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6 {
+            color: #ffffff !important;
+        }
+
         /* Paragraphs */
         p:not([class*="text-"]) {
             color: var(--ist-text-secondary) !important;
+        }
+
+        .dark p:not([class*="text-"]) {
+            color: #e5e7eb !important;
         }
 
         /* Breadcrumb and navigation links */
@@ -296,7 +345,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                         </a>
 
                         <?php if (current_user_can_upload()) { ?>
-                        <a href="<?php echo BASE_URI; ?>upload.php"
+                        <a href="<?php echo BASE_URI; ?>upload.php<?php echo !empty($current_folder) ? '?folder_id=' . $current_folder : ''; ?>"
                            class="p-2 rounded-lg text-white hover:bg-white hover:bg-opacity-20 transition-colors duration-200"
                            title="<?php _e('Upload Files', 'ist_template'); ?>">
                             <i class="fas fa-cloud-upload-alt"></i>
@@ -340,15 +389,15 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
                         <?php echo __('Public Document Center', 'ist_template'); ?>
                     </h2>
-                    <p class="text-gray-600 dark:text-gray-300">
+                    <p class="text-gray-600 dark:text-white">
                         <?php echo __('Browse and download publicly available documents', 'ist_template'); ?>
                     </p>
                 </div>
 
                 <!-- Quick Stats -->
                 <div class="mt-4 sm:mt-0 flex space-x-4">
-                    <div class="bg-white dark:bg-gray-800 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <div class="text-sm text-gray-600 dark:text-gray-300"><?php echo __('Total Files', 'ist_template'); ?></div>
+                    <div class="bg-white dark:bg-gray-500 px-4 py-2 rounded-lg border border-gray-200 dark:border-gray-400">
+                        <div class="text-sm text-gray-600 dark:text-gray-100"><?php echo __('Total Files', 'ist_template'); ?></div>
                         <div class="text-xl font-semibold text-gray-900 dark:text-white"><?php echo $count_for_pagination; ?></div>
                     </div>
                 </div>
@@ -359,7 +408,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
         <?php
         $groups = get_groups(['public' => true]);
         if (!empty($groups) && $mode !== 'group'): ?>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div class="bg-white dark:bg-gray-500 rounded-lg shadow-sm border border-gray-200 dark:border-gray-400 p-6 mb-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 <i class="fas fa-layer-group mr-2"></i>
                 <?php echo __('Browse by Group', 'ist_template'); ?>
@@ -368,13 +417,13 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                 <?php foreach ($groups as $group):
                     $group_file_count = count_public_files_in_group($group['id']); ?>
                     <a href="<?php echo BASE_URI; ?>public.php?group=<?php echo $group['id']; ?>&token=<?php echo $group['public_token']; ?>"
-                       class="block p-4 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 hover:border-primary-500 dark:hover:border-primary-400 transition-colors duration-200">
+                       class="block p-4 bg-gray-50 dark:bg-gray-400 rounded-lg border border-gray-200 dark:border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-300 hover:border-primary-500 dark:hover:border-primary-400 transition-colors duration-200">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center">
                                 <i class="fas fa-folder text-primary-500 dark:text-primary-300 mr-3"></i>
                                 <span class="font-medium text-gray-900 dark:text-white"><?php echo html_output($group['name']); ?></span>
                             </div>
-                            <span class="bg-primary-100 dark:bg-primary-800 text-primary-800 dark:text-primary-100 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                            <span class="bg-primary-100 dark:bg-primary-500 text-primary-800 dark:text-white text-xs font-medium px-2.5 py-0.5 rounded-full">
                                 <?php echo $group_file_count; ?>
                             </span>
                         </div>
@@ -384,26 +433,67 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
         </div>
         <?php endif; ?>
 
-        <!-- Group Breadcrumb (when viewing a group) -->
-        <?php if ($mode === 'group' && isset($group_props)): ?>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6">
-            <div class="flex items-center space-x-2 text-sm">
-                <a href="<?php echo BASE_URI; ?>public.php" class="flex items-center text-primary-500 dark:text-primary-400 hover:text-primary-600 dark:hover:text-primary-300">
-                    <i class="fas fa-home mr-1"></i>
-                    <?php echo __('All Public Files', 'ist_template'); ?>
-                </a>
-                <span class="text-gray-400 dark:text-gray-500">></span>
-                <span class="flex items-center text-gray-700 dark:text-gray-300">
-                    <i class="fas fa-folder mr-1"></i>
-                    <?php echo html_output($group_props['name']); ?>
-                </span>
+        <!-- Navigation Breadcrumb -->
+        <?php if (($mode === 'group' && isset($group_props)) || !empty($folder_breadcrumbs)): ?>
+        <nav class="mb-6" aria-label="Breadcrumb">
+            <div class="bg-gradient-to-r from-gray-50 to-white dark:from-gray-600 dark:to-gray-500 rounded-xl shadow-sm border border-gray-200 dark:border-gray-400 overflow-hidden">
+                <div class="px-4 py-3 sm:px-6">
+                    <ol class="flex items-center flex-wrap gap-1 sm:gap-2 text-sm">
+                        <!-- Home -->
+                        <li class="flex items-center">
+                            <a href="<?php echo BASE_URI; ?>public.php"
+                               class="group flex items-center px-3 py-1.5 rounded-lg bg-white dark:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-500 text-primary-600 dark:text-primary-300 hover:bg-primary-50 dark:hover:bg-primary-900 hover:border-primary-300 dark:hover:border-primary-500 transition-all duration-200">
+                                <i class="fas fa-home text-xs mr-2 group-hover:scale-110 transition-transform"></i>
+                                <span class="font-medium"><?php echo __('All Files', 'ist_template'); ?></span>
+                            </a>
+                        </li>
+
+                        <?php if ($mode === 'group' && isset($group_props)): ?>
+                        <!-- Group breadcrumb -->
+                        <li class="flex items-center">
+                            <i class="fas fa-chevron-right text-gray-400 dark:text-gray-300 text-xs mx-1"></i>
+                        </li>
+                        <li class="flex items-center">
+                            <span class="flex items-center px-3 py-1.5 rounded-lg bg-primary-100 dark:bg-primary-800 text-primary-700 dark:text-primary-200 font-medium shadow-sm">
+                                <i class="fas fa-users text-xs mr-2"></i>
+                                <?php echo html_output($group_props['name']); ?>
+                            </span>
+                        </li>
+                        <?php endif; ?>
+
+                        <?php if (!empty($folder_breadcrumbs)): ?>
+                        <!-- Folder breadcrumbs -->
+                        <?php foreach ($folder_breadcrumbs as $index => $crumb): ?>
+                            <?php if ($index > 0): // Skip first "Files root" item since we have "All Files" ?>
+                            <li class="flex items-center">
+                                <i class="fas fa-chevron-right text-gray-400 dark:text-gray-300 text-xs mx-1"></i>
+                            </li>
+                            <li class="flex items-center">
+                                <?php if (!empty($crumb['url'])): ?>
+                                <a href="<?php echo htmlspecialchars($crumb['url']); ?>"
+                                   class="group flex items-center px-3 py-1.5 rounded-lg bg-white dark:bg-gray-700 shadow-sm border border-gray-200 dark:border-gray-500 text-gray-700 dark:text-gray-200 hover:bg-primary-50 dark:hover:bg-primary-900 hover:text-primary-600 dark:hover:text-primary-300 hover:border-primary-300 dark:hover:border-primary-500 transition-all duration-200">
+                                    <i class="fas fa-folder text-yellow-500 dark:text-yellow-400 text-xs mr-2 group-hover:scale-110 transition-transform"></i>
+                                    <span class="font-medium"><?php echo html_output($crumb['name']); ?></span>
+                                </a>
+                                <?php else: ?>
+                                <span class="flex items-center px-3 py-1.5 rounded-lg bg-primary-100 dark:bg-primary-700 text-primary-700 dark:text-white font-semibold shadow-sm">
+                                    <i class="fas fa-folder-open text-primary-500 dark:text-primary-300 text-xs mr-2"></i>
+                                    <?php echo html_output($crumb['name']); ?>
+                                </span>
+                                <?php endif; ?>
+                            </li>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                        <?php endif; ?>
+                    </ol>
+                </div>
             </div>
-        </div>
+        </nav>
         <?php endif; ?>
 
         <!-- Search and Filters -->
         <?php if ($count > 0 || isset($_GET['search'])): ?>
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6">
+        <div class="bg-white dark:bg-gray-500 rounded-lg shadow-sm border border-gray-200 dark:border-gray-400 p-6 mb-6">
             <form action="<?php echo BASE_URI; ?>public.php" method="get" class="flex flex-col lg:flex-row gap-4">
                 <?php if (isset($_GET['group'])): ?>
                     <input type="hidden" name="group" value="<?php echo htmlspecialchars($_GET['group']); ?>">
@@ -422,7 +512,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                                name="search"
                                value="<?php echo isset($_GET['search']) ? html_output($_GET['search']) : ''; ?>"
                                placeholder="<?php echo __('Search documents...', 'ist_template'); ?>"
-                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-400 rounded-lg bg-white dark:bg-gray-400 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent">
                     </div>
                 </div>
 
@@ -436,17 +526,53 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
         </div>
         <?php endif; ?>
 
-        <!-- Folder Navigation -->
-        <?php
-            $current_url = get_form_action_with_existing_parameters('public.php');
-            $current_folder = (isset($_GET['folder_id'])) ? (int)$_GET['folder_id'] : null;
-            include_once LAYOUT_DIR . DS . 'breadcrumbs.php';
-            include_once LAYOUT_DIR . DS . 'folders-nav.php';
-        ?>
+        <!-- Folder Tree Layout -->
+        <div class="flex flex-col lg:flex-row gap-6">
+            <?php
+            // Include the folder tree sidebar
+            include_once dirname(__FILE__) . '/folder-tree-public.php';
+            ?>
 
-        <!-- Files Grid -->
-        <?php if (isset($count) && $count > 0 && isset($files['files_ids']) && !empty($files['files_ids'])) { ?>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+            <!-- Main Content Area -->
+            <div class="flex-1 min-w-0">
+                <?php
+                    $current_url = get_form_action_with_existing_parameters('public.php');
+                    $show_folder_buttons = isset($_COOKIE['public_show_folder_buttons']) && $_COOKIE['public_show_folder_buttons'] === 'true';
+                ?>
+
+                <!-- Folder Buttons Toggle -->
+                <div class="mb-4">
+                    <button type="button" id="toggle-public-folder-buttons"
+                            class="inline-flex items-center gap-2 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-400 rounded-lg bg-gray-50 dark:bg-gray-400 text-gray-600 dark:text-gray-100 hover:bg-primary-50 dark:hover:bg-primary-600 hover:border-primary-300 dark:hover:border-primary-400 hover:text-primary-600 dark:hover:text-white transition-colors">
+                        <i class="fas fa-th-large"></i>
+                        <span><?php echo $show_folder_buttons ? __('Hide Folder Buttons', 'ist_template') : __('Show Folder Buttons', 'ist_template'); ?></span>
+                    </button>
+                    <div id="public-folders-nav-container" class="mt-3 <?php echo $show_folder_buttons ? '' : 'hidden'; ?>">
+                        <?php include_once LAYOUT_DIR . DS . 'folders-nav.php'; ?>
+                    </div>
+                </div>
+
+                <script>
+                document.getElementById('toggle-public-folder-buttons').addEventListener('click', function() {
+                    const container = document.getElementById('public-folders-nav-container');
+                    const btn = this;
+                    const isHidden = container.classList.contains('hidden');
+
+                    if (isHidden) {
+                        container.classList.remove('hidden');
+                        btn.querySelector('span').textContent = '<?php echo __('Hide Folder Buttons', 'ist_template'); ?>';
+                        document.cookie = 'public_show_folder_buttons=true;path=/;max-age=31536000';
+                    } else {
+                        container.classList.add('hidden');
+                        btn.querySelector('span').textContent = '<?php echo __('Show Folder Buttons', 'ist_template'); ?>';
+                        document.cookie = 'public_show_folder_buttons=false;path=/;max-age=31536000';
+                    }
+                });
+                </script>
+
+                <!-- Files Grid -->
+                <?php if (isset($count) && $count > 0 && isset($files['files_ids']) && !empty($files['files_ids'])) { ?>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-5">
             <?php foreach ($files['files_ids'] as $file_id):
                 $file = new \ProjectSend\Classes\Files($file_id);
 
@@ -455,7 +581,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                     continue;
                 }
             ?>
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:shadow-md transition-shadow duration-200 overflow-hidden file-card cursor-pointer flex flex-col" data-file-id="<?php echo $file->id; ?>" data-expired="<?php echo $file->expired ? 'true' : 'false'; ?>">
+            <div class="bg-white dark:bg-gray-500 rounded-lg shadow-sm border border-gray-200 dark:border-gray-400 hover:shadow-md transition-shadow duration-200 overflow-hidden file-card cursor-pointer flex flex-col" data-file-id="<?php echo $file->id; ?>" data-expired="<?php echo $file->expired ? 'true' : 'false'; ?>">
 
                 <!-- File Icon/Thumbnail -->
                 <div class="p-6 text-center relative">
@@ -466,13 +592,13 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                                  alt="<?php echo html_output($file->title); ?>"
                                  class="w-20 h-20 mx-auto rounded-lg object-cover">
                         <?php else: ?>
-                            <div class="w-20 h-20 mx-auto bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                                <i class="<?php echo get_file_type_icon($file->extension); ?> text-3xl text-gray-400 dark:text-gray-500"></i>
+                            <div class="w-20 h-20 mx-auto bg-gray-100 dark:bg-gray-400 rounded-lg flex items-center justify-center">
+                                <i class="<?php echo get_file_type_icon($file->extension); ?> text-3xl text-gray-400 dark:text-gray-200"></i>
                             </div>
                         <?php endif; ?>
                     <?php else: ?>
-                        <div class="w-20 h-20 mx-auto bg-gray-100 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                            <i class="<?php echo get_file_type_icon($file->extension); ?> text-3xl text-gray-400 dark:text-gray-500"></i>
+                        <div class="w-20 h-20 mx-auto bg-gray-100 dark:bg-gray-400 rounded-lg flex items-center justify-center">
+                            <i class="<?php echo get_file_type_icon($file->extension); ?> text-3xl text-gray-400 dark:text-gray-200"></i>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -486,7 +612,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                         </h3>
 
                         <?php if (!empty($file->description)): ?>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                        <p class="text-sm text-gray-600 dark:text-gray-100 mb-3 line-clamp-2">
                             <?php echo nl2br(html_output($file->description)); ?>
                         </p>
                         <?php endif; ?>
@@ -495,7 +621,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                     <!-- Bottom Content - Always at bottom -->
                     <div class="mt-auto">
                         <!-- File Meta -->
-                        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
+                        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-100 mb-3">
                             <span><?php echo $file->size_formatted; ?></span>
                             <span><?php echo format_date($file->uploaded_date); ?></span>
                         </div>
@@ -506,7 +632,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                         <div class="flex gap-2">
                             <!-- Info Button -->
                             <button type="button"
-                               class="get-info flex items-center justify-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+                               class="get-info flex items-center justify-center px-3 py-1.5 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-700 dark:hover:text-gray-200 rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                                data-file-id="<?php echo $file->id; ?>"
                                title="<?php echo __('File Info', 'ist_template'); ?>">
                                 <i class="fas fa-info-circle mr-1.5 text-xs"></i>
@@ -514,28 +640,21 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                             </button>
 
                             <?php if ($file->embeddable): ?>
-                            <!-- Preview Button -->
+                            <!-- Preview Button (for embeddable files) -->
                             <button type="button"
                                class="get-preview flex-1 flex items-center justify-center px-3 py-1.5 border border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
                                data-file-id="<?php echo $file->id; ?>"
                                data-file-name="<?php echo html_output($file->filename_original); ?>"
                                data-file-type="<?php echo $file->embeddable_type; ?>"
-                               data-file-url="<?php echo html_entity_decode($file->download_link) . '&inline=1'; ?>">
+                               data-file-url="<?php echo $file->public_url; ?>&inline=1">
                                 <i class="fas fa-eye mr-1.5 text-xs"></i>
                                 <span class="uppercase tracking-wider"><?php echo __('Preview', 'ist_template'); ?></span>
                             </button>
-                            <?php else: ?>
-                            <!-- View Details Button (for non-previewable files) -->
-                            <a href="<?php echo BASE_URI; ?>download.php?id=<?php echo $file->id; ?>&token=<?php echo $file->public_token; ?>"
-                               class="flex-1 flex items-center justify-center px-3 py-1.5 border border-primary-500 text-primary-500 hover:bg-primary-500 hover:text-white rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
-                                <i class="fas fa-eye mr-1.5 text-xs"></i>
-                                <span class="uppercase tracking-wider"><?php echo __('View', 'ist_template'); ?></span>
-                            </a>
                             <?php endif; ?>
                         </div>
 
                         <!-- Row 2: Download (full width) -->
-                        <a href="<?php echo $file->download_link; ?>"
+                        <a href="<?php echo $file->public_url; ?>"
                            class="w-full flex items-center justify-center px-3 py-1.5 bg-primary-500 hover:bg-primary-600 text-white rounded-md text-xs font-semibold transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
                             <i class="fas fa-download mr-1.5 text-xs"></i>
                             <span class="uppercase tracking-wider"><?php echo __('Download', 'ist_template'); ?></span>
@@ -565,13 +684,13 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
         <?php } else { ?>
             <!-- No Files Message -->
             <div class="text-center py-12">
-                <div class="mx-auto w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
-                    <i class="fas fa-folder-open text-3xl text-gray-400"></i>
+                <div class="mx-auto w-24 h-24 bg-gray-100 dark:bg-gray-500 rounded-full flex items-center justify-center mb-6">
+                    <i class="fas fa-folder-open text-3xl text-gray-400 dark:text-gray-200"></i>
                 </div>
                 <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                     <?php echo __('No public documents found', 'ist_template'); ?>
                 </h3>
-                <p class="text-gray-600 dark:text-gray-300 mb-6 max-w-md mx-auto">
+                <p class="text-gray-600 dark:text-gray-100 mb-6 max-w-md mx-auto">
                     <?php if (isset($_GET['search']) && !empty($_GET['search'])) { ?>
                         <?php echo __('Your search returned no results. Try different keywords or browse all files.', 'ist_template'); ?>
                     <?php } else { ?>
@@ -586,7 +705,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                         <?php echo __('Browse All Files', 'ist_template'); ?>
                     </a>
                 <?php } elseif ($is_logged_in && current_user_can_upload()) { ?>
-                    <a href="<?php echo BASE_URI; ?>upload.php"
+                    <a href="<?php echo BASE_URI; ?>upload.php<?php echo !empty($current_folder) ? '?folder_id=' . $current_folder : ''; ?>"
                        class="inline-flex items-center px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors duration-200">
                         <i class="fas fa-cloud-upload-alt mr-2"></i>
                         <?php echo __('Upload Files', 'ist_template'); ?>
@@ -595,12 +714,15 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
             </div>
         <?php } ?>
 
+            </div><!-- .main-content-area -->
+        </div><!-- .folder-tree-layout -->
+
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
+    <footer class="bg-white dark:bg-gray-600 border-t border-gray-200 dark:border-gray-500 mt-12">
         <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div class="text-center text-sm text-gray-600 dark:text-gray-300">
+            <div class="text-center text-sm text-gray-600 dark:text-gray-100">
                 <?php render_footer_text(); ?>
             </div>
         </div>
@@ -710,7 +832,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                         <!-- Loading indicator -->
                         <div id="info_loading" class="text-center py-8">
                             <i class="fas fa-spinner fa-spin text-2xl text-primary-500"></i>
-                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-400"><?php echo __('Loading...', 'ist_template'); ?></p>
+                            <p class="mt-2 text-sm text-gray-500 dark:text-gray-100"><?php echo __('Loading...', 'ist_template'); ?></p>
                         </div>
 
                         <!-- Content -->
@@ -718,37 +840,37 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
                             <dl class="space-y-4">
                                 <!-- Basic Info Section -->
                                 <div class="pb-3 border-b border-gray-200 dark:border-gray-700">
-                                    <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3"><?php echo __('Basic Information', 'ist_template'); ?></h4>
+                                    <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-200 uppercase tracking-wider mb-3"><?php echo __('Basic Information', 'ist_template'); ?></h4>
                                     <div class="space-y-3">
                                         <div>
-                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Title', 'ist_template'); ?></dt>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-100"><?php echo __('Title', 'ist_template'); ?></dt>
                                             <dd id="info_file_title" class="mt-1 text-sm text-gray-900 dark:text-white font-semibold"></dd>
                                         </div>
                                         <div>
-                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Filename', 'ist_template'); ?></dt>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-100"><?php echo __('Filename', 'ist_template'); ?></dt>
                                             <dd id="info_file_name" class="mt-1 text-sm text-gray-900 dark:text-white break-all"></dd>
                                         </div>
                                         <div id="info_description_row">
-                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Description', 'ist_template'); ?></dt>
+                                            <dt class="text-sm font-medium text-gray-500 dark:text-gray-100"><?php echo __('Description', 'ist_template'); ?></dt>
                                             <dd id="info_file_description" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
                                         </div>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>
-                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('File Type', 'ist_template'); ?></dt>
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-100"><?php echo __('File Type', 'ist_template'); ?></dt>
                                                 <dd id="info_file_type" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
                                             </div>
                                             <div>
-                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('File Size', 'ist_template'); ?></dt>
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-100"><?php echo __('File Size', 'ist_template'); ?></dt>
                                                 <dd id="info_file_size" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
                                             </div>
                                         </div>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>
-                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Upload Date', 'ist_template'); ?></dt>
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-100"><?php echo __('Upload Date', 'ist_template'); ?></dt>
                                                 <dd id="info_file_date" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
                                             </div>
                                             <div>
-                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400"><?php echo __('Expires', 'ist_template'); ?></dt>
+                                                <dt class="text-sm font-medium text-gray-500 dark:text-gray-100"><?php echo __('Expires', 'ist_template'); ?></dt>
                                                 <dd id="info_file_expiry" class="mt-1 text-sm text-gray-900 dark:text-white"></dd>
                                             </div>
                                         </div>
@@ -757,7 +879,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
 
                                 <!-- S3 Metadata Section -->
                                 <div id="info_s3_section" class="hidden">
-                                    <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-3"><?php echo __('Document Metadata', 'ist_template'); ?></h4>
+                                    <h4 class="text-xs font-semibold text-gray-400 dark:text-gray-200 uppercase tracking-wider mb-3"><?php echo __('Document Metadata', 'ist_template'); ?></h4>
                                     <div id="info_s3_metadata" class="space-y-3">
                                         <!-- S3 metadata will be populated here -->
                                     </div>
@@ -895,7 +1017,7 @@ $pagination_page = (isset($_GET["page"])) ? $_GET["page"] : 1;
 
             const div = document.createElement('div');
             div.innerHTML = `
-                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">${label}</dt>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-100">${label}</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-white">${displayValue}</dd>
             `;
             container.appendChild(div);

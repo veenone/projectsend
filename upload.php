@@ -14,6 +14,9 @@ $page_title = __('Upload files', 'cftp_admin');
 
 $page_id = 'upload_form';
 
+// Get current folder from query parameter (passed from manage-files or my_files)
+$upload_to_folder = isset($_GET['folder_id']) ? (int)$_GET['folder_id'] : null;
+
 // Check if user is logged in
 redirect_if_not_logged_in();
 
@@ -97,7 +100,9 @@ if (!$quota_unlimited) {
                     //silverlight_xap_url: 'vendor/moxiecode/plupload/js/Moxie.xap',
                     preinit: {
                         Init: function(up, info) {
-                            //$('#uploader_container').removeAttr("title");
+                            // Remove the default "using runtime: html5" tooltip and set a meaningful one
+                            $('#uploader_container').removeAttr("title");
+                            $('.plupload_droptext').attr("title", "<?php _e('Drag and drop files here or click to browse', 'cftp_admin'); ?>");
                         }
                     },
                     init: {

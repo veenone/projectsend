@@ -41,6 +41,7 @@ class Users
     public $metadata;
     public $require_password_change;
     public $limit_upload_to;
+    public $allowed_storage; // JSON array of allowed storage integration IDs
 
     // LDAP auto-create flag - bypasses permission checks when creating users via LDAP
     private $is_ldap_auto_create = false;
@@ -201,6 +202,7 @@ class Users
         $this->can_upload_public = (!empty($arguments['can_upload_public'])) ? (int)$arguments['can_upload_public'] : 0;
         $this->require_password_change = (!empty($arguments['require_password_change'])) ? $arguments['require_password_change'] : false;
         $this->limit_upload_to = (!empty($arguments['limit_upload_to'])) ? $arguments['limit_upload_to'] : null;
+        $this->allowed_storage = isset($arguments['allowed_storage']) ? $arguments['allowed_storage'] : null;
 
         // Specific for clients
         $this->address = (!empty($arguments['address'])) ? encode_html($arguments['address']) : null;
@@ -261,6 +263,9 @@ class Users
             $this->contact = html_output($row['contact']);
             $this->notify_upload = html_output($row['notify']);
             $this->can_upload_public = html_output($row['can_upload_public']);
+
+            // Allowed storage integrations
+            $this->allowed_storage = isset($row['allowed_storage']) ? $row['allowed_storage'] : null;
 
             // Files
             $statement = $this->dbh->prepare("SELECT DISTINCT id FROM " . TABLE_FILES . " WHERE uploader = :username");
@@ -323,6 +328,7 @@ class Users
             'groups' => $this->groups,
             'meta' => $this->meta,
             'limit_upload_to' => $this->limit_upload_to,
+            'allowed_storage' => $this->allowed_storage,
         ];
 
         return $return;
@@ -566,10 +572,10 @@ class Users
             /** Insert the client information into the database */
             $statement = $this->dbh->prepare(
                 "INSERT INTO " . TABLE_USERS . " (
-                    name, user, password, role_id, address, phone, email, notify, contact, created_by, active, account_requested, max_file_size, max_disk_quota, can_upload_public
+                    name, user, password, role_id, address, phone, email, notify, contact, created_by, active, account_requested, max_file_size, max_disk_quota, can_upload_public, allowed_storage
                 )
                 VALUES (
-                    :name, :username, :password, :role_id, :address, :phone, :email, :notify_upload, :contact, :created_by, :active, :request, :max_file_size, :max_disk_quota, :can_upload_public
+                    :name, :username, :password, :role_id, :address, :phone, :email, :notify_upload, :contact, :created_by, :active, :request, :max_file_size, :max_disk_quota, :can_upload_public, :allowed_storage
                 )"
             );
             $statement->bindParam(':name', $this->name);
@@ -587,6 +593,7 @@ class Users
             $statement->bindParam(':max_file_size', $this->max_file_size, PDO::PARAM_INT);
             $statement->bindParam(':max_disk_quota', $this->max_disk_quota, PDO::PARAM_INT);
             $statement->bindParam(':can_upload_public', $this->can_upload_public, PDO::PARAM_INT);
+            $statement->bindParam(':allowed_storage', $this->allowed_storage);
             $statement->execute();
 
             if ($statement) {
@@ -763,7 +770,8 @@ class Users
                                     notify = :notify_upload,
                                     max_file_size = :max_file_size,
                                     max_disk_quota = :max_disk_quota,
-                                    can_upload_public = :can_upload_public
+                                    can_upload_public = :can_upload_public,
+                                    allowed_storage = :allowed_storage
                                     ";
 
         /** Block password change for LDAP users if configured */
@@ -795,6 +803,7 @@ class Users
         $statement->bindParam(':max_file_size', $this->max_file_size, PDO::PARAM_INT);
         $statement->bindParam(':max_disk_quota', $this->max_disk_quota, PDO::PARAM_INT);
         $statement->bindParam(':can_upload_public', $this->can_upload_public, PDO::PARAM_INT);
+        $statement->bindParam(':allowed_storage', $this->allowed_storage);
         $statement->bindParam(':id', $this->id, PDO::PARAM_INT);
         if (!empty($this->password)) {
             $password_hashed = $this->hashPassword($this->password);
@@ -1132,6 +1141,51 @@ class Users
             }
         }
         return false;
+    }
+
+    /**
+     * Get allowed storage integrations as an array
+     * @return array Array of allowed storage IDs (includes 'local' for local storage)
+     *               Empty array means all storage options are allowed
+     */
+    public function getAllowedStorageArray()
+    {
+        if (empty($this->allowed_storage)) {
+            return []; // Empty means all allowed
+        }
+
+        $decoded = json_decode($this->allowed_storage, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Check if a specific storage is allowed for this user
+     * @param string|int $storage_id Storage ID ('local' for local storage, or integration ID)
+     * @return bool True if allowed, false otherwise
+     */
+    public function isStorageAllowed($storage_id)
+    {
+        $allowed = $this->getAllowedStorageArray();
+
+        // Empty array means all storage options are allowed
+        if (empty($allowed)) {
+            return true;
+        }
+
+        return in_array($storage_id, $allowed) || in_array((string)$storage_id, $allowed);
+    }
+
+    /**
+     * Set allowed storage from an array
+     * @param array $storage_ids Array of storage IDs to allow
+     */
+    public function setAllowedStorageFromArray($storage_ids)
+    {
+        if (empty($storage_ids) || !is_array($storage_ids)) {
+            $this->allowed_storage = null;
+        } else {
+            $this->allowed_storage = json_encode(array_values($storage_ids));
+        }
     }
 
     public function validatePassword($password = null)

@@ -565,6 +565,9 @@ class Files
             ],
             'categories' => $this->categories,
             'folder_id' => $this->folder_id,
+            'download_limit_enabled' => $this->download_limit_enabled ?? 0,
+            'download_limit_type' => $this->download_limit_type ?? 'total',
+            'download_limit_count' => $this->download_limit_count ?? 0,
         ];
 
         return $data;
@@ -1004,7 +1007,7 @@ class Files
         return false;
 	}
 
-    private function currentUserCanDeleteFile()
+    public function currentUserCanDelete()
     {
         if (defined('CRON_TASKS_AUTHORIZED') && CRON_TASKS_AUTHORIZED == true) {
             return true;
@@ -1027,6 +1030,10 @@ class Files
             if ( $this->uploaded_by == CURRENT_USER_USERNAME ) {
                 return true;
             }
+            // Also check user_id for files uploaded by this user
+            if ( $this->user_id == CURRENT_USER_ID ) {
+                return true;
+            }
         }
 
         // Users with delete_others_files permission can delete any files
@@ -1044,7 +1051,7 @@ class Files
      */
     function deleteFiles()
 	{
-        if (!$this->currentUserCanDeleteFile()) {
+        if (!$this->currentUserCanDelete()) {
             return [
                 'status' => 'error',
                 'message' => __('You do not have permission to delete this file.', 'cftp_admin')
@@ -1370,9 +1377,9 @@ class Files
 
         // Check download limit permissions
         if (!current_user_can('limit_downloads')) {
-            $this->download_limit_enabled = (int)$current["download_limit_enabled"];
-            $this->download_limit_type = $current["download_limit_type"];
-            $this->download_limit_count = (int)$current["download_limit_count"];
+            $this->download_limit_enabled = (int)($current["download_limit_enabled"] ?? 0);
+            $this->download_limit_type = $current["download_limit_type"] ?? 'total';
+            $this->download_limit_count = (int)($current["download_limit_count"] ?? 0);
         }
 
         if (empty($this->name)) {

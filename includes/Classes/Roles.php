@@ -302,13 +302,17 @@ class Roles
 
             // Insert new permissions
             if (!empty($permissions)) {
-                $sql = "INSERT IGNORE INTO " . TABLE_ROLE_PERMISSIONS . " (role_id, permission, granted)
-                        VALUES (:role_id, :permission, 1)";
+                // Include role_level for backward compatibility (defaults to 0)
+                // Use INSERT ... ON DUPLICATE KEY UPDATE to handle potential duplicates
+                $sql = "INSERT INTO " . TABLE_ROLE_PERMISSIONS . " (role_id, role_level, permission, granted)
+                        VALUES (:role_id, :role_level, :permission, 1)
+                        ON DUPLICATE KEY UPDATE granted = 1";
                 $statement = $this->dbh->prepare($sql);
 
                 foreach ($permissions as $permission) {
                     $statement->execute([
                         'role_id' => $this->id,
+                        'role_level' => 0, // Default to 0 for backward compatibility
                         'permission' => $permission
                     ]);
                 }
@@ -326,8 +330,9 @@ class Roles
             ]);
 
             return true;
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $this->dbh->rollback();
+            error_log("Roles::setPermissions error: " . $e->getMessage());
             return false;
         }
     }
@@ -343,17 +348,24 @@ class Roles
             return false;
         }
 
-        $sql = "INSERT IGNORE INTO " . TABLE_ROLE_PERMISSIONS . " (role_id, permission, granted)
-                VALUES (:role_id, :permission, 1)";
-        $statement = $this->dbh->prepare($sql);
-        $result = $statement->execute([
-            'role_id' => $this->id,
-            'permission' => $permission
-        ]);
+        try {
+            // Include role_level for backward compatibility (defaults to 0)
+            $sql = "INSERT INTO " . TABLE_ROLE_PERMISSIONS . " (role_id, role_level, permission, granted)
+                    VALUES (:role_id, :role_level, :permission, 1)
+                    ON DUPLICATE KEY UPDATE granted = 1";
+            $statement = $this->dbh->prepare($sql);
+            $result = $statement->execute([
+                'role_id' => $this->id,
+                'role_level' => 0,
+                'permission' => $permission
+            ]);
 
-        if ($result) {
-            $this->permissions[] = $permission;
-            return true;
+            if ($result) {
+                $this->permissions[] = $permission;
+                return true;
+            }
+        } catch (\Exception $e) {
+            error_log("Roles::addPermission error: " . $e->getMessage());
         }
 
         return false;

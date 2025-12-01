@@ -24,6 +24,7 @@ class Groups
     public $files;
     public $created_by;
     public $created_date;
+    public $allowed_storage; // JSON array of allowed storage integration IDs
 
     private $validation_passed;
     private $validation_errors;
@@ -75,6 +76,7 @@ class Groups
         $this->description = (!empty($arguments['description'])) ? encode_html($arguments['description']) : null;
         $this->members = (!empty($arguments['members'])) ? $arguments['members'] : null;
         $this->public = (!empty($arguments['public'])) ? (int)$arguments['public'] : 0;
+        $this->allowed_storage = isset($arguments['allowed_storage']) ? $arguments['allowed_storage'] : null;
     }
 
     /**
@@ -102,6 +104,7 @@ class Groups
             $this->public_url = BASE_URI.'public.php?id='.$this->id.'&token='.$this->public_token;
             $this->created_by = html_output($row['created_by']);
             $this->created_date = html_output($row['timestamp']);
+            $this->allowed_storage = isset($row['allowed_storage']) ? $row['allowed_storage'] : null;
         }
 
         /* Get group members IDs */
@@ -148,6 +151,7 @@ class Groups
             'public_url' => $this->public_url,
             'created_by' => $this->created_by,
             'created_date' => $this->created_date,
+            'allowed_storage' => $this->allowed_storage,
         ];
 
         return $return;
@@ -164,6 +168,51 @@ class Groups
         }
 
         return false;
+    }
+
+    /**
+     * Get allowed storage integrations as an array
+     * @return array Array of allowed storage IDs (includes 'local' for local storage)
+     *               Empty array means all storage options are allowed
+     */
+    public function getAllowedStorageArray()
+    {
+        if (empty($this->allowed_storage)) {
+            return []; // Empty means all allowed
+        }
+
+        $decoded = json_decode($this->allowed_storage, true);
+        return is_array($decoded) ? $decoded : [];
+    }
+
+    /**
+     * Check if a specific storage is allowed for this group
+     * @param string|int $storage_id Storage ID ('local' for local storage, or integration ID)
+     * @return bool True if allowed, false otherwise
+     */
+    public function isStorageAllowed($storage_id)
+    {
+        $allowed = $this->getAllowedStorageArray();
+
+        // Empty array means all storage options are allowed
+        if (empty($allowed)) {
+            return true;
+        }
+
+        return in_array($storage_id, $allowed) || in_array((string)$storage_id, $allowed);
+    }
+
+    /**
+     * Set allowed storage from an array
+     * @param array $storage_ids Array of storage IDs to allow
+     */
+    public function setAllowedStorageFromArray($storage_ids)
+    {
+        if (empty($storage_ids) || !is_array($storage_ids)) {
+            $this->allowed_storage = null;
+        } else {
+            $this->allowed_storage = json_encode(array_values($storage_ids));
+        }
     }
 
 	/**
@@ -230,13 +279,14 @@ class Groups
         /** Define the group information */
         $this->public_token = generate_random_string(32);
 
-        $sql_query = $this->dbh->prepare("INSERT INTO " . TABLE_GROUPS . " (name, description, public, public_token, created_by)"
-                                                ." VALUES (:name, :description, :public, :token, :admin)");
+        $sql_query = $this->dbh->prepare("INSERT INTO " . TABLE_GROUPS . " (name, description, public, public_token, created_by, allowed_storage)"
+                                                ." VALUES (:name, :description, :public, :token, :admin, :allowed_storage)");
         $sql_query->bindParam(':name', $this->name);
         $sql_query->bindParam(':description', $this->description);
         $sql_query->bindParam(':public', $this->public, PDO::PARAM_INT);
         $sql_query->bindParam(':admin', $this->created_by);
         $sql_query->bindParam(':token', $this->public_token);
+        $sql_query->bindParam(':allowed_storage', $this->allowed_storage);
         $sql_query->execute();
 
         $this->id = $this->dbh->lastInsertId();
@@ -342,10 +392,11 @@ class Groups
         $editing_user = defined('CURRENT_USER_USERNAME') ? \CURRENT_USER_USERNAME : 'system';
 
 		/** SQL query */
-		$sql_query = $this->dbh->prepare( "UPDATE " . TABLE_GROUPS . " SET name = :name, description = :description, public = :public WHERE id = :id" );
+		$sql_query = $this->dbh->prepare( "UPDATE " . TABLE_GROUPS . " SET name = :name, description = :description, public = :public, allowed_storage = :allowed_storage WHERE id = :id" );
 		$sql_query->bindParam(':name', $this->name);
 		$sql_query->bindParam(':description', $this->description);
 		$sql_query->bindParam(':public', $this->public, PDO::PARAM_INT);
+		$sql_query->bindParam(':allowed_storage', $this->allowed_storage);
 		$sql_query->bindParam(':id', $this->id, PDO::PARAM_INT);
 		$sql_query->execute();
 

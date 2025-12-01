@@ -1,10 +1,36 @@
 <?php
+// Start output buffering FIRST to catch any stray output
+ob_start();
+
 define('FILE_UPLOADING', true);
+
+// Suppress ALL HTML error output - we need clean JSON responses
+ini_set('display_errors', 0);
+ini_set('html_errors', 0);
+error_reporting(0);
+
+// Set up error handler to log errors instead of displaying them
+set_error_handler(function($errno, $errstr, $errfile, $errline) {
+    error_log("Upload error [$errno]: $errstr in $errfile on line $errline");
+    return true; // Don't execute PHP's internal error handler
+});
+
+// Set up exception handler
+set_exception_handler(function($exception) {
+    ob_end_clean(); // Clear any buffered output
+    error_log("Upload exception: " . $exception->getMessage());
+    header('Content-Type: application/json');
+    echo json_encode(['OK' => 0, 'error' => ['code' => 500, 'message' => 'Server error']]);
+    exit;
+});
 
 /**
  *  Call the required system files
  */
 require_once '../bootstrap.php';
+
+// Clear any output that may have been generated during bootstrap
+ob_end_clean();
 
 /**
  * If there is no valid session/user block the upload of files
@@ -21,7 +47,7 @@ function dieWithError($message = null, $code = 400)
         'error' => [
             'code' => $code,
             'message' => $message,
-            'filename' => $_REQUEST["name"]
+            'filename' => isset($_REQUEST["name"]) ? $_REQUEST["name"] : ''
         ]
     ];
 
@@ -158,6 +184,50 @@ if (!$chunks || $chunk == $chunks - 1) {
 
     // Get storage selection from request or use default
     $storage_selection = isset($_REQUEST['storage_selection']) ? $_REQUEST['storage_selection'] : get_option('default_upload_storage', 'local');
+
+    // Validate storage selection against user/group restrictions (only if user is logged in)
+    if (defined('CURRENT_USER_ID') && CURRENT_USER_ID) {
+        $current_user = new \ProjectSend\Classes\Users(CURRENT_USER_ID);
+        $user_allowed_storage = $current_user->getAllowedStorageArray();
+
+        // Get allowed storage from user's groups
+        $group_allowed_storage = [];
+        $user_groups = $current_user->groups;
+        if (!empty($user_groups)) {
+            foreach ($user_groups as $group_id) {
+                $group = new \ProjectSend\Classes\Groups($group_id);
+                $group_storage = $group->getAllowedStorageArray();
+                if (!empty($group_storage)) {
+                    $group_allowed_storage = array_merge($group_allowed_storage, $group_storage);
+                }
+            }
+            $group_allowed_storage = array_unique($group_allowed_storage);
+        }
+
+        // Determine effective allowed storage
+        // Logic: User can use storage allowed by user settings OR group settings (union)
+        $effective_allowed_storage = [];
+        $has_user_restrictions = !empty($user_allowed_storage);
+        $has_group_restrictions = !empty($group_allowed_storage);
+
+        if ($has_user_restrictions && $has_group_restrictions) {
+            // Use union - user can use storage allowed by user OR group settings
+            $effective_allowed_storage = array_unique(array_merge($user_allowed_storage, $group_allowed_storage));
+        } elseif ($has_user_restrictions) {
+            $effective_allowed_storage = $user_allowed_storage;
+        } elseif ($has_group_restrictions) {
+            $effective_allowed_storage = $group_allowed_storage;
+        }
+
+        // Validate selected storage is allowed
+        if (!empty($effective_allowed_storage)) {
+            $storage_allowed = in_array($storage_selection, $effective_allowed_storage) ||
+                              in_array((string)$storage_selection, $effective_allowed_storage);
+            if (!$storage_allowed) {
+                dieWithError(__('You are not allowed to upload to the selected storage location.', 'cftp_admin'), 403);
+            }
+        }
+    }
 
     // Check if encryption is requested
     $encrypt_file = false;

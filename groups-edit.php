@@ -40,12 +40,19 @@ if ($_POST) {
      * validation failed, the new unsaved values are shown to avoid
      * having to type them again.
      */
+    // Process allowed_storage - convert array to JSON
+    $allowed_storage_value = null;
+    if (isset($_POST["allowed_storage"]) && is_array($_POST["allowed_storage"]) && !empty($_POST["allowed_storage"])) {
+        $allowed_storage_value = json_encode(array_values($_POST["allowed_storage"]));
+    }
+
     $group_arguments = array(
         'id' => $group_id,
         'name' => $_POST['name'],
         'description' => $_POST['description'],
         'members' => (!empty($_POST["members"])) ? $_POST['members'] : null,
         'public' => (isset($_POST["public"])) ? 1 : 0,
+        'allowed_storage' => $allowed_storage_value,
     );
 
     /** Validate the information from the posted form. */

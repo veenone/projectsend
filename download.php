@@ -40,23 +40,27 @@ if (!empty($_GET['token']) && !empty($_GET['id'])) {
     }
 
     if ($can_download == true) {
-        if (isset($_GET['download'])) {
-            record_new_download(0, $file->id);
+        if (isset($_GET['download']) || isset($_GET['inline'])) {
+            $inline = isset($_GET['inline']) && $_GET['inline'] == '1';
 
-            /** Record the action log */
-            $logger = new \ProjectSend\Classes\ActionsLog;
-            $new_record_action = $logger->addEntry([
-                'action' => 37,
-                'owner_user' => null,
-                'owner_id' => 0,
-                'affected_file' => $file->id,
-                'affected_file_name' => $file->filename_original,
-            ]);
+            if (!$inline) {
+                record_new_download(0, $file->id);
 
-            // DOWNLOAD
+                /** Record the action log */
+                $logger = new \ProjectSend\Classes\ActionsLog;
+                $new_record_action = $logger->addEntry([
+                    'action' => 37,
+                    'owner_user' => null,
+                    'owner_id' => 0,
+                    'affected_file' => $file->id,
+                    'affected_file_name' => $file->filename_original,
+                ]);
+            }
+
+            // DOWNLOAD or INLINE VIEW
             $process = new Download;
             $alias = $process->getAlias($file);
-            $process->serveFile($file->full_path, $file->filename_unfiltered, $alias);
+            $process->serveFile($file->full_path, $file->filename_unfiltered, $alias, $file, $inline);
             exit;
         }
     }

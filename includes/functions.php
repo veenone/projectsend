@@ -2941,12 +2941,24 @@ function die_with_error_code($code = 403)
 function exit_with_error_code($code = 403)
 {
     switch ($code) {
-        default:
-        case 403:
-            $url = PAGE_STATUS_CODE_403;
+        case 401:
+            $url = PAGE_STATUS_CODE_401;
             break;
         case 404:
             $url = PAGE_STATUS_CODE_404;
+            break;
+        case 500:
+            $url = PAGE_STATUS_CODE_500;
+            break;
+        case 'csrf':
+            $url = PAGE_STATUS_CODE_CSRF;
+            break;
+        case 'database':
+            $url = PAGE_STATUS_CODE_DATABASE;
+            break;
+        default:
+        case 403:
+            $url = PAGE_STATUS_CODE_403;
             break;
     }
 

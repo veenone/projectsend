@@ -100,6 +100,12 @@ if ($_POST) {
      * validation failed, the new unsaved values are shown to avoid
      * having to type them again.
      */
+    // Process allowed_storage - convert array to JSON
+    $allowed_storage_value = null;
+    if (isset($_POST["allowed_storage"]) && is_array($_POST["allowed_storage"]) && !empty($_POST["allowed_storage"])) {
+        $allowed_storage_value = json_encode(array_values($_POST["allowed_storage"]));
+    }
+
     $user_arguments = array(
         'id' => $user_arguments['id'],
         'username' => $user_arguments['username'],
@@ -111,6 +117,7 @@ if ($_POST) {
         'active' => $user_arguments['active'],
         'type' => 'edit_user',
         'limit_upload_to' => (isset($_POST["limit_upload_to"])) ? $_POST["limit_upload_to"] : null,
+        'allowed_storage' => $allowed_storage_value,
     );
 
     if ($ignore_size == false) {

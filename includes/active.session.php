@@ -18,8 +18,10 @@ if ( session_expired() && user_is_logged_in()) {
 
 extend_session(); // update last activity time stamp
 
-// Clean up expired remember me tokens periodically
-cleanup_expired_remember_tokens();
+// Clean up expired remember me tokens periodically (skip for AJAX to improve performance)
+if (!defined('IS_AJAX_REQUEST')) {
+    cleanup_expired_remember_tokens();
+}
 
 /**
  * Global information on the current account to use across the system.
@@ -54,7 +56,12 @@ if (!empty($_SESSION['user_id'])) {
 
         // Define disk quota constants
         define('CURRENT_USER_DISK_QUOTA', (int)$session_user->max_disk_quota);
-        define('CURRENT_USER_DISK_USAGE', get_user_disk_usage(CURRENT_USER_ID));
+        // Skip disk usage calculation for AJAX requests (expensive query)
+        if (defined('IS_AJAX_REQUEST')) {
+            define('CURRENT_USER_DISK_USAGE', 0); // Will be calculated when needed
+        } else {
+            define('CURRENT_USER_DISK_USAGE', get_user_disk_usage(CURRENT_USER_ID));
+        }
     } else {
         force_logout();
     }

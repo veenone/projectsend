@@ -45,6 +45,42 @@ require_once ROOT_DIR . '/includes/functions.assets.php';
 // Options functions
 require_once ROOT_DIR . '/includes/functions.options.php';
 
+/**
+ * Define upload directory constants
+ *
+ * Now that get_option() is available, we can check for custom upload paths.
+ * These constants are only defined here for normal operation.
+ * For install/make-config, they are defined in app.php with defaults.
+ */
+if (!defined('UPLOADED_FILES_ROOT')) {
+    $upload_root_path = ROOT_DIR . DS . 'upload'; // Default
+
+    // Check for custom upload directory from database
+    if (!defined('IS_MAKE_CONFIG') && function_exists('get_option')) {
+        $custom_upload_path = get_option('upload_directory_path');
+        if (!empty($custom_upload_path)) {
+            $custom_upload_path = rtrim($custom_upload_path, DS);
+            $validated_path = realpath($custom_upload_path);
+
+            // Validate the custom path exists and has required subdirectory
+            if ($validated_path !== false && is_dir($validated_path)) {
+                $files_subdir = $validated_path . DS . 'files';
+                if (is_dir($files_subdir)) {
+                    $upload_root_path = $validated_path;
+                }
+            }
+        }
+    }
+
+    define('UPLOADED_FILES_ROOT', $upload_root_path);
+    define('UPLOADED_FILES_DIR', UPLOADED_FILES_ROOT . DS . 'files');
+    define('UPLOADS_TEMP_DIR', UPLOADED_FILES_ROOT . DS . 'temp');
+    define('THUMBNAILS_FILES_DIR', UPLOADED_FILES_ROOT . DS . 'thumbnails');
+    define('UPLOADED_FILES_URL', 'upload/files/');
+    define('XACCEL_FILES_URL', '/serve-file');
+    define('ADMIN_UPLOADS_DIR', UPLOADED_FILES_ROOT . DS . 'admin');
+}
+
 // Require the updates functions (needed by migrations)
 require_once ROOT_DIR . '/includes/updates.functions.php';
 

@@ -266,12 +266,230 @@ class Folders
                 continue;
             }
             $return .= '<option '.$selected.' value="'.$folder['id'].'">'.$depth_indicator . $folder['name'].'</option>';
-            
+
             if (!empty($folder['children'])) {
                 $return .= $this->renderSelectOptions($folder['children'], $arguments);
             }
         }
 
         return $return;
+    }
+
+    /**
+     * Get folder tree structure for tree view navigation
+     * Returns all folders in a nested tree structure with metadata
+     *
+     * @param array $arguments Filter arguments (user_id, role, etc.)
+     * @param int|null $expandedFolderId Currently selected/expanded folder ID
+     * @return array Nested folder tree structure
+     */
+    function getFolderTree($arguments = [], $expandedFolderId = null)
+    {
+        // Get all folders without parent filter to build complete tree
+        $all_folders_args = $arguments;
+        unset($all_folders_args['parent']);
+
+        // Get all accessible folders
+        $all_folders = $this->getAllFoldersFlat($all_folders_args);
+
+        // Build tree structure
+        $tree = $this->buildTree($all_folders, null, $expandedFolderId);
+
+        return $tree;
+    }
+
+    /**
+     * Get all folders in a flat array (without parent filter)
+     * Used internally by getFolderTree
+     */
+    private function getAllFoldersFlat($arguments = [])
+    {
+        $folders = [];
+        $params = [];
+
+        // Get client access level if not provided
+        if (!isset($arguments['role']) && isset($arguments['user_id'])) {
+            $arguments['role'] = $this->getUserRole($arguments['user_id']);
+            if (in_array($arguments['role'], ['Client', 'Internal User']) && !isset($arguments['client_id'])) {
+                $arguments['client_id'] = $arguments['user_id'];
+            }
+        }
+
+        // Determine if we should only count public files
+        $public_only = (!empty($arguments['include_public']) && !isset($arguments['role']));
+        $files_count_condition = $public_only ? " AND tf.public_allow = 1" : "";
+
+        $query = "SELECT DISTINCT f.*,
+                  (SELECT COUNT(*) FROM " . TABLE_FOLDERS . " c WHERE c.parent = f.id) as children_count,
+                  (SELECT COUNT(*) FROM " . TABLE_FILES . " tf WHERE tf.folder_id = f.id{$files_count_condition}) as files_count
+                  FROM " . TABLE_FOLDERS . " f";
+
+        if (isset($arguments['role']) && in_array($arguments['role'], ['Client', 'Internal User']) && isset($arguments['client_id'])) {
+            $query .= " WHERE (
+                f.user_id = :client_created
+                OR
+                EXISTS (
+                    SELECT 1 FROM " . TABLE_FILES . " tf
+                    WHERE tf.folder_id = f.id AND tf.user_id = :current_user_id
+                )
+                OR
+                EXISTS (
+                    SELECT 1 FROM " . TABLE_FILES_RELATIONS . " fr
+                    JOIN " . TABLE_FILES . " tf ON fr.file_id = tf.id
+                    WHERE tf.folder_id = f.id AND fr.hidden = 0
+                    AND (
+                        fr.client_id = :client_id
+                        OR fr.group_id IN (
+                            SELECT group_id FROM " . TABLE_MEMBERS . "
+                            WHERE COALESCE(user_id, client_id) = :client_id_groups
+                        )
+                    )
+                )
+                OR
+                f.id IN (
+                    WITH RECURSIVE folder_hierarchy AS (
+                        SELECT DISTINCT tf.folder_id as id, fld.parent
+                        FROM " . TABLE_FILES_RELATIONS . " fr
+                        JOIN " . TABLE_FILES . " tf ON fr.file_id = tf.id
+                        JOIN " . TABLE_FOLDERS . " fld ON tf.folder_id = fld.id
+                        WHERE fr.hidden = 0
+                        AND (
+                            fr.client_id = :client_id_hierarchy
+                            OR fr.group_id IN (
+                                SELECT group_id FROM " . TABLE_MEMBERS . "
+                                WHERE COALESCE(user_id, client_id) = :client_id_groups_hierarchy
+                            )
+                        )
+                        UNION ALL
+                        SELECT f2.id, f2.parent
+                        FROM " . TABLE_FOLDERS . " f2
+                        INNER JOIN folder_hierarchy fh ON f2.id = fh.parent
+                    )
+                    SELECT id FROM folder_hierarchy
+                )
+            )";
+            $params[':client_created'] = $arguments['client_id'];
+            $params[':current_user_id'] = $arguments['client_id'];
+            $params[':client_id'] = $arguments['client_id'];
+            $params[':client_id_groups'] = $arguments['client_id'];
+            $params[':client_id_hierarchy'] = $arguments['client_id'];
+            $params[':client_id_groups_hierarchy'] = $arguments['client_id'];
+        } elseif (!empty($arguments['include_public']) && !isset($arguments['role'])) {
+            // Anonymous users - only show folders containing public files
+            $query .= " WHERE (
+                -- Folders that directly contain public files
+                EXISTS (
+                    SELECT 1 FROM " . TABLE_FILES . " tf
+                    WHERE tf.folder_id = f.id AND tf.public_allow = 1
+                )
+                OR
+                -- Parent folders in the hierarchy of folders with public files
+                f.id IN (
+                    WITH RECURSIVE folder_hierarchy AS (
+                        SELECT DISTINCT tf.folder_id as id, fld.parent
+                        FROM " . TABLE_FILES . " tf
+                        JOIN " . TABLE_FOLDERS . " fld ON tf.folder_id = fld.id
+                        WHERE tf.public_allow = 1
+                        UNION ALL
+                        SELECT f2.id, f2.parent
+                        FROM " . TABLE_FOLDERS . " f2
+                        INNER JOIN folder_hierarchy fh ON f2.id = fh.parent
+                    )
+                    SELECT id FROM folder_hierarchy
+                )
+            )";
+        }
+
+        $query .= " ORDER BY f.name ASC";
+
+        $statement = $this->dbh->prepare($query);
+        $statement->execute($params);
+
+        if ($statement->rowCount() > 0) {
+            $statement->setFetchMode(\PDO::FETCH_ASSOC);
+            while ($row = $statement->fetch()) {
+                $folders[$row['id']] = [
+                    'id' => $row['id'],
+                    'name' => $row['name'],
+                    'parent' => $row['parent'],
+                    'slug' => $row['slug'],
+                    'public' => $row['public'],
+                    'children_count' => (int)$row['children_count'],
+                    'files_count' => (int)$row['files_count'],
+                ];
+            }
+        }
+
+        return $folders;
+    }
+
+    /**
+     * Build nested tree structure from flat folder array
+     */
+    private function buildTree($folders, $parentId = null, $expandedFolderId = null)
+    {
+        $tree = [];
+
+        // Find path to expanded folder for auto-expansion
+        $expandPath = [];
+        if ($expandedFolderId !== null && isset($folders[$expandedFolderId])) {
+            $expandPath = $this->getAncestorIds($folders, $expandedFolderId);
+            $expandPath[] = $expandedFolderId;
+        }
+
+        foreach ($folders as $folder) {
+            if ($folder['parent'] == $parentId) {
+                $children = $this->buildTree($folders, $folder['id'], $expandedFolderId);
+                $hasChildren = !empty($children) || $folder['children_count'] > 0;
+
+                // Determine if this folder should be expanded
+                $isExpanded = in_array($folder['id'], $expandPath);
+                $isActive = ($folder['id'] == $expandedFolderId);
+
+                $tree[] = [
+                    'id' => $folder['id'],
+                    'name' => $folder['name'],
+                    'slug' => $folder['slug'],
+                    'parent' => $folder['parent'],
+                    'public' => $folder['public'],
+                    'has_children' => $hasChildren,
+                    'children_count' => $folder['children_count'],
+                    'files_count' => $folder['files_count'],
+                    'is_expanded' => $isExpanded,
+                    'is_active' => $isActive,
+                    'children' => $children,
+                ];
+            }
+        }
+
+        return $tree;
+    }
+
+    /**
+     * Get all ancestor IDs for a folder
+     */
+    private function getAncestorIds($folders, $folderId)
+    {
+        $ancestors = [];
+        $currentId = $folderId;
+
+        while ($currentId !== null && isset($folders[$currentId])) {
+            $parentId = $folders[$currentId]['parent'];
+            if ($parentId !== null) {
+                $ancestors[] = $parentId;
+            }
+            $currentId = $parentId;
+        }
+
+        return $ancestors;
+    }
+
+    /**
+     * Get folder tree as JSON for AJAX requests
+     */
+    function getFolderTreeJson($arguments = [], $expandedFolderId = null)
+    {
+        $tree = $this->getFolderTree($arguments, $expandedFolderId);
+        return json_encode($tree);
     }
 }

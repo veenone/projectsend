@@ -93,6 +93,38 @@ switch ($groups_form_type) {
 		</div>
     </div>
 
+    <div class="form-group row" id="allowed_storage_container">
+        <label for="allowed_storage" class="col-sm-4 control-label"><?php _e('Allowed storage for uploads','cftp_admin'); ?></label>
+        <div class="col-sm-8">
+            <?php
+                // Get current group's allowed storage as array
+                $current_allowed_storage = [];
+                if (isset($group_arguments['allowed_storage']) && !empty($group_arguments['allowed_storage'])) {
+                    $decoded = json_decode($group_arguments['allowed_storage'], true);
+                    if (is_array($decoded)) {
+                        $current_allowed_storage = $decoded;
+                    }
+                }
+
+                // Get all active storage integrations
+                $integrations_handler = new \ProjectSend\Classes\Integrations();
+                $all_integrations = $integrations_handler->getAll(true); // true = active only
+            ?>
+            <select class="form-select select2 none" multiple="multiple" id="allowed_storage" name="allowed_storage[]" data-placeholder="<?php _e('Select allowed storage options', 'cftp_admin');?>">
+                <option value="local" <?php echo (empty($current_allowed_storage) || in_array('local', $current_allowed_storage)) ? 'selected="selected"' : ''; ?>>
+                    <?php _e('Local Storage', 'cftp_admin'); ?>
+                </option>
+                <?php foreach ($all_integrations as $integration): ?>
+                    <option value="<?php echo $integration['id']; ?>"
+                        <?php echo (empty($current_allowed_storage) || in_array($integration['id'], $current_allowed_storage) || in_array((string)$integration['id'], $current_allowed_storage)) ? 'selected="selected"' : ''; ?>>
+                        <?php echo html_output($integration['name']); ?> (<?php echo ucfirst($integration['type']); ?>)
+                    </option>
+                <?php endforeach; ?>
+            </select>
+            <p class="field_note form-text"><?php _e('Select which storage locations members of this group can upload files to. Leave all selected to allow all storage options.','cftp_admin'); ?></p>
+        </div>
+    </div>
+
 	<div class="inside_form_buttons">
 		<button type="submit" class="btn btn-wide btn-primary"><?php echo html_output($submit_value); ?></button>
 	</div>

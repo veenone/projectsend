@@ -239,39 +239,36 @@ define('SESSION_TIMEOUT_EXPIRE', true);
 $session_expire_time = 31*24*60*60; // 31 days * 24 hours * 60 minutes * 60 seconds
 define('SESSION_EXPIRE_TIME', $session_expire_time);
 
-/* Define the folder where uploaded files will reside */
-// Get custom upload directory from options (requires database connection)
-// This is loaded after database initialization in bootstrap.php
-if (!defined('IS_MAKE_CONFIG') && function_exists('get_option')) {
-    $custom_upload_root = get_option('upload_directory_path');
-
-    // Validate custom path
-    if (!empty($custom_upload_root)) {
-        // Ensure it's an absolute path and clean it
-        $custom_upload_root = rtrim($custom_upload_root, DS);
-
-        // Security: Validate path exists and is writable
-        if (is_dir($custom_upload_root) && is_writable($custom_upload_root)) {
-            // Use realpath to prevent directory traversal
-            $validated_path = realpath($custom_upload_root);
-            if ($validated_path !== false) {
-                define('UPLOADED_FILES_ROOT', $validated_path);
-            }
-        }
+/**
+ * Upload directory constants
+ *
+ * These are only defined here for install/make-config scenarios.
+ * For normal operation, they are defined in bootstrap.php AFTER
+ * options functions are loaded, allowing custom paths from database.
+ */
+if (defined('IS_MAKE_CONFIG') || defined('IS_INSTALL')) {
+    if (!defined('UPLOADED_FILES_ROOT')) {
+        define('UPLOADED_FILES_ROOT', ROOT_DIR . DS . 'upload');
+    }
+    if (!defined('UPLOADED_FILES_DIR')) {
+        define('UPLOADED_FILES_DIR', UPLOADED_FILES_ROOT . DS . 'files');
+    }
+    if (!defined('UPLOADS_TEMP_DIR')) {
+        define('UPLOADS_TEMP_DIR', UPLOADED_FILES_ROOT . DS . 'temp');
+    }
+    if (!defined('THUMBNAILS_FILES_DIR')) {
+        define('THUMBNAILS_FILES_DIR', UPLOADED_FILES_ROOT . DS . 'thumbnails');
+    }
+    if (!defined('UPLOADED_FILES_URL')) {
+        define('UPLOADED_FILES_URL', 'upload/files/');
+    }
+    if (!defined('XACCEL_FILES_URL')) {
+        define('XACCEL_FILES_URL', '/serve-file');
+    }
+    if (!defined('ADMIN_UPLOADS_DIR')) {
+        define('ADMIN_UPLOADS_DIR', UPLOADED_FILES_ROOT . DS . 'admin');
     }
 }
-
-// Fallback to default if not set or validation failed
-if (!defined('UPLOADED_FILES_ROOT')) {
-    define('UPLOADED_FILES_ROOT', ROOT_DIR . DS . 'upload');
-}
-
-// Define subdirectories
-define('UPLOADED_FILES_DIR', UPLOADED_FILES_ROOT . DS . 'files');
-define('UPLOADS_TEMP_DIR', UPLOADED_FILES_ROOT . DS . 'temp');
-define('THUMBNAILS_FILES_DIR', UPLOADED_FILES_ROOT . DS . 'thumbnails');
-define('UPLOADED_FILES_URL', 'upload/files/');
-define('XACCEL_FILES_URL', '/serve-file');
 
 /* Assets */
 define('ASSETS_DIR', ROOT_DIR . DS . 'assets');
@@ -293,7 +290,7 @@ define('SYSTEM_TEMPLATES_DIR', ROOT_DIR . DS . 'systemtemplates');
 define('JSON_CACHE_DIR', ROOT_DIR . DS . 'cache');
 
 /* Branding */
-define('ADMIN_UPLOADS_DIR', UPLOADED_FILES_ROOT . DS . 'admin');
+// ADMIN_UPLOADS_DIR is defined in bootstrap.php after UPLOADED_FILES_ROOT
 define('LOGO_MAX_WIDTH', 300);
 define('LOGO_MAX_HEIGHT', 300);
 define('DEFAULT_LOGO_FILENAME', 'projectsend-logo.svg');

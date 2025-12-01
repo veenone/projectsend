@@ -44,6 +44,9 @@ function get_public_files($args = [])
         if ( get_option('public_listing_show_all_files') == 1) {
             $limit_to_public = false;
         }
+    } elseif (!empty($args['folder_id'])) {
+        // When filtering by folder, show all public files in that folder regardless of group
+        $files_sql .= " WHERE 1=1";
     } else {
         if (empty($files_in_groups)) {
             $files_in_groups = [0];
@@ -57,6 +60,12 @@ function get_public_files($args = [])
     if ($limit_to_public == true) {
         $files_sql .= " AND public_allow = :public";
         $params[':public'] = 1;
+    }
+
+    // Filter by folder
+    if (!empty($args['folder_id'])) {
+        $files_sql .= " AND folder_id = :folder_id";
+        $params[':folder_id'] = $args['folder_id'];
     }
 
     // Search

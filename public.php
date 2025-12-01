@@ -57,6 +57,9 @@ $args = [
 if (!empty($_GET['group'])) {
     $args['group_id'] = $_GET['group'];
 }
+if (!empty($_GET['folder_id'])) {
+    $args['folder_id'] = (int)$_GET['folder_id'];
+}
 
 $files = get_public_files($args);
 

@@ -171,8 +171,12 @@ a {
     transition: color 0.2s ease;
 }
 
-#header .theme-toggle {
+[data-theme="dark"] #header .theme-toggle {
   color: #ffffff !important;
+}
+
+#header .theme-toggle {
+  color: white !important;
 }
 
 a:hover {
@@ -263,6 +267,23 @@ a.btn.btn-outline-primary {
 .btn-outline-primary.btn:hover,
 a.btn.btn-outline-primary:hover {
     color: #ffffff !important;
+}
+
+a.btn.btn-secondary {
+  background-color: var(--ist-light-1);
+  color: white;
+}
+
+#generate_password  {
+  background-color: var(--ist-dark-2);
+}
+
+#select-all {
+  background-color: var(--ist-dark-2);
+}
+
+#select-none {
+  background-color: var(--ist-primary);  
 }
 
 /* ============================================
@@ -357,6 +378,10 @@ body.dark-mode .folder-item .badge {
 .main_side_menu {
     background-color: var(--ist-bg-secondary);
     border-right: 1px solid var(--ist-border-color);
+}
+
+[data-theme="dark"] .main_side_menu {
+  background-color: var(--bs-gray-600);
 }
 
 .main_menu .nav_top_level {
@@ -707,7 +732,7 @@ hr {
 }
 
 /* Loading states */
-.spinner-border {
+.spinner-border { 
     color: var(--ist-primary);
 }
 
@@ -717,6 +742,467 @@ span.label, span.alert {
   color: white !important;
 }
 
+
+.badge .bg-light .text-dark {
+  color: var (--ist-primary);
+}
+
 .btn-pslight {
   background-color: var(--ist-light-2);  
+}
+
+[data-theme="dark"] body.dashboard .widget .widget-header .widget-controls .widget-control-btn {
+  background-color: white;
+}
+
+body.dashboard .widget .widget-header .widget-controls .widget-control-btn {
+  background-color: var(--ist-light-1);
+  color: white;
+}
+
+/* ============================================
+   FOLDER TREE SIDEBAR (elFinder-style)
+   ============================================ */
+
+/* Main layout container for tree + content */
+.folder-tree-layout {
+    display: flex;
+    gap: 0;
+    min-height: calc(100vh - 200px);
+}
+
+.folder-tree-layout .main-content-area {
+    flex: 1;
+    min-width: 0;
+    padding-left: 1rem;
+}
+
+/* Sidebar container */
+.folder-tree-sidebar {
+    width: 280px;
+    min-width: 200px;
+    max-width: 500px;
+    background-color: var(--ist-bg-primary);
+    border: 1px solid var(--ist-border-color);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: var(--ist-shadow-sm);
+    transition: width 0.3s ease, min-width 0.3s ease;
+    flex-shrink: 0;
+}
+
+.folder-tree-sidebar.collapsed {
+    width: 48px !important;
+    min-width: 48px !important;
+    overflow: hidden;
+}
+
+.folder-tree-sidebar.collapsed .tree-sidebar-title .title-text,
+.folder-tree-sidebar.collapsed .tree-container {
+    display: none;
+}
+
+[data-theme="dark"] .folder-tree-sidebar {
+    background-color: var(--bs-gray-600);
+}
+
+.folder-tree-sidebar.collapsed .tree-sidebar-header {
+    padding: 0.75rem 0.5rem;
+    justify-content: center;
+}
+
+.folder-tree-sidebar.collapsed .tree-collapse-btn i {
+    transform: rotate(180deg);
+}
+
+/* Sidebar header */
+.tree-sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    border-radius: 8px 8px 0 0;
+}
+
+.tree-sidebar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.tree-sidebar-title i {
+    color: var(--ist-light-2);
+}
+
+.tree-collapse-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: #ffffff;
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.tree-collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.tree-collapse-btn i {
+    transition: transform 0.3s ease;
+}
+
+/* Tree container */
+.tree-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.5rem 0;
+}
+
+/* Tree nodes */
+.tree-node {
+    user-select: none;
+}
+
+.tree-node-content {
+    display: flex;
+    align-items: center;
+    padding: 0.4rem 0.5rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    gap: 0.25rem;
+}
+
+.tree-node-content:hover {
+    background-color: var(--ist-bg-hover);
+}
+
+.tree-node.active > .tree-node-content {
+    background-color: var(--ist-primary-lighter);
+    border-right: 3px solid var(--ist-primary);
+}
+
+.tree-node.active > .tree-node-content .tree-node-name {
+    color: var(--ist-primary-darker) !important;
+    font-weight: 600;
+}
+
+/* Toggle arrow */
+.tree-toggle {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--ist-text-muted);
+    flex-shrink: 0;
+    border-radius: 3px;
+    transition: all 0.15s ease;
+}
+
+.tree-toggle:hover {
+    background-color: var(--ist-primary-lighter);
+    color: var(--ist-primary);
+}
+
+.tree-toggle i {
+    font-size: 0.7rem;
+    transition: transform 0.2s ease;
+}
+
+.tree-toggle-placeholder {
+    width: 20px;
+    flex-shrink: 0;
+}
+
+/* Tree link */
+.tree-node-link {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 1;
+    min-width: 0;
+    text-decoration: none !important;
+    color: var(--ist-text-primary) !important;
+}
+
+.tree-node-link:hover {
+    color: var(--ist-primary) !important;
+}
+
+.tree-icon {
+    font-size: 1rem;
+    color: var(--ist-primary) !important;
+    flex-shrink: 0;
+}
+
+.tree-node-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.875rem;
+}
+
+/* File count badge */
+.tree-node-badge {
+    background-color: var(--ist-primary);
+    color: #ffffff !important;
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 10px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+/* Context menu trigger */
+.tree-node-menu {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ist-text-muted);
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    cursor: pointer;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+.tree-node-content:hover .tree-node-menu {
+    opacity: 1;
+}
+
+.tree-node-menu:hover {
+    background-color: var(--ist-primary-lighter);
+    color: var(--ist-primary);
+}
+
+/* Children container */
+.tree-children {
+    margin-left: 0;
+}
+
+/* Root node special styling */
+.tree-root > .tree-node-content {
+    border-bottom: 1px solid var(--ist-border-color);
+    margin-bottom: 0.25rem;
+}
+
+.tree-root .tree-icon {
+    color: var(--ist-dark-2) !important;
+}
+
+/* Empty state */
+.tree-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1rem;
+    color: var(--ist-text-muted);
+    text-align: center;
+}
+
+.tree-empty i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    opacity: 0.5;
+}
+
+.tree-empty span {
+    font-size: 0.875rem;
+    color: var(--ist-text-muted) !important;
+}
+
+/* Resize handle */
+.tree-resize-handle {
+    position: absolute;
+    right: -3px;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: ew-resize;
+    background: transparent;
+    z-index: 10;
+}
+
+.tree-resize-handle:hover,
+body.resizing-sidebar .tree-resize-handle {
+    background: var(--ist-primary);
+    opacity: 0.3;
+}
+
+body.resizing-sidebar {
+    cursor: ew-resize !important;
+    user-select: none;
+}
+
+body.resizing-sidebar * {
+    cursor: ew-resize !important;
+}
+
+/* Drag & Drop States */
+.tree-node.dragging {
+    opacity: 0.5;
+}
+
+.tree-node.drop-ready > .tree-node-content {
+    background-color: rgba(32, 133, 55, 0.1);
+    border: 1px dashed #208537;
+    border-radius: 4px;
+}
+
+.tree-node.drop-hover > .tree-node-content {
+    background-color: rgba(32, 133, 55, 0.2);
+    border: 2px solid #208537;
+    border-radius: 4px;
+}
+
+.tree-node.drop-forbidden > .tree-node-content {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .folder-tree-sidebar,
+body.dark-mode .folder-tree-sidebar {
+    background-color: var(--ist-bg-secondary);
+    border-color: var(--ist-border-color);
+}
+
+[data-theme="dark"] .tree-sidebar-header,
+body.dark-mode .tree-sidebar-header {
+    background: linear-gradient(135deg, var(--ist-primary) 0%, var(--ist-light-2) 100%);
+}
+
+[data-theme="dark"] .tree-node.active > .tree-node-content,
+body.dark-mode .tree-node.active > .tree-node-content {
+    background-color: rgba(150, 175, 255, 0.15);
+}
+
+[data-theme="dark"] .tree-node-badge,
+body.dark-mode .tree-node-badge {
+    background-color: var(--ist-light-1);
+    color: var(--ist-dark-1) !important;
+}
+
+[data-theme="dark"] .select-all-btn {
+  background-color: var(--bs-gray-600) !important;  
+}
+
+
+[data-theme="dark"] .dropdown-toggle {
+  background-color: var(--bs-gray-600) !important;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .folder-tree-layout {
+        flex-direction: column;
+    }
+
+    .folder-tree-sidebar {
+        width: 100% !important;
+        max-width: 100%;
+        min-width: 100%;
+        max-height: 300px;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .folder-tree-sidebar.collapsed {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-height: 48px;
+    }
+
+    .folder-tree-layout .main-content-area {
+        padding-left: 0;
+    }
+
+    .tree-resize-handle {
+        display: none;
+    }
+
+    .tree-collapse-btn i {
+        transform: rotate(-90deg);
+    }
+
+    .folder-tree-sidebar.collapsed .tree-collapse-btn i {
+        transform: rotate(90deg);
+    }
+}
+
+/* ============================================
+   FOLDER BUTTONS TOGGLE
+   ============================================ */
+
+.folder-buttons-wrapper {
+    margin-bottom: 1rem;
+}
+
+.folder-buttons-toggle {
+    margin-bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+    border-color: var(--ist-border-color);
+    color: var(--ist-text-secondary) !important;
+    background-color: var(--ist-bg-secondary);
+}
+
+[data-theme="dark"] .folder-buttons-toggle {
+    margin-bottom: 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.75rem;
+    border-color: var(--ist-border-color);
+    color: var(--ist-text-secondary) !important;
+    background-color: var(--bs-gray-600) !important;
+}
+
+.folder-buttons-toggle:hover {
+    background-color: var(--ist-primary-lighter);
+    border-color: var(--ist-primary);
+    color: var(--ist-primary-darker) !important;
+}
+
+.folder-buttons-toggle i {
+    font-size: 0.9rem;
+}
+
+#folders-nav-container {
+    transition: all 0.3s ease;
+}
+
+#folders-nav-container.hidden {
+    display: none;
+}
+
+[data-theme="dark"] .folder-buttons-toggle,
+body.dark-mode .folder-buttons-toggle {
+    background-color: var(--ist-bg-tertiary);
+    border-color: var(--ist-border-color);
+}
+
+[data-theme="dark"] .folder-buttons-toggle:hover,
+body.dark-mode .folder-buttons-toggle:hover {
+    background-color: var(--ist-primary-light);
+    color: #ffffff !important;
 }

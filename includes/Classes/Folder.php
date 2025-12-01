@@ -145,9 +145,17 @@ class Folder
 
     public function userCanEdit($user_id)
     {
-        $user = new \ProjectSend\Classes\Users($user_id);
-        if (in_array($user->role, ['System Administrator', 'Account Manager', 'Uploader'])) {
-            return true;
+        // Use current_role_in() for current user (faster, no DB query)
+        if ($user_id == CURRENT_USER_ID) {
+            if (current_role_in(['System Administrator', 'Account Manager', 'Uploader'])) {
+                return true;
+            }
+        } else {
+            // For other users, we need to query
+            $user = new \ProjectSend\Classes\Users($user_id);
+            if (in_array($user->role, ['System Administrator', 'Account Manager', 'Uploader'])) {
+                return true;
+            }
         }
 
         if ($this->user_id == $user_id) {
@@ -202,9 +210,17 @@ class Folder
 
     public function userCanDelete($user_id)
     {
-        $user = new \ProjectSend\Classes\Users($user_id);
-        if (in_array($user->role, ['System Administrator', 'Account Manager', 'Uploader'])) {
-            return true;
+        // Use current_role_in() for current user (faster, no DB query)
+        if ($user_id == CURRENT_USER_ID) {
+            if (current_role_in(['System Administrator', 'Account Manager', 'Uploader'])) {
+                return true;
+            }
+        } else {
+            // For other users, we need to query
+            $user = new \ProjectSend\Classes\Users($user_id);
+            if (in_array($user->role, ['System Administrator', 'Account Manager', 'Uploader'])) {
+                return true;
+            }
         }
 
         if ($this->user_id == $user_id) {
@@ -280,47 +296,81 @@ class Folder
 
         $deleted = [
             'files' => [],
-            'folder' => [],
+            'folders' => [],
         ];
 
-        $descendants = $this->getAllDescendants($this->id);
-        // reverse, to make sure that a folder that cannot be deleted is no left without parent
-        $descendants = array_reverse($descendants);
-        foreach ($descendants as $descendant) {
-            $files_in_folder = [];
-            $statement = $this->dbh->prepare("SELECT * FROM " . TABLE_FILES . " WHERE folder_id=:id");
-            $statement->bindParam(':id', $descendant['id']);
-            $statement->execute();
-            if ($statement->rowCount() > 0) {
-                $statement->setFetchMode(\PDO::FETCH_ASSOC);
-                while ($row = $statement->fetch()) {
-                    $files_in_folder[] = $row['id'];
-                }
-            }
+        // Get all descendant folder IDs in one query (optimized)
+        $descendant_ids = $this->getAllDescendantIds($this->id);
 
-            // Attempt to delete folder
-            $folder = new \ProjectSend\Classes\Folder($descendant['id']);
-            if (!$folder->userCanDelete(CURRENT_USER_ID)) {
+        if (empty($descendant_ids)) {
+            return $deleted;
+        }
+
+        // Reverse to delete children before parents
+        $descendant_ids = array_reverse($descendant_ids);
+
+        // Get all files in all folders in one batch query
+        $placeholders = implode(',', array_fill(0, count($descendant_ids), '?'));
+        $stmt = $this->dbh->prepare("SELECT id, folder_id FROM " . TABLE_FILES . " WHERE folder_id IN ($placeholders)");
+        $stmt->execute($descendant_ids);
+        $all_files = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Group files by folder
+        $files_by_folder = [];
+        foreach ($all_files as $file) {
+            $files_by_folder[$file['folder_id']][] = $file['id'];
+        }
+
+        // Delete folders and their files
+        foreach ($descendant_ids as $folder_id) {
+            // Delete folder from database directly (we already checked permissions for root)
+            $stmt = $this->dbh->prepare("DELETE FROM " . TABLE_FOLDERS . " WHERE id = ?");
+            if (!$stmt->execute([$folder_id])) {
                 continue;
             }
 
-            if (!$folder->deleteFromDatabase()) {
-                continue;
-            }
+            $deleted['folders'][] = $folder_id;
 
-            $deleted['folders'][] = $folder->id;
-
-            // Find and delete files, only if the folder was actually deleted before
-            foreach ($files_in_folder as $file_id) {
-                $file = new \ProjectSend\Classes\Files($file_id);
-                $result = $file->deleteFiles();
-                if ($result['status'] === 'success') {
-                    $deleted['files'][] = $file->id;
+            // Delete files in this folder
+            if (isset($files_by_folder[$folder_id])) {
+                foreach ($files_by_folder[$folder_id] as $file_id) {
+                    $file = new \ProjectSend\Classes\Files($file_id);
+                    $result = $file->deleteFiles();
+                    if ($result['status'] === 'success') {
+                        $deleted['files'][] = $file_id;
+                    }
                 }
             }
         }
 
         return $deleted;
+    }
+
+    /**
+     * Get all descendant folder IDs using optimized recursive query
+     * @param int $folder_id
+     * @return array
+     */
+    private function getAllDescendantIds($folder_id)
+    {
+        $all_ids = [(int)$folder_id];
+        $to_process = [(int)$folder_id];
+
+        while (!empty($to_process)) {
+            $placeholders = implode(',', array_fill(0, count($to_process), '?'));
+            $stmt = $this->dbh->prepare("SELECT id FROM " . TABLE_FOLDERS . " WHERE parent IN ($placeholders)");
+            $stmt->execute($to_process);
+            $children = $stmt->fetchAll(\PDO::FETCH_COLUMN);
+
+            if (empty($children)) {
+                break;
+            }
+
+            $all_ids = array_merge($all_ids, $children);
+            $to_process = $children;
+        }
+
+        return $all_ids;
     }
 
     public function deleteFromDatabase()

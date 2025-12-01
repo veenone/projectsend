@@ -220,7 +220,7 @@ $folders_arguments = [
 if (!empty($_GET['search'])) {
     $folders_arguments['search'] = $_GET['search'];
 }
-if (current_role_in(['Client'])) {
+if (current_role_in(['Client', 'Internal User'])) {
     if (current_user_can('upload_public')) {
         $folders_arguments['public_or_client'] = true;
         $folders_arguments['client_id'] = CURRENT_USER_ID;
@@ -238,6 +238,18 @@ if (current_role_in(['Client'])) {
 
 $folders_obj = new \ProjectSend\Classes\Folders;
 $folders = $folders_obj->getFolders($folders_arguments);
+
+// Get folder tree for sidebar navigation - use same filtering as folders_arguments
+$folder_tree_arguments = [];
+if (current_role_in(['Client', 'Internal User'])) {
+    if (current_user_can('upload_public')) {
+        $folder_tree_arguments['public_or_client'] = true;
+        $folder_tree_arguments['client_id'] = CURRENT_USER_ID;
+    } else {
+        $folder_tree_arguments['user_id'] = CURRENT_USER_ID;
+    }
+}
+$folder_tree = $folders_obj->getFolderTree($folder_tree_arguments, $current_folder);
 
 // Get files
 if (isset($search_on)) {
@@ -515,7 +527,7 @@ if (current_user_can_upload()) {
             ],
         ],
         [
-            'url' => 'upload.php',
+            'url' => 'upload.php' . (!empty($current_folder) ? '?folder_id=' . $current_folder : ''),
             'label' => __('Upload files', 'cftp_admin'),
         ],
     ];
@@ -572,9 +584,10 @@ if (!current_role_in(['Client']) && isset($search_on)) {
     $bulk_actions_items['hide'] = __('Set to hidden', 'cftp_admin');
     $bulk_actions_items['show'] = __('Set to visible', 'cftp_admin');
     $bulk_actions_items['unassign'] = __('Unassign', 'cftp_admin');
-} else {
-    if (!current_role_in(['Client']) || (current_role_in(['Client']) && current_user_can('delete_files')))
-        $bulk_actions_items['delete'] = __('Delete', 'cftp_admin');
+}
+// Show delete option for users with delete_files or delete_others_files permission
+if (current_user_can('delete_files') || current_user_can('delete_others_files')) {
+    $bulk_actions_items['delete'] = __('Delete', 'cftp_admin');
 }
 
 // Include layout files
@@ -582,10 +595,57 @@ include_once ADMIN_VIEWS_DIR . DS . 'header.php';
 
 include_once LAYOUT_DIR . DS . 'search-filters-bar.php';
 
-include_once LAYOUT_DIR . DS . 'breadcrumbs.php';
-
-include_once LAYOUT_DIR . DS . 'folders-nav.php';
+// Folder tree sidebar variables
+$tree_base_url = $current_url;
+$tree_context = 'admin';
+$tree_id = 'folder-tree';
+$show_file_counts = true;
+$allow_drag_drop = current_user_can_upload();
 ?>
+
+<!-- Folder Tree Layout Container -->
+<div class="folder-tree-layout">
+    <?php
+    // Include the folder tree sidebar
+    include_once LAYOUT_DIR . DS . 'folder-tree.php';
+    ?>
+
+    <!-- Main Content Area -->
+    <div class="main-content-area">
+        <?php
+        // Check if folder buttons should be shown (default: hidden when tree is visible)
+        $show_folder_buttons = isset($_COOKIE['show_folder_buttons']) && $_COOKIE['show_folder_buttons'] === 'true';
+        include_once LAYOUT_DIR . DS . 'breadcrumbs.php';
+        ?>
+
+        <!-- Folder Buttons Toggle & Container -->
+        <div class="folder-buttons-wrapper">
+            <button type="button" class="btn btn-sm btn-outline-secondary folder-buttons-toggle" id="toggle-folder-buttons" title="<?php _e('Toggle folder buttons view', 'cftp_admin'); ?>">
+                <i class="fa <?php echo $show_folder_buttons ? 'fa-th-large' : 'fa-th-large'; ?>"></i>
+                <span><?php echo $show_folder_buttons ? __('Hide Folder Buttons', 'cftp_admin') : __('Show Folder Buttons', 'cftp_admin'); ?></span>
+            </button>
+            <div id="folders-nav-container" class="<?php echo $show_folder_buttons ? '' : 'hidden'; ?>">
+                <?php include_once LAYOUT_DIR . DS . 'folders-nav.php'; ?>
+            </div>
+        </div>
+
+        <script>
+        document.getElementById('toggle-folder-buttons').addEventListener('click', function() {
+            const container = document.getElementById('folders-nav-container');
+            const btn = this;
+            const isHidden = container.classList.contains('hidden');
+
+            if (isHidden) {
+                container.classList.remove('hidden');
+                btn.querySelector('span').textContent = '<?php _e('Hide Folder Buttons', 'cftp_admin'); ?>';
+                document.cookie = 'show_folder_buttons=true;path=/;max-age=31536000';
+            } else {
+                container.classList.add('hidden');
+                btn.querySelector('span').textContent = '<?php _e('Show Folder Buttons', 'cftp_admin'); ?>';
+                document.cookie = 'show_folder_buttons=false;path=/;max-age=31536000';
+            }
+        });
+        </script>
 
 <form action="<?php echo $current_url; ?>" name="files_list" method="post" class="batch_actions">
     <?php addCsrf(); ?>
@@ -1179,6 +1239,10 @@ include_once LAYOUT_DIR . DS . 'folders-nav.php';
                                 'content' => '<a href="files-edit.php?ids=' . $file->id . '" class="btn btn-primary btn-sm" title="' . __('Edit file', 'cftp_admin') . '"><i class="fa fa-pencil"></i><span class="button_label">' . __('Edit', 'cftp_admin') . '</span></a>',
                                 'condition' => $file->currentUserCanEdit(), // Check if current user can edit this file
                             ),
+                            array(
+                                'content' => '<button type="button" class="btn btn-danger btn-sm delete-file-btn" data-file-id="' . $file->id . '" data-file-name="' . html_output($file->title) . '" title="' . __('Delete file', 'cftp_admin') . '"><i class="fa fa-trash"></i><span class="button_label">' . __('Delete', 'cftp_admin') . '</span></button>',
+                                'condition' => $file->currentUserCanDelete(), // Check if current user can delete this file
+                            ),
                         );
 
                         foreach ($tbody_cells as $cell) {
@@ -1301,7 +1365,53 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Handle individual file delete buttons
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.delete-file-btn')) {
+        const btn = e.target.closest('.delete-file-btn');
+        const fileId = btn.getAttribute('data-file-id');
+        const fileName = btn.getAttribute('data-file-name');
+
+        if (confirm('<?php echo __('Are you sure you want to delete this file?', 'cftp_admin'); ?>\n\n' + fileName)) {
+            // Create a form and submit it
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = window.location.href;
+
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = document.querySelector('input[name="csrf_token"]')?.value || '';
+            form.appendChild(csrfInput);
+
+            // Add action
+            const actionInput = document.createElement('input');
+            actionInput.type = 'hidden';
+            actionInput.name = 'action';
+            actionInput.value = 'delete';
+            form.appendChild(actionInput);
+
+            // Add file ID
+            const batchInput = document.createElement('input');
+            batchInput.type = 'hidden';
+            batchInput.name = 'batch[]';
+            batchInput.value = fileId;
+            form.appendChild(batchInput);
+
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+});
 </script>
+
+    </div><!-- .main-content-area -->
+</div><!-- .folder-tree-layout -->
+
+<!-- Folder Tree JavaScript -->
+<script src="<?php echo BASE_URI; ?>assets/src/js/parts/folder_tree.js"></script>
 
 <?php
 include_once ADMIN_VIEWS_DIR . DS . 'footer.php';

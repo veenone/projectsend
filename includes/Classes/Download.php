@@ -409,6 +409,13 @@ class Download
                 }
             }
 
+            // For inline preview, always use PHP streaming for reliability
+            // X-Sendfile/X-Accel may not work with custom upload directories
+            if ($inline) {
+                $this->downloadPHP($file_location, $save_as, $file_key, $inline);
+                return;
+            }
+
             switch (get_option('download_method')) {
                 default:
                 case 'php':

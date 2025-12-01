@@ -1,5 +1,6 @@
 <?php
 // Process ajax calls
+define('IS_AJAX_REQUEST', true); // Flag for optimized loading
 require_once '../bootstrap.php';
 
 global $auth;
@@ -95,7 +96,7 @@ switch ($_GET['do']) {
 
     case 'folder_delete':
         $folder = new \ProjectSend\Classes\Folder($_POST['folder_id']);
-        $delete = $folder->delete(); 
+        $delete = $folder->delete();
 
         if (!$delete) {
             echo json_encode([
@@ -114,6 +115,37 @@ switch ($_GET['do']) {
             ]);
             die_with_error_code(500);
         }
+
+        exit;
+    break;
+
+    case 'folder_tree':
+        // Get folder tree for tree navigation
+        $folders_obj = new \ProjectSend\Classes\Folders();
+
+        // Build arguments based on user role
+        $tree_arguments = [];
+        if (current_role_in(['Client', 'Internal User'])) {
+            if (current_user_can('upload_public')) {
+                $tree_arguments['public_or_client'] = true;
+                $tree_arguments['client_id'] = CURRENT_USER_ID;
+            } else {
+                $tree_arguments['user_id'] = CURRENT_USER_ID;
+            }
+            $tree_arguments['role'] = CURRENT_USER_ROLE_NAME;
+            $tree_arguments['client_id'] = CURRENT_USER_ID;
+        }
+
+        // Get current folder from request
+        $current_folder = isset($_GET['current_folder']) ? (int)$_GET['current_folder'] : null;
+
+        // Get tree data
+        $tree = $folders_obj->getFolderTree($tree_arguments, $current_folder);
+
+        echo json_encode([
+            'status' => 'success',
+            'tree' => $tree,
+        ]);
 
         exit;
     break;

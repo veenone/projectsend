@@ -27,6 +27,12 @@ if ($_POST) {
      * Clean the posted form values to be used on the user actions,
      * and again on the form if validation failed.
      */
+    // Process allowed_storage - convert array to JSON
+    $allowed_storage_value = null;
+    if (isset($_POST["allowed_storage"]) && is_array($_POST["allowed_storage"]) && !empty($_POST["allowed_storage"])) {
+        $allowed_storage_value = json_encode(array_values($_POST["allowed_storage"]));
+    }
+
     $user_arguments = array(
         'username' => $_POST['username'],
         'password' => $_POST['password'],
@@ -39,6 +45,7 @@ if ($_POST) {
         'active' => (isset($_POST["active"])) ? 1 : 0,
         'require_password_change' => (isset($_POST["require_password_change"])) ? true : false,
         'limit_upload_to' => (isset($_POST["limit_upload_to"])) ? $_POST["limit_upload_to"] : null,
+        'allowed_storage' => $allowed_storage_value,
         'type' => 'new_user',
     );
 
