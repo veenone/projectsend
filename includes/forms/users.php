@@ -35,13 +35,13 @@ switch ($user_form_type) {
 		break;
 }
 
-// Check if this is an LDAP user and if password changes are disabled
+// Check if this is an LDAP user - always disable password/username changes for LDAP users
 $is_ldap_user = false;
 $hide_password_field = false;
 if (isset($user_arguments['id']) && !empty($user_arguments['id'])) {
     $check_ldap_user = new \ProjectSend\Classes\Users($user_arguments['id']);
     $is_ldap_user = $check_ldap_user->isLdapUser();
-    if ($is_ldap_user && get_option('ldap_disable_password_change', null, 'true') === 'true') {
+    if ($is_ldap_user) {
         $hide_password_field = true;
     }
 }
@@ -56,20 +56,30 @@ if (isset($user_arguments['id']) && !empty($user_arguments['id'])) {
 		</div>
 	</div>
 
+	<?php if ($is_ldap_user): ?>
+	<div class="form-group row">
+		<label for="username" class="col-sm-4 control-label"><?php _e('Log in username','cftp_admin'); ?></label>
+		<div class="col-sm-8">
+			<input type="text" name="username" id="username" class="form-control" value="<?php echo (isset($user_arguments['username'])) ? format_form_value($user_arguments['username']) : ''; ?>" readonly />
+			<p class="field_note form-text text-muted"><i class="fa fa-lock"></i> <?php _e('Username is managed by LDAP and cannot be changed.','cftp_admin'); ?></p>
+		</div>
+	</div>
+	<?php else: ?>
 	<div class="form-group row">
 		<label for="username" class="col-sm-4 control-label"><?php _e('Log in username','cftp_admin'); ?></label>
 		<div class="col-sm-8">
 			<input type="text" name="username" id="username" class="form-control <?php if (!$disable_user) { echo 'required'; } ?>" maxlength="<?php echo MAX_USER_CHARS; ?>" value="<?php echo (isset($user_arguments['username'])) ? format_form_value($user_arguments['username']) : ''; ?>" <?php if ($disable_user) { echo 'readonly'; } ?> placeholder="<?php _e("Must be alphanumeric",'cftp_admin'); ?>" required />
 		</div>
 	</div>
+	<?php endif; ?>
 
 	<?php if ($hide_password_field): ?>
 	<div class="form-group row">
 		<label class="col-sm-4 control-label"><?php _e('Password','cftp_admin'); ?></label>
 		<div class="col-sm-8">
 			<div class="alert alert-info mb-0">
-				<i class="fa fa-info-circle"></i>
-				<?php _e('This is an LDAP user. Password must be changed through your organization\'s directory service (e.g., Active Directory).','cftp_admin'); ?>
+				<i class="fa fa-lock"></i>
+				<?php _e('Password is managed by LDAP and cannot be changed here.','cftp_admin'); ?>
 			</div>
 		</div>
 	</div>
