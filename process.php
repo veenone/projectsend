@@ -722,6 +722,78 @@ switch ($_GET['do']) {
         }
         exit;
     break;
+
+    case 'get_onlyoffice_config':
+        // Get ONLYOFFICE editor configuration for a file
+        if (!isset($_GET['file_id']) || empty($_GET['file_id'])) {
+            echo json_encode(['status' => 'error', 'message' => __('File ID is required', 'cftp_admin')]);
+            exit;
+        }
+
+        $file_id = (int)$_GET['file_id'];
+        $mode = isset($_GET['mode']) ? $_GET['mode'] : 'edit';
+
+        // Check if ONLYOFFICE is enabled
+        if (!\ProjectSend\Classes\OnlyOffice::isEnabled()) {
+            echo json_encode(['status' => 'error', 'message' => __('Document editing is not enabled', 'cftp_admin')]);
+            exit;
+        }
+
+        // Load the file
+        $file = new \ProjectSend\Classes\Files($file_id);
+        if (!$file->recordExists()) {
+            echo json_encode(['status' => 'error', 'message' => __('File not found', 'cftp_admin')]);
+            exit;
+        }
+
+        // Check if user can access this file
+        if (!user_can_download_file(CURRENT_USER_ID, $file_id)) {
+            echo json_encode(['status' => 'error', 'message' => __('You do not have permission to access this file', 'cftp_admin')]);
+            exit;
+        }
+
+        // Check if file type is supported
+        $extension = strtolower(pathinfo($file->filename_original, PATHINFO_EXTENSION));
+        if (!\ProjectSend\Classes\OnlyOffice::isViewable($extension)) {
+            echo json_encode(['status' => 'error', 'message' => __('This file type is not supported for editing', 'cftp_admin')]);
+            exit;
+        }
+
+        // For edit mode, check if user has edit permission
+        if ($mode === 'edit' && !current_user_can('edit_files')) {
+            $mode = 'view'; // Downgrade to view mode
+        }
+
+        try {
+            $onlyoffice = new \ProjectSend\Classes\OnlyOffice();
+            $user = new \ProjectSend\Classes\Users(CURRENT_USER_ID);
+            $config = $onlyoffice->getEditorConfig($file, $user, $mode);
+
+            echo json_encode([
+                'status' => 'success',
+                'config' => $config,
+                'server_url' => \ProjectSend\Classes\OnlyOffice::getServerUrl()
+            ]);
+        } catch (\Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        exit;
+    break;
+
+    case 'test_onlyoffice_connection':
+        // Test ONLYOFFICE Document Server connection
+        if (!current_user_can('edit_settings')) {
+            echo json_encode(['status' => 'error', 'message' => __('Permission denied', 'cftp_admin')]);
+            exit;
+        }
+
+        $result = \ProjectSend\Classes\OnlyOffice::testConnection();
+        echo json_encode([
+            'status' => $result['success'] ? 'success' : 'error',
+            'message' => $result['message']
+        ]);
+        exit;
+    break;
 }
 
 exit;

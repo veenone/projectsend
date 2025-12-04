@@ -195,6 +195,28 @@
                                                 }
                                             }
                                             ?>
+
+                                            <?php
+                                            // ONLYOFFICE Document Editor
+                                            if (\ProjectSend\Classes\OnlyOffice::isEnabled() && \ProjectSend\Classes\OnlyOffice::isViewable($file->extension)) {
+                                                $canEdit = \ProjectSend\Classes\OnlyOffice::isEditable($file->extension) && current_user_can('edit_files');
+                                            ?>
+                                            <hr class="my-3">
+                                            <h5 class="mb-3"><i class="fa fa-file-text-o me-1"></i> <?php _e('Document Editor', 'cftp_admin'); ?></h5>
+                                            <div class="d-grid gap-2">
+                                                <?php if ($canEdit): ?>
+                                                <button type="button" class="btn btn-primary onlyoffice-edit" data-file-id="<?php echo $file->id; ?>">
+                                                    <i class="fa fa-pencil me-1"></i> <?php _e('Edit Document', 'cftp_admin'); ?>
+                                                </button>
+                                                <?php endif; ?>
+                                                <button type="button" class="btn btn-outline-secondary onlyoffice-view" data-file-id="<?php echo $file->id; ?>">
+                                                    <i class="fa fa-eye me-1"></i> <?php _e('View Document', 'cftp_admin'); ?>
+                                                </button>
+                                            </div>
+                                            <p class="form-text text-muted mt-2 small">
+                                                <?php _e('Open this document in the browser-based editor.', 'cftp_admin'); ?>
+                                            </p>
+                                            <?php } ?>
                                         </div>
                                     </div>
                                 </div><!-- /.col-lg-4 -->

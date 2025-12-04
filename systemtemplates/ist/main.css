@@ -233,8 +233,28 @@ body.dark-mode .btn-primary:focus {
 
 /* Button text links */
 .btn-outline-secondary {
-    color: var(--ist-primary-dark) !important; 
+    color: #ffffff !important;
     background-color: var(--ist-primary-dark);
+    border-color: var(--ist-primary-dark);
+}
+
+.btn-outline-secondary:hover {
+    color: #ffffff !important;
+    background-color: var(--ist-primary);
+    border-color: var(--ist-primary);
+}
+
+/* ONLYOFFICE buttons - ensure white text */
+.onlyoffice-view,
+.onlyoffice-edit,
+button.onlyoffice-view,
+button.onlyoffice-edit {
+    color: #ffffff !important;
+}
+
+.onlyoffice-view:hover,
+.onlyoffice-edit:hover {
+    color: #ffffff !important;
 }
 
 .btn-sm {

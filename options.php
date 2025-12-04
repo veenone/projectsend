@@ -98,6 +98,13 @@ switch ($section) {
             'files_encryption_required',
         );
         break;
+    case 'onlyoffice':
+        $section_title = __('Document Editor', 'cftp_admin');
+        $checkboxes = array(
+            'onlyoffice_enabled',
+            'onlyoffice_jwt_enabled',
+        );
+        break;
     case 'branding':
         $section_title = __('Branding', 'cftp_admin');
         $checkboxes = array();

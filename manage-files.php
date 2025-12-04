@@ -242,12 +242,15 @@ $folders = $folders_obj->getFolders($folders_arguments);
 // Get folder tree for sidebar navigation - use same filtering as folders_arguments
 $folder_tree_arguments = [];
 if (current_role_in(['Client', 'Internal User'])) {
+    // Always pass user_id and client_id for proper role detection and permission filtering
+    $folder_tree_arguments['user_id'] = CURRENT_USER_ID;
+    $folder_tree_arguments['client_id'] = CURRENT_USER_ID;
     if (current_user_can('upload_public')) {
         $folder_tree_arguments['public_or_client'] = true;
-        $folder_tree_arguments['client_id'] = CURRENT_USER_ID;
-    } else {
-        $folder_tree_arguments['user_id'] = CURRENT_USER_ID;
     }
+} elseif (!current_user_can('edit_others_files')) {
+    // For users without edit_others_files permission, only count their own files
+    $folder_tree_arguments['owner_user_id'] = CURRENT_USER_ID;
 }
 $folder_tree = $folders_obj->getFolderTree($folder_tree_arguments, $current_folder);
 

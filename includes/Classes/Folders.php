@@ -315,13 +315,43 @@ class Folders
             }
         }
 
-        // Determine if we should only count public files
-        $public_only = (!empty($arguments['include_public']) && !isset($arguments['role']));
-        $files_count_condition = $public_only ? " AND tf.public_allow = 1" : "";
+        // Build file count subquery based on role/permissions
+        $files_count_subquery = "(SELECT COUNT(*) FROM " . TABLE_FILES . " tf WHERE tf.folder_id = f.id";
+
+        if (isset($arguments['role']) && in_array($arguments['role'], ['Client', 'Internal User']) && isset($arguments['client_id'])) {
+            // For Client/Internal User: only count files they can access
+            $files_count_subquery .= " AND (
+                tf.user_id = :files_count_user_id
+                OR EXISTS (
+                    SELECT 1 FROM " . TABLE_FILES_RELATIONS . " fr
+                    WHERE fr.file_id = tf.id AND fr.hidden = 0
+                    AND (
+                        fr.client_id = :files_count_client_id
+                        OR fr.group_id IN (
+                            SELECT group_id FROM " . TABLE_MEMBERS . "
+                            WHERE COALESCE(user_id, client_id) = :files_count_client_groups
+                        )
+                    )
+                )
+            )";
+            $params[':files_count_user_id'] = $arguments['client_id'];
+            $params[':files_count_client_id'] = $arguments['client_id'];
+            $params[':files_count_client_groups'] = $arguments['client_id'];
+        } elseif (isset($arguments['owner_user_id'])) {
+            // For users without edit_others_files permission: only count their own files
+            $files_count_subquery .= " AND tf.user_id = :files_count_owner_id";
+            $params[':files_count_owner_id'] = $arguments['owner_user_id'];
+        } elseif (!empty($arguments['include_public']) && !isset($arguments['role'])) {
+            // For anonymous/public: only count public files
+            $files_count_subquery .= " AND tf.public_allow = 1";
+        }
+        // For admin users with full access: no additional filter (count all files)
+
+        $files_count_subquery .= ") as files_count";
 
         $query = "SELECT DISTINCT f.*,
                   (SELECT COUNT(*) FROM " . TABLE_FOLDERS . " c WHERE c.parent = f.id) as children_count,
-                  (SELECT COUNT(*) FROM " . TABLE_FILES . " tf WHERE tf.folder_id = f.id{$files_count_condition}) as files_count
+                  {$files_count_subquery}
                   FROM " . TABLE_FOLDERS . " f";
 
         if (isset($arguments['role']) && in_array($arguments['role'], ['Client', 'Internal User']) && isset($arguments['client_id'])) {

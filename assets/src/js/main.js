@@ -42,6 +42,7 @@
                 break;
             case 'file_editor':
                 admin.pages.fileEditor();
+                admin.parts.onlyofficeEditor();
                 break;
             case 'client_form':
                 admin.pages.clientForm();
@@ -59,6 +60,7 @@
             case 'manage_files':
                 admin.parts.filePreviewModal();
                 admin.parts.foldersAdmin();
+                admin.parts.onlyofficeEditor();
                 break;
             case 'manage_downloads':
                 admin.parts.filePreviewModal();
