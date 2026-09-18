@@ -123,6 +123,28 @@ test('apply() overrides the files_external disk config once fully configured and
         ->and(config('filesystems.disks.files_external.root'))->toBe('projectsend');
 });
 
+test('an S3 bucket folder still yields a usable disk', function () {
+    // The config assertions above pass whether or not the disk can be built.
+    // It could not: 'prefix' sent FilesystemManager to PathPrefixedAdapter,
+    // from a package Laravel suggests and this project does not require, so
+    // filling in the bucket folder turned every storage page into a 500.
+    ExternalStorageSettings::current()->fill([
+        'active' => true,
+        'key' => 'AKIAEXAMPLE',
+        'secret' => 'shh',
+        'bucket' => 'my-bucket',
+        'region' => 'us-east-1',
+        'endpoint' => 'https://minio.example.test',
+        'use_path_style' => true,
+        'root' => 'projectsend',
+    ])->save();
+
+    app(ExternalStorageConfigApplier::class)->flush();
+    app(ExternalStorageConfigApplier::class)->apply();
+
+    expect(fn () => Storage::disk('files_external'))->not->toThrow(Throwable::class);
+});
+
 test('the ResolvingUploadDisk listener leaves new uploads on the local disk when not configured', function () {
     app(ExternalStorageConfigApplier::class)->flush();
 
