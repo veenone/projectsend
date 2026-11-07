@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Это изменение касается только новых загрузок. Уже загруженные файлы (:count) остаются на месте.",
     "Choose a location": "Выберите место хранения",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Клиенты видят это название и заметку ниже, когда выбирают, куда загружать. Бакет они не видят.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Клиенты, у которых оно было, потеряют его из своего списка. В нём нет файлов, больше ничего не изменится.",
     "Default for new uploads": "По умолчанию для новых загрузок",
     "Edit location": "Изменить место хранения",
     "Enter the credentials for this bucket.": "Введите учётные данные для этого бакета.",
@@ -2467,5 +2466,15 @@
     "via": "через",
     ":name also comes from a group; it is listed once, above.": ":name также приходит из группы; в списке оно указано один раз, выше.",
     "Upload screen offers locations (:count): :list.": "Экран загрузки предлагает места хранения (:count): :list.",
-    "(preselected)": "(выбрано заранее)"
+    "(preselected)": "(выбрано заранее)",
+    "Used by": "Используют",
+    "Everyone else (default)": "Все остальные (по умолчанию)",
+    "Nobody": "Никто",
+    "Groups: :count": "Группы: :count",
+    "People: :count": "Люди: :count",
+    "Clients: :count": "Клиенты: :count",
+    "Choice :position": "Выбор :position",
+    "People": "Люди",
+    "Assignments are changed on each group or person. This list is read-only.": "Назначения меняются в каждой группе или у каждого человека. Этот список только для чтения.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Группы и люди, у которых оно было, потеряют его из своего списка. В нём нет файлов, больше ничего не изменится."
 }

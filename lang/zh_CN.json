@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "此更改只影响新上传。已上传的文件（:count）保留在原处。",
     "Choose a location": "选择存储位置",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "客户选择上传位置时会看到这个名称和下面的说明。他们永远看不到存储桶。",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "拥有它的客户会在列表中失去它。其中没有文件，因此不会有其他变化。",
     "Default for new uploads": "新上传的默认位置",
     "Edit location": "编辑存储位置",
     "Enter the credentials for this bucket.": "请输入此存储桶的凭据。",
@@ -2467,5 +2466,15 @@
     "via": "来自",
     ":name also comes from a group; it is listed once, above.": ":name 也来自某个群组；它只在上方列出一次。",
     "Upload screen offers locations (:count): :list.": "上传页面提供的存储位置(:count 个)：:list。",
-    "(preselected)": "(预选)"
+    "(preselected)": "(预选)",
+    "Used by": "使用者",
+    "Everyone else (default)": "其他所有人（默认）",
+    "Nobody": "无人",
+    "Groups: :count": "群组：:count",
+    "People: :count": "人员：:count",
+    "Clients: :count": "客户：:count",
+    "Choice :position": "选择 :position",
+    "People": "人员",
+    "Assignments are changed on each group or person. This list is read-only.": "分配需在各个群组或人员处修改。此列表为只读。",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "拥有它的群组和人员将从其列表中失去它。它不包含任何文件，因此不会有其他变化。"
 }

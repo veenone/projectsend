@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Bu değişiklik yalnızca yeni yüklemeleri etkiler. Zaten yüklenmiş dosyalar (:count) oldukları yerde kalır.",
     "Choose a location": "Bir konum seçin",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Müşteriler, nereye yükleyeceklerini seçerken bu adı ve aşağıdaki notu görür. Kovayı hiçbir zaman görmezler.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Bu konuma sahip müşteriler onu listelerinden kaybeder. İçinde dosya yok, başka bir şey değişmez.",
     "Default for new uploads": "Yeni yüklemeler için varsayılan",
     "Edit location": "Konumu düzenle",
     "Enter the credentials for this bucket.": "Bu kovanın kimlik bilgilerini girin.",
@@ -2467,5 +2466,15 @@
     "via": "aracılığıyla",
     ":name also comes from a group; it is listed once, above.": ":name aynı zamanda bir gruptan geliyor; yalnızca bir kez, yukarıda listelenir.",
     "Upload screen offers locations (:count): :list.": "Yükleme ekranı şu konumları sunar (:count): :list.",
-    "(preselected)": "(önceden seçili)"
+    "(preselected)": "(önceden seçili)",
+    "Used by": "Kullananlar",
+    "Everyone else (default)": "Diğer herkes (varsayılan)",
+    "Nobody": "Kimse",
+    "Groups: :count": "Gruplar: :count",
+    "People: :count": "Kişiler: :count",
+    "Clients: :count": "Müşteriler: :count",
+    "Choice :position": "Seçenek :position",
+    "People": "Kişiler",
+    "Assignments are changed on each group or person. This list is read-only.": "Atamalar her grupta veya kişide değiştirilir. Bu liste salt okunurdur.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Bunu kullanan gruplar ve kişiler listelerinden kaybeder. İçinde dosya yok, bu yüzden başka bir şey değişmez."
 }

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Platform\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
 use App\Modules\Files\Models\File;
@@ -57,7 +58,9 @@ class ExternalStorageSettingsController extends Controller
             ->groupBy('disk')
             ->pluck('aggregate', 'disk');
 
-        $locations = StorageLocation::query()->withCount('users')->orderByDesc('is_default')->orderBy('id')->get()
+        $locations = StorageLocation::query()
+            ->with(['groups' => fn ($groups) => $groups->withCount('members')->orderBy('name'), 'users'])
+            ->orderByDesc('is_default')->orderBy('id')->get()
             ->map(fn (StorageLocation $location): array => [
                 'id' => $location->id,
                 'name' => $location->name,
@@ -68,7 +71,20 @@ class ExternalStorageSettingsController extends Controller
                 'accepts_uploads' => $location->accepts_uploads,
                 'configured' => $location->isConfigured(),
                 'location' => $location->location(),
-                'clients_count' => $location->users_count,
+                // Groups are already without soft-deleted ones (Group's scope).
+                'used_by' => [
+                    'groups' => $location->groups->map(fn ($group): array => [
+                        'id' => $group->id,
+                        'name' => $group->name,
+                        'members_count' => $group->members_count,
+                    ])->values()->all(),
+                    'people' => $location->users->sortBy('pivot.priority')->map(fn (User $person): array => [
+                        'id' => $person->id,
+                        'name' => $person->name,
+                        'type' => $person->isClient() ? 'client' : 'staff',
+                        'position' => (int) $person->pivot->priority,
+                    ])->values()->all(),
+                ],
                 'files_count' => (int) ($fileCounts[$location->disk] ?? 0),
                 'use_instance_role' => $location->use_instance_role,
                 // Never name a top-level Inertia prop "key" — Inertia's React

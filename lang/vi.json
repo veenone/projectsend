@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Thay đổi này chỉ áp dụng cho các lần tải lên mới. Các tệp đã tải lên (:count) vẫn ở nguyên chỗ cũ.",
     "Choose a location": "Chọn một vị trí",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Khách hàng thấy tên này, cùng ghi chú bên dưới, khi chọn nơi tải lên. Họ không bao giờ thấy bucket.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Khách hàng đang có vị trí này sẽ mất nó khỏi danh sách. Vị trí không chứa tệp nào, nên không có gì khác thay đổi.",
     "Default for new uploads": "Mặc định cho tải lên mới",
     "Edit location": "Sửa vị trí",
     "Enter the credentials for this bucket.": "Nhập thông tin đăng nhập cho bucket này.",
@@ -2467,5 +2466,15 @@
     "via": "qua",
     ":name also comes from a group; it is listed once, above.": ":name cũng đến từ một nhóm; chỉ được liệt kê một lần, ở trên.",
     "Upload screen offers locations (:count): :list.": "Màn hình tải lên cung cấp các vị trí (:count): :list.",
-    "(preselected)": "(chọn sẵn)"
+    "(preselected)": "(chọn sẵn)",
+    "Used by": "Được dùng bởi",
+    "Everyone else (default)": "Tất cả những người còn lại (mặc định)",
+    "Nobody": "Không ai",
+    "Groups: :count": "Nhóm: :count",
+    "People: :count": "Người: :count",
+    "Clients: :count": "Khách hàng: :count",
+    "Choice :position": "Lựa chọn :position",
+    "People": "Người",
+    "Assignments are changed on each group or person. This list is read-only.": "Việc gán được thay đổi ở từng nhóm hoặc từng người. Danh sách này chỉ để xem.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Các nhóm và người đã có nơi này sẽ mất nó khỏi danh sách của họ. Nơi này không chứa tệp nào nên không có gì khác thay đổi."
 }

@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Perubahan ini hanya berlaku untuk unggahan baru. Berkas yang sudah diunggah (:count) tetap di tempatnya.",
     "Choose a location": "Pilih lokasi",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Klien melihat nama ini, beserta catatan di bawah, saat memilih tempat mengunggah. Mereka tidak pernah melihat bucket-nya.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Klien yang memilikinya akan kehilangannya dari daftar mereka. Lokasi ini tidak berisi berkas, jadi tidak ada lagi yang berubah.",
     "Default for new uploads": "Bawaan untuk unggahan baru",
     "Edit location": "Ubah lokasi",
     "Enter the credentials for this bucket.": "Masukkan kredensial untuk bucket ini.",
@@ -2467,5 +2466,15 @@
     "via": "melalui",
     ":name also comes from a group; it is listed once, above.": ":name juga berasal dari grup; hanya ditampilkan sekali, di atas.",
     "Upload screen offers locations (:count): :list.": "Layar unggah menawarkan lokasi (:count): :list.",
-    "(preselected)": "(dipilih otomatis)"
+    "(preselected)": "(dipilih otomatis)",
+    "Used by": "Digunakan oleh",
+    "Everyone else (default)": "Semua yang lain (default)",
+    "Nobody": "Tidak ada",
+    "Groups: :count": "Grup: :count",
+    "People: :count": "Orang: :count",
+    "Clients: :count": "Klien: :count",
+    "Choice :position": "Pilihan :position",
+    "People": "Orang",
+    "Assignments are changed on each group or person. This list is read-only.": "Penetapan diubah di setiap grup atau orang. Daftar ini hanya-baca.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Grup dan orang yang memilikinya akan kehilangannya dari daftar mereka. Lokasi ini tidak berisi berkas, jadi tidak ada hal lain yang berubah."
 }

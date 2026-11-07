@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Esta mudança afeta apenas os novos envios. Os arquivos já enviados (:count) ficam onde estão.",
     "Choose a location": "Escolha um local",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Os clientes veem este nome, e a nota abaixo, ao escolher onde enviar. Eles nunca veem o bucket.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Os clientes que o tinham o perdem da lista. Ele não tem arquivos, então nada mais muda.",
     "Default for new uploads": "Padrão para novos envios",
     "Edit location": "Editar local",
     "Enter the credentials for this bucket.": "Informe as credenciais deste bucket.",
@@ -2467,5 +2466,15 @@
     "via": "via",
     ":name also comes from a group; it is listed once, above.": ":name também vem de um grupo; aparece uma só vez, acima.",
     "Upload screen offers locations (:count): :list.": "A tela de envio oferece locais (:count): :list.",
-    "(preselected)": "(pré-selecionado)"
+    "(preselected)": "(pré-selecionado)",
+    "Used by": "Usado por",
+    "Everyone else (default)": "Todos os demais (padrão)",
+    "Nobody": "Ninguém",
+    "Groups: :count": "Grupos: :count",
+    "People: :count": "Pessoas: :count",
+    "Clients: :count": "Clientes: :count",
+    "Choice :position": "Opção :position",
+    "People": "Pessoas",
+    "Assignments are changed on each group or person. This list is read-only.": "As atribuições são alteradas em cada grupo ou pessoa. Esta lista é somente leitura.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Os grupos e as pessoas que o tinham o perdem da sua lista. Ele não contém arquivos, então nada mais muda."
 }

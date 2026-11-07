@@ -739,6 +739,54 @@ test('the orphan scanner looks in every bucket, under the name it was given', fu
         ->and($disks[$b->disk]['location'])->toBe('s3://media');
 });
 
+test('the storage screen lists the groups and people using each location', function () {
+    $location = bucketLocation();
+    $client = User::factory()->client()->create();
+    $staff = User::factory()->create();
+    $group = groupWithStorage([$location], User::factory()->client()->count(3)->create()->all());
+    $gone = groupWithStorage([$location], []);
+    $gone->delete();
+    assignPersonalLocations($client, [bucketLocation(), $location]);
+    assignPersonalLocations($staff, [$location]);
+
+    $this->actingAs($this->admin)->get(route('system-settings.storage.edit'))
+        ->assertInertia(fn ($page) => $page
+            ->where('locations.1.used_by.groups', [
+                ['id' => $group->id, 'name' => $group->name, 'members_count' => 3],
+            ])
+            ->where('locations.1.used_by.people', fn ($people) => collect($people)->sortBy('id')->values()->all() === [
+                ['id' => $client->id, 'name' => $client->name, 'type' => 'client', 'position' => 2],
+                ['id' => $staff->id, 'name' => $staff->name, 'type' => 'staff', 'position' => 1],
+            ])
+            ->missing('locations.1.clients_count'));
+});
+
+test('building the storage screen does not query per location', function () {
+    $queriesFor = function (): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $this->actingAs($this->admin)->get(route('system-settings.storage.edit'))->assertOk();
+        $count = count(DB::getQueryLog());
+        DB::disableQueryLog();
+
+        return $count;
+    };
+    $addLocation = function (): void {
+        $location = bucketLocation();
+        groupWithStorage([$location], [User::factory()->client()->create()]);
+        assignPersonalLocations(User::factory()->client()->create(), [$location]);
+    };
+
+    $addLocation();
+    $queriesFor(); // warm caches (settings, session)
+    $one = $queriesFor();
+    foreach (range(1, 4) as $_) {
+        $addLocation();
+    }
+
+    expect($queriesFor())->toBe($one);
+});
+
 /**
  * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>

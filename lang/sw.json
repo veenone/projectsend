@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Badiliko hili linahusu upakiaji mpya tu. Mafaili yaliyokwisha pakiwa (:count) yanabaki yalipo.",
     "Choose a location": "Chagua mahali",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Wateja wanaona jina hili, na maelezo yaliyo hapa chini, wanapochagua mahali pa kupakia. Hawaioni bucket kamwe.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Wateja waliokuwa nayo wataipoteza kwenye orodha yao. Haina mafaili, kwa hiyo hakuna kingine kinachobadilika.",
     "Default for new uploads": "Chaguomsingi kwa upakiaji mpya",
     "Edit location": "Hariri mahali",
     "Enter the credentials for this bucket.": "Weka vitambulisho vya bucket hii.",
@@ -2467,5 +2466,15 @@
     "via": "kupitia",
     ":name also comes from a group; it is listed once, above.": ":name pia linatoka kwenye kikundi; limeorodheshwa mara moja, hapo juu.",
     "Upload screen offers locations (:count): :list.": "Skrini ya kupakia inatoa maeneo (:count): :list.",
-    "(preselected)": "(imechaguliwa awali)"
+    "(preselected)": "(imechaguliwa awali)",
+    "Used by": "Inatumiwa na",
+    "Everyone else (default)": "Wengine wote (chaguo-msingi)",
+    "Nobody": "Hakuna",
+    "Groups: :count": "Vikundi: :count",
+    "People: :count": "Watu: :count",
+    "Clients: :count": "Wateja: :count",
+    "Choice :position": "Chaguo :position",
+    "People": "Watu",
+    "Assignments are changed on each group or person. This list is read-only.": "Mgawo hubadilishwa kwenye kila kikundi au mtu. Orodha hii ni ya kusoma tu.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Vikundi na watu waliokuwa nayo wataipoteza kwenye orodha yao. Haina faili, kwa hivyo hakuna kingine kinachobadilika."
 }

@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Ce changement ne concerne que les nouveaux téléversements. Les fichiers déjà téléversés (:count) restent où ils sont.",
     "Choose a location": "Choisissez un emplacement",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Les clients voient ce nom, et la note ci-dessous, lorsqu’ils choisissent où téléverser. Ils ne voient jamais le bucket.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Les clients qui l’avaient le perdent de leur liste. Il ne contient aucun fichier, rien d’autre ne change.",
     "Default for new uploads": "Par défaut pour les nouveaux téléversements",
     "Edit location": "Modifier l’emplacement",
     "Enter the credentials for this bucket.": "Saisissez les identifiants de ce bucket.",
@@ -2467,5 +2466,15 @@
     "via": "via",
     ":name also comes from a group; it is listed once, above.": ":name provient aussi d’un groupe ; il n’est listé qu’une fois, ci-dessus.",
     "Upload screen offers locations (:count): :list.": "L’écran de téléversement propose des emplacements (:count) : :list.",
-    "(preselected)": "(présélectionné)"
+    "(preselected)": "(présélectionné)",
+    "Used by": "Utilisé par",
+    "Everyone else (default)": "Tous les autres (par défaut)",
+    "Nobody": "Personne",
+    "Groups: :count": "Groupes : :count",
+    "People: :count": "Personnes : :count",
+    "Clients: :count": "Clients : :count",
+    "Choice :position": "Choix :position",
+    "People": "Personnes",
+    "Assignments are changed on each group or person. This list is read-only.": "Les attributions se modifient sur chaque groupe ou personne. Cette liste est en lecture seule.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Les groupes et les personnes qui l’avaient le perdent de leur liste. Il ne contient aucun fichier, donc rien d’autre ne change."
 }
