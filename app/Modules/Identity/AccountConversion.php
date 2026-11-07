@@ -9,9 +9,9 @@ use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
 use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Identity\Models\Role;
+use App\Modules\Identity\Permissions\SystemRole;
 use App\Modules\Mcp\OAuth\Grants;
 use App\Modules\Platform\Seats\SeatAllowance;
-use App\Modules\Identity\Permissions\SystemRole;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
