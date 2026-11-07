@@ -425,4 +425,3 @@ function uploadChunkedAsClient(array $session = []): TestResponse
 
     return test()->postJson("/uploads/{$id}/complete");
 }
-
