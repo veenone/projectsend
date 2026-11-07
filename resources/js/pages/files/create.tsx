@@ -3,8 +3,8 @@ import { Head, router } from '@inertiajs/react';
 import { useState } from 'react';
 
 import Heading from '@/components/heading';
-import { StorageLocationPicker, type UploadStorageLocation } from '@/components/uploads/storage-location-picker';
 import ChunkedUploadDashboard from '@/components/uploads/chunked-upload-dashboard';
+import { StorageLocationPicker, type UploadStorageLocation } from '@/components/uploads/storage-location-picker';
 import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
 

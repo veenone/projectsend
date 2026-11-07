@@ -233,7 +233,7 @@ function ConvertDialog({
         });
     };
 
-    const revoked = (toClient
+    const revoked = toClient
         ? [
               c.api_tokens > 0 && plural(t, c.api_tokens, '1 API token', ':count API tokens'),
               c.assigned_clients > 0 && plural(t, c.assigned_clients, '1 assigned client', ':count assigned clients'),
@@ -241,8 +241,8 @@ function ConvertDialog({
         : [
               c.managed_by > 0 &&
                   plural(t, c.managed_by, 'Managed by 1 staff member', 'Managed by :count staff members'),
-          ]
-    ).concat(c.storage_locations > 0 && t('Their personal storage locations are removed.'));
+          ];
+    revoked.push(c.storage_locations > 0 && t('Their personal storage locations are removed.'));
 
     const kept = [
         (c.content.files > 0 || c.content.folders > 0) &&

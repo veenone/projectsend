@@ -133,7 +133,9 @@ export default function ClientSettings({
                         </Select>
                         <p className="text-muted-foreground text-sm">{t('Self-registered clients join this group automatically.')}</p>
                         {auto_group_has_storage && data.clients_auto_group === String(clients_auto_group) && (
-                            <p className="text-muted-foreground text-sm">{t('Clients who join this group automatically can upload to its storage locations.')}</p>
+                            <p className="text-muted-foreground text-sm">
+                                {t('Clients who join this group automatically can upload to its storage locations.')}
+                            </p>
                         )}
                         <InputError message={errors.clients_auto_group} />
                     </div>

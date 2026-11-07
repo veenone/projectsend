@@ -1,7 +1,7 @@
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, useForm } from '@inertiajs/react';
 import { ChevronDown, ChevronRight, Cylinder, HardDrive, Info, Plus, Shield, User, Users } from 'lucide-react';
-import { FormEventHandler, Fragment, useState } from 'react';
+import { FormEventHandler, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import Heading from '@/components/heading';
@@ -153,158 +153,149 @@ export default function StorageSettings({ locations, upload_notification_names_l
                     emptyMessage={null}
                     isEmpty={false}
                 >
-                    {locations.map((location) => {
-                        const { groups, people } = location.used_by;
-                        const isOpen = expanded.includes(location.id);
-
-                        return (
-                            <Fragment key={location.id}>
-                                <tr className="border-b last:border-0">
-                                    <td className="px-4 py-3">
-                                        <div className="flex min-w-56 items-center gap-3">
-                                            <span
-                                                className={`flex size-9 shrink-0 items-center justify-center rounded-md ${location.local ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}
-                                            >
-                                                {location.local ? <HardDrive className="size-4" /> : <Cylinder className="size-4" />}
-                                            </span>
-                                            <div className="min-w-0">
-                                                <p className="flex flex-wrap items-center gap-1.5 font-medium">
-                                                    {location.name}
-                                                    {location.is_default && <Badge variant="secondary">{t('Default')}</Badge>}
-                                                </p>
-                                                <p className="text-muted-foreground text-xs">{providerLabel(location)}</p>
-                                                <p className="text-muted-foreground truncate font-mono text-[11px]">{location.location}</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td className="px-4 py-3">
-                                        {groups.length + people.length > 0 ? (
-                                            <button
-                                                type="button"
-                                                className="flex items-center gap-1.5 whitespace-nowrap"
-                                                aria-expanded={isOpen}
-                                                onClick={() => toggleExpanded(location.id)}
-                                            >
-                                                {isOpen ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
-                                                {[
-                                                    groups.length > 0 && t('Groups: :count', { count: groups.length }),
-                                                    people.length > 0 && t('People: :count', { count: people.length }),
-                                                ]
-                                                    .filter(Boolean)
-                                                    .join(' · ')}
-                                            </button>
-                                        ) : location.is_default ? (
-                                            t('Everyone else (default)')
-                                        ) : (
-                                            <span className="text-muted-foreground">{t('Nobody')}</span>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3 text-right tabular-nums">{location.files_count}</td>
-                                    <td className="px-4 py-3 whitespace-nowrap">
-                                        {!location.configured ? (
-                                            <Badge variant="destructive">{t('Not set up')}</Badge>
-                                        ) : location.accepts_uploads ? (
-                                            <Badge variant="success">{t('Accepting uploads')}</Badge>
-                                        ) : (
-                                            <Badge variant="outline">{t('Existing files only')}</Badge>
-                                        )}
-                                    </td>
-                                    <td className="px-4 py-3 text-right">
-                                        <div className="flex justify-end gap-1">
-                                            <Button variant="outline" size="sm" onClick={() => setSheet(location)}>
-                                                {t('Edit')}
-                                            </Button>
-                                            {!location.local && !location.is_default && location.files_count === 0 && (
-                                                <ConfirmDialog
-                                                    trigger={
-                                                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
-                                                            {t('Delete')}
-                                                        </Button>
-                                                    }
-                                                    title={t('Remove this storage location?')}
-                                                    description={t(
-                                                        'Groups and people who had it lose it from their list. It holds no files, so nothing else changes.',
-                                                    )}
-                                                    confirmLabel={t('Remove')}
-                                                    onConfirm={() =>
-                                                        router.delete(route('system-settings.storage.locations.destroy', location.id), {
-                                                            preserveScroll: true,
-                                                        })
-                                                    }
-                                                />
-                                            )}
-                                        </div>
-                                    </td>
-                                </tr>
-                                {isOpen && (
-                                    <tr className="bg-muted/30 border-b last:border-0">
-                                        <td colSpan={5} className="px-4 py-4">
-                                            <div className="flex flex-wrap gap-x-16 gap-y-4 pl-12">
-                                                {groups.length > 0 && (
-                                                    <div>
-                                                        <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">{t('Groups')}</p>
-                                                        <ul className="grid gap-1.5">
-                                                            {groups.map((group) => (
-                                                                <li key={group.id} className="flex items-center gap-2">
-                                                                    <Users className="text-muted-foreground size-4" />
-                                                                    <Link
-                                                                        href={route('groups.edit', { group: group.id, tab: 'storage' })}
-                                                                        className="text-primary hover:underline"
-                                                                    >
-                                                                        {group.name}
-                                                                    </Link>
-                                                                    <span className="text-muted-foreground text-xs">
-                                                                        {t('Clients: :count', { count: group.members_count })}
-                                                                    </span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                                {people.length > 0 && (
-                                                    <div>
-                                                        <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">{t('People')}</p>
-                                                        <ul className="grid gap-1.5">
-                                                            {people.map((person) => (
-                                                                <li key={person.id} className="flex items-center gap-2">
-                                                                    {person.type === 'client' ? (
-                                                                        <User className="text-muted-foreground size-4" />
-                                                                    ) : (
-                                                                        <Shield className="text-muted-foreground size-4" />
-                                                                    )}
-                                                                    <Link
-                                                                        href={
-                                                                            person.type === 'client'
-                                                                                ? route('clients.edit', person.id)
-                                                                                : route('users.edit', person.id)
-                                                                        }
-                                                                        className="text-primary hover:underline"
-                                                                    >
-                                                                        {person.name}
-                                                                    </Link>
-                                                                    <Badge variant="outline">
-                                                                        {person.type === 'client' ? t('Client') : t('Staff')}
-                                                                    </Badge>
-                                                                    <span className="text-muted-foreground text-xs">
-                                                                        {t('Choice :position', { position: person.position })}
-                                                                        {person.position === 1 && ` ${t('(preselected)')}`}
-                                                                    </span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <p className="text-muted-foreground mt-4 flex items-center gap-2 pl-12 text-xs">
-                                                <Info className="size-3.5" />
-                                                {t('Assignments are changed on each group or person. This list is read-only.')}
-                                            </p>
-                                        </td>
-                                    </tr>
+                    {locations.map((location) => [
+                        <tr key={location.id} className="border-b last:border-0">
+                            <td className="px-4 py-3">
+                                <div className="flex min-w-56 items-center gap-3">
+                                    <span
+                                        className={`flex size-9 shrink-0 items-center justify-center rounded-md ${location.local ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary'}`}
+                                    >
+                                        {location.local ? <HardDrive className="size-4" /> : <Cylinder className="size-4" />}
+                                    </span>
+                                    <div className="min-w-0">
+                                        <p className="flex flex-wrap items-center gap-1.5 font-medium">
+                                            {location.name}
+                                            {location.is_default && <Badge variant="secondary">{t('Default')}</Badge>}
+                                        </p>
+                                        <p className="text-muted-foreground text-xs">{providerLabel(location)}</p>
+                                        <p className="text-muted-foreground truncate font-mono text-[11px]">{location.location}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="px-4 py-3">
+                                {location.used_by.groups.length + location.used_by.people.length > 0 ? (
+                                    <button
+                                        type="button"
+                                        className="flex items-center gap-1.5 whitespace-nowrap"
+                                        aria-expanded={expanded.includes(location.id)}
+                                        onClick={() => toggleExpanded(location.id)}
+                                    >
+                                        {expanded.includes(location.id) ? <ChevronDown className="size-4" /> : <ChevronRight className="size-4" />}
+                                        {[
+                                            location.used_by.groups.length > 0 && t('Groups: :count', { count: location.used_by.groups.length }),
+                                            location.used_by.people.length > 0 && t('People: :count', { count: location.used_by.people.length }),
+                                        ]
+                                            .filter(Boolean)
+                                            .join(' · ')}
+                                    </button>
+                                ) : location.is_default ? (
+                                    t('Everyone else (default)')
+                                ) : (
+                                    <span className="text-muted-foreground">{t('Nobody')}</span>
                                 )}
-                            </Fragment>
-                        );
-                    })}
+                            </td>
+                            <td className="px-4 py-3 text-right tabular-nums">{location.files_count}</td>
+                            <td className="px-4 py-3 whitespace-nowrap">
+                                {!location.configured ? (
+                                    <Badge variant="destructive">{t('Not set up')}</Badge>
+                                ) : location.accepts_uploads ? (
+                                    <Badge variant="success">{t('Accepting uploads')}</Badge>
+                                ) : (
+                                    <Badge variant="outline">{t('Existing files only')}</Badge>
+                                )}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                                <div className="flex justify-end gap-1">
+                                    <Button variant="outline" size="sm" onClick={() => setSheet(location)}>
+                                        {t('Edit')}
+                                    </Button>
+                                    {!location.local && !location.is_default && location.files_count === 0 && (
+                                        <ConfirmDialog
+                                            trigger={
+                                                <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                                    {t('Delete')}
+                                                </Button>
+                                            }
+                                            title={t('Remove this storage location?')}
+                                            description={t(
+                                                'Groups and people who had it lose it from their list. It holds no files, so nothing else changes.',
+                                            )}
+                                            confirmLabel={t('Remove')}
+                                            onConfirm={() =>
+                                                router.delete(route('system-settings.storage.locations.destroy', location.id), {
+                                                    preserveScroll: true,
+                                                })
+                                            }
+                                        />
+                                    )}
+                                </div>
+                            </td>
+                        </tr>,
+                        expanded.includes(location.id) && (
+                            <tr key={`${location.id}-used-by`} className="bg-muted/30 border-b last:border-0">
+                                <td colSpan={5} className="px-4 py-4">
+                                    <div className="flex flex-wrap gap-x-16 gap-y-4 pl-12">
+                                        {location.used_by.groups.length > 0 && (
+                                            <div>
+                                                <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">{t('Groups')}</p>
+                                                <ul className="grid gap-1.5">
+                                                    {location.used_by.groups.map((group) => (
+                                                        <li key={group.id} className="flex items-center gap-2">
+                                                            <Users className="text-muted-foreground size-4" />
+                                                            <Link
+                                                                href={route('groups.edit', { group: group.id, tab: 'storage' })}
+                                                                className="text-primary hover:underline"
+                                                            >
+                                                                {group.name}
+                                                            </Link>
+                                                            <span className="text-muted-foreground text-xs">
+                                                                {t('Clients: :count', { count: group.members_count })}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                        {location.used_by.people.length > 0 && (
+                                            <div>
+                                                <p className="text-muted-foreground mb-2 text-xs font-medium uppercase">{t('People')}</p>
+                                                <ul className="grid gap-1.5">
+                                                    {location.used_by.people.map((person) => (
+                                                        <li key={person.id} className="flex items-center gap-2">
+                                                            {person.type === 'client' ? (
+                                                                <User className="text-muted-foreground size-4" />
+                                                            ) : (
+                                                                <Shield className="text-muted-foreground size-4" />
+                                                            )}
+                                                            <Link
+                                                                href={
+                                                                    person.type === 'client'
+                                                                        ? route('clients.edit', person.id)
+                                                                        : route('users.edit', person.id)
+                                                                }
+                                                                className="text-primary hover:underline"
+                                                            >
+                                                                {person.name}
+                                                            </Link>
+                                                            <Badge variant="outline">{person.type === 'client' ? t('Client') : t('Staff')}</Badge>
+                                                            <span className="text-muted-foreground text-xs">
+                                                                {t('Choice :position', { position: person.position })}
+                                                                {person.position === 1 && ` ${t('(preselected)')}`}
+                                                            </span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <p className="text-muted-foreground mt-4 flex items-center gap-2 pl-12 text-xs">
+                                        <Info className="size-3.5" />
+                                        {t('Assignments are changed on each group or person. This list is read-only.')}
+                                    </p>
+                                </td>
+                            </tr>
+                        ),
+                    ])}
                 </TableShell>
                 <p className="text-muted-foreground mt-2 max-w-3xl text-xs">
                     {t(
