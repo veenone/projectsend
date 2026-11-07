@@ -54,7 +54,7 @@ final class ClientUploadMail
             'user_id' => $client->id,
             'type' => self::TYPE,
             'subject_name' => $file->name,
-            'context' => ['file_id' => $file->id],
+            'context' => ['file_id' => $file->id, 'disk' => $file->disk],
         ]);
 
         SendClientUploadMail::dispatch($client->id, PendingBatch::queueCannotWait())->delay(now()->addSeconds(self::DEBOUNCE_SECONDS));

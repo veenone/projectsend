@@ -12,6 +12,7 @@ use App\Modules\Notifications\PendingBatch;
 use App\Modules\Notifications\PendingNotification;
 use App\Modules\Platform\Settings\Setting;
 use App\Modules\Platform\Settings\Settings;
+use App\Modules\Platform\Settings\StorageLocation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -59,13 +60,25 @@ class SendClientUploadMail implements ShouldQueue
             return;
         }
 
+        // Each file's storage location by name, when the setting asks for
+        // it. Looked up now rather than at upload time: the setting, or
+        // the location's name, may have changed during the wait.
+        $locationNames = [];
+        if ($settings->get(Setting::UploadNotificationNamesLocation) === true) {
+            $disks = $items->map(fn (PendingNotification $item): mixed => $item->context['disk'] ?? null)->filter(fn (mixed $disk): bool => is_string($disk))->unique()->values();
+            /** @var array<string, string> $locationNames */
+            $locationNames = StorageLocation::query()->whereIn('disk', $disks)->pluck('name', 'disk')->all();
+        }
+
         foreach ($mail->addresses() as $address) {
             if ($items->count() === 1) {
                 /** @var PendingNotification $item */
                 $item = $items->first();
-                $notification = new AdminClientUploadedNotification($client->name, $item->subject_name, (int) ($item->context['file_id'] ?? 0));
+                $disk = $item->context['disk'] ?? null;
+                $locationName = is_string($disk) ? ($locationNames[$disk] ?? null) : null;
+                $notification = new AdminClientUploadedNotification($client->name, $item->subject_name, (int) ($item->context['file_id'] ?? 0), $locationName);
             } else {
-                $notification = new AdminClientUploadDigestNotification($client->name, $client->id, array_values($items->all()));
+                $notification = new AdminClientUploadDigestNotification($client->name, $client->id, array_values($items->all()), $locationNames);
             }
 
             Notification::route('mail', $address)->notify($notification);

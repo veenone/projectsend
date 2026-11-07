@@ -30,11 +30,13 @@ class AdminClientUploadDigestNotification extends Notification implements Should
 
     /**
      * @param  list<PendingNotification>  $items
+     * @param  array<string, string>  $locationNames  Storage location names by disk; filled only when Setting::UploadNotificationNamesLocation is on.
      */
     public function __construct(
         private readonly string $clientName,
         private readonly int $clientId,
         private readonly array $items,
+        private readonly array $locationNames = [],
     ) {}
 
     /**
@@ -57,12 +59,31 @@ class AdminClientUploadDigestNotification extends Notification implements Should
                 ->line(__(':client uploaded these :count files:', ['client' => $this->clientName, 'count' => $count]));
         }
 
-        foreach ($this->items as $item) {
+        $names = array_map(fn (PendingNotification $item): ?string => $this->locationNameOf($item), $this->items);
+        // One line for the whole burst when every file went to the same
+        // place, which is nearly always; otherwise each file says where.
+        $sameLocation = count(array_unique($names)) === 1 && $names[0] !== null;
+
+        foreach ($this->items as $i => $item) {
             $message->line(__('File: :name', ['name' => $item->subject_name]));
+            if (! $sameLocation && $names[$i] !== null) {
+                $message->line(__('Stored in: :location', ['location' => $names[$i]]));
+            }
+        }
+
+        if ($sameLocation) {
+            $message->line(__('Stored in: :location', ['location' => $names[0]]));
         }
 
         // The library filtered to this client's uploads: every file in the
         // list, in one place, behind the usual sign-in.
         return $message->action(__('View the files'), route('files.index', ['uploader' => $this->clientId]));
+    }
+
+    private function locationNameOf(PendingNotification $item): ?string
+    {
+        $disk = $item->context['disk'] ?? null;
+
+        return is_string($disk) ? ($this->locationNames[$disk] ?? null) : null;
     }
 }
