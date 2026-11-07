@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Cylinder, HardDrive, Plus, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Cylinder, HardDrive, Plus, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -16,29 +16,36 @@ export interface StorageLocationOption {
     is_default: boolean;
 }
 
-export interface ClientStorageProps {
+export interface StorageProps {
     can_assign: boolean;
     options: StorageLocationOption[];
     assigned_ids: number[];
     files_count: number;
+    /** Clients only: what their groups give that the upload screen offers. */
+    from_groups?: { id: number; name: string; groups: string[] }[];
+    /** Clients only: personal locations a group gives as well. */
+    also_in_groups?: string[];
 }
 
 /**
- * The client edit page's "Storage locations" card: the places this
- * client's uploads may go, the first preferred. Reordered with the arrows
+ * The client and staff edit pages' "Storage locations" card: the places this
+ * account's uploads may go, the first preferred. Reordered with the arrows
  * (no drag, so it works the same by keyboard and on a phone). Read-only
- * for an editor who may not change the installation's settings.
+ * for an editor who may not change the installation's settings. A client's
+ * card also lists, read-only, what their groups add.
  */
-export function ClientStorageLocations({
+export function StorageLocationsCard({
     storage,
     value,
     onChange,
     error,
+    audience = 'client',
 }: {
-    storage: ClientStorageProps;
+    storage: StorageProps;
     value: number[];
     onChange: (ids: number[]) => void;
     error?: string;
+    audience?: 'client' | 'staff';
 }) {
     const { t } = useTranslation();
     const byId = new Map(storage.options.map((option) => [option.id, option]));
@@ -46,6 +53,10 @@ export function ClientStorageLocations({
     const available = storage.options.filter((option) => !value.includes(option.id));
     const [adding, setAdding] = useState('');
     const defaultLocation = storage.options.find((option) => option.is_default);
+    const staff = audience === 'staff';
+    const fromGroups = storage.from_groups ?? [];
+    const alsoInGroups = storage.also_in_groups ?? [];
+    const offered = [...assigned.map((option) => option.name), ...fromGroups.map((entry) => entry.name)];
 
     const move = (index: number, by: number) => {
         const next = [...value];
@@ -67,13 +78,17 @@ export function ClientStorageLocations({
                     {t('Storage locations')}
                 </Label>
                 <p className="text-muted-foreground text-sm">
-                    {t('Their uploads go to the first location unless they choose another on the upload screen.')}
+                    {staff
+                        ? t('Where this staff member’s uploads go. The first is preselected.')
+                        : t('Their uploads go to the first location unless they choose another on the upload screen.')}
                 </p>
             </div>
 
             {assigned.length === 0 ? (
                 <p className="text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center text-sm">
-                    {t('No locations. Their uploads use the default, :name.', { name: defaultLocation?.name ?? '' })}
+                    {t(staff ? 'No personal locations. Their uploads use the default, :name.' : 'No locations. Their uploads use the default, :name.', {
+                        name: defaultLocation?.name ?? '',
+                    })}
                 </p>
             ) : (
                 <ol className="grid min-w-0 gap-2">
@@ -168,6 +183,51 @@ export function ClientStorageLocations({
             )}
 
             {error && <p className="text-destructive text-sm">{error}</p>}
+
+            {fromGroups.length > 0 && (
+                <div className="grid min-w-0 gap-2">
+                    <p className="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+                        {t('From groups')} <span className="font-normal tracking-normal normal-case">{t('Read-only. Change it on the group.')}</span>
+                    </p>
+                    <ul className="grid min-w-0 gap-2">
+                        {fromGroups.map((entry) => {
+                            const option = byId.get(entry.id);
+                            return (
+                                <li key={entry.id} className="bg-muted/50 flex min-w-0 flex-wrap items-center gap-2 rounded-md border px-3 py-2">
+                                    <span className="text-muted-foreground">
+                                        {option?.local ? <HardDrive className="size-4" /> : <Cylinder className="size-4" />}
+                                    </span>
+                                    <span className="font-medium">{entry.name}</span>
+                                    <span className="text-muted-foreground text-xs">{t('via')}</span>
+                                    {entry.groups.map((group) => (
+                                        <Badge key={group} variant="outline">
+                                            {group}
+                                        </Badge>
+                                    ))}
+                                </li>
+                            );
+                        })}
+                    </ul>
+                </div>
+            )}
+
+            {alsoInGroups.map((name) => (
+                <p key={name} className="text-muted-foreground text-xs">
+                    {t(':name also comes from a group; it is listed once, above.', { name })}
+                </p>
+            ))}
+
+            {offered.length > 0 && (
+                <p className="border-primary/40 flex items-start gap-2 rounded-md border px-3 py-2 text-sm">
+                    <Upload className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                    <span>
+                        {t('Upload screen offers locations (:count): :list.', {
+                            count: offered.length,
+                            list: offered.map((name, index) => (index === 0 ? `${name} ${t('(preselected)')}` : name)).join(', '),
+                        })}
+                    </span>
+                </p>
+            )}
 
             <p className="bg-muted text-muted-foreground rounded-md px-3 py-2 text-xs">
                 {t('Changing this affects new uploads only. Files already uploaded (:count) stay where they are.', { count: storage.files_count })}

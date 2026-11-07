@@ -2459,5 +2459,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Memengaruhi unggahan baru oleh anggota: :count. File yang sudah diunggah tetap di tempatnya.",
     "Save storage": "Simpan penyimpanan",
     "Clients who join this group automatically can upload to its storage locations.": "Klien yang bergabung otomatis ke grup ini dapat mengunggah ke lokasi penyimpanannya.",
-    "Group storage saved.": "Penyimpanan grup disimpan."
+    "Group storage saved.": "Penyimpanan grup disimpan.",
+    "Where this staff member’s uploads go. The first is preselected.": "Ke mana unggahan anggota tim ini dikirim. Yang pertama dipilih otomatis.",
+    "No personal locations. Their uploads use the default, :name.": "Tidak ada lokasi pribadi. Unggahannya memakai lokasi bawaan, :name.",
+    "From groups": "Dari grup",
+    "Read-only. Change it on the group.": "Hanya baca. Ubah di grup.",
+    "via": "melalui",
+    ":name also comes from a group; it is listed once, above.": ":name juga berasal dari grup; hanya ditampilkan sekali, di atas.",
+    "Upload screen offers locations (:count): :list.": "Layar unggah menawarkan lokasi (:count): :list.",
+    "(preselected)": "(dipilih otomatis)"
 }

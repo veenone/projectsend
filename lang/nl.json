@@ -2459,5 +2459,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Geldt voor nieuwe uploads van leden: :count. Bestanden die al zijn geüpload blijven waar ze zijn.",
     "Save storage": "Opslag opslaan",
     "Clients who join this group automatically can upload to its storage locations.": "Klanten die automatisch lid worden van deze groep kunnen uploaden naar de opslaglocaties ervan.",
-    "Group storage saved.": "Groepsopslag opgeslagen."
+    "Group storage saved.": "Groepsopslag opgeslagen.",
+    "Where this staff member’s uploads go. The first is preselected.": "Waar de uploads van dit teamlid naartoe gaan. De eerste is voorgeselecteerd.",
+    "No personal locations. Their uploads use the default, :name.": "Geen persoonlijke locaties. Hun uploads gebruiken de standaard, :name.",
+    "From groups": "Uit groepen",
+    "Read-only. Change it on the group.": "Alleen-lezen. Wijzig het in de groep.",
+    "via": "via",
+    ":name also comes from a group; it is listed once, above.": ":name komt ook uit een groep; het staat maar één keer vermeld, hierboven.",
+    "Upload screen offers locations (:count): :list.": "Het uploadscherm biedt locaties aan (:count): :list.",
+    "(preselected)": "(voorgeselecteerd)"
 }

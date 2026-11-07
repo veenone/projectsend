@@ -2459,5 +2459,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Inaathiri upakiaji mpya wa wanachama: :count. Faili zilizokwisha pakiwa hubaki zilipo.",
     "Save storage": "Hifadhi mipangilio ya hifadhi",
     "Clients who join this group automatically can upload to its storage locations.": "Wateja wanaojiunga na kikundi hiki kiotomatiki wanaweza kupakia kwenye maeneo yake ya hifadhi.",
-    "Group storage saved.": "Hifadhi ya kikundi imehifadhiwa."
+    "Group storage saved.": "Hifadhi ya kikundi imehifadhiwa.",
+    "Where this staff member’s uploads go. The first is preselected.": "Mahali ambapo upakiaji wa mfanyakazi huyu huenda. La kwanza huchaguliwa awali.",
+    "No personal locations. Their uploads use the default, :name.": "Hakuna mahali pa kibinafsi. Upakiaji wao unatumia chaguomsingi, :name.",
+    "From groups": "Kutoka vikundi",
+    "Read-only. Change it on the group.": "Kusoma tu. Badilisha kwenye kikundi.",
+    "via": "kupitia",
+    ":name also comes from a group; it is listed once, above.": ":name pia linatoka kwenye kikundi; limeorodheshwa mara moja, hapo juu.",
+    "Upload screen offers locations (:count): :list.": "Skrini ya kupakia inatoa maeneo (:count): :list.",
+    "(preselected)": "(imechaguliwa awali)"
 }

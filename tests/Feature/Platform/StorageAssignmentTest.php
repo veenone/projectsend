@@ -13,6 +13,7 @@ use App\Modules\Identity\Permissions\SystemRole;
 use App\Modules\Platform\Settings\StorageLocation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia as Assert;
 
 /*
  * Where an upload may go: the person's own list, then the storages of every
@@ -174,4 +175,85 @@ test('converting staff to a client clears their personal locations', function ()
     expect($staff->storageLocations()->count())->toBe(0)
         ->and($result['storage_locations_cleared'])->toBe(2)
         ->and(ActivityLog::query()->where('action', Action::AccountConvertedToClient)->where('subject_id', $staff->id)->first()->context['storage_locations_cleared'])->toBe(2);
+});
+
+function staffUpdatePayload(User $staff, array $extra = []): array
+{
+    return [
+        'name' => $staff->name,
+        'email' => $staff->email,
+        'role_id' => $staff->role_id,
+        'active' => true,
+        ...$extra,
+    ];
+}
+
+test('an administrator sets a staff member\'s locations in order', function () {
+    [$a, $b] = [bucketLocation(['name' => 'A']), bucketLocation(['name' => 'B'])];
+    applyStorage();
+    $staff = User::factory()->role(SystemRole::Uploader)->create();
+
+    $this->actingAs($this->admin)
+        ->patch("/users/{$staff->id}", staffUpdatePayload($staff, ['storage_location_ids' => [$b->id, $a->id]]))
+        ->assertSessionHasNoErrors();
+
+    expect($staff->storageLocations()->pluck('storage_locations.id')->all())->toBe([$b->id, $a->id])
+        ->and($staff->storageLocations()->pluck('priority')->map(fn ($p): int => (int) $p)->all())->toBe([1, 2]);
+});
+
+test('a staff member who cannot change settings cannot change another staff member\'s locations', function () {
+    $a = bucketLocation();
+    applyStorage();
+    $staff = User::factory()->role(SystemRole::Uploader)->create();
+    $editor = User::factory()->role(SystemRole::AccountManager)->create();
+
+    $this->actingAs($editor)
+        ->patch("/users/{$staff->id}", staffUpdatePayload($staff, ['storage_location_ids' => [$a->id]]));
+
+    expect($staff->storageLocations()->count())->toBe(0);
+});
+
+test('the staff edit page offers the personal card only where storage is permitted', function () {
+    $a = bucketLocation(['name' => 'A']);
+    applyStorage();
+    $staff = User::factory()->role(SystemRole::Uploader)->create();
+    assignPersonalLocations($staff, [$a]);
+
+    $this->actingAs($this->admin)->get("/users/{$staff->id}")->assertInertia(
+        fn (Assert $page) => $page
+            ->where('storage.can_assign', true)
+            ->where('storage.assigned_ids', [$a->id])
+            ->missing('storage.from_groups'),
+    );
+});
+
+test('the client edit page shows storage from groups once, with the groups it comes from', function () {
+    [$a, $c] = [bucketLocation(['name' => 'A']), bucketLocation(['name' => 'C'])];
+    applyStorage();
+    $client = User::factory()->client()->create();
+    assignPersonalLocations($client, [$a]);
+    $finance = groupWithStorage([$a, $c], [$client]);
+    $finance->update(['name' => 'Finance']);
+    $legal = groupWithStorage([$c], [$client]);
+    $legal->update(['name' => 'Legal']);
+
+    $this->actingAs($this->admin)->get("/clients/{$client->id}")->assertInertia(
+        fn (Assert $page) => $page
+            ->where('storage.from_groups', [['id' => $c->id, 'name' => 'C', 'groups' => ['Finance', 'Legal']]])
+            ->where('storage.also_in_groups', ['A']),
+    );
+});
+
+test('storage from groups leaves out what the upload screen would not offer', function () {
+    $closed = bucketLocation(['name' => 'Closed', 'accepts_uploads' => false]);
+    $open = bucketLocation(['name' => 'Open']);
+    applyStorage();
+    $client = User::factory()->client()->create();
+    $deleted = groupWithStorage([$open], [$client]);
+    $deleted->delete();
+    groupWithStorage([$closed], [$client]);
+
+    $this->actingAs($this->admin)->get("/clients/{$client->id}")->assertInertia(
+        fn (Assert $page) => $page->where('storage.from_groups', []),
+    );
 });

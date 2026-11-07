@@ -2459,5 +2459,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Üyelerin yeni yüklemelerini etkiler: :count. Önceden yüklenen dosyalar bulundukları yerde kalır.",
     "Save storage": "Depolamayı kaydet",
     "Clients who join this group automatically can upload to its storage locations.": "Bu gruba otomatik katılan müşteriler, grubun depolama konumlarına yükleme yapabilir.",
-    "Group storage saved.": "Grup depolaması kaydedildi."
+    "Group storage saved.": "Grup depolaması kaydedildi.",
+    "Where this staff member’s uploads go. The first is preselected.": "Bu ekip üyesinin yüklemelerinin gittiği yer. İlki önceden seçilidir.",
+    "No personal locations. Their uploads use the default, :name.": "Kişisel konum yok. Yüklemeleri varsayılanı kullanır: :name.",
+    "From groups": "Gruplardan",
+    "Read-only. Change it on the group.": "Salt okunur. Grupta değiştirin.",
+    "via": "aracılığıyla",
+    ":name also comes from a group; it is listed once, above.": ":name aynı zamanda bir gruptan geliyor; yalnızca bir kez, yukarıda listelenir.",
+    "Upload screen offers locations (:count): :list.": "Yükleme ekranı şu konumları sunar (:count): :list.",
+    "(preselected)": "(önceden seçili)"
 }

@@ -2459,5 +2459,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Concerne les nouveaux téléversements des membres : :count. Les fichiers déjà téléversés restent où ils sont.",
     "Save storage": "Enregistrer le stockage",
     "Clients who join this group automatically can upload to its storage locations.": "Les clients qui rejoignent automatiquement ce groupe peuvent téléverser vers ses emplacements de stockage.",
-    "Group storage saved.": "Stockage du groupe enregistré."
+    "Group storage saved.": "Stockage du groupe enregistré.",
+    "Where this staff member’s uploads go. The first is preselected.": "Où vont les téléversements de ce membre de l’équipe. Le premier est présélectionné.",
+    "No personal locations. Their uploads use the default, :name.": "Aucun emplacement personnel. Ses téléversements utilisent l’emplacement par défaut : :name.",
+    "From groups": "Depuis les groupes",
+    "Read-only. Change it on the group.": "Lecture seule. Modifiez-le dans le groupe.",
+    "via": "via",
+    ":name also comes from a group; it is listed once, above.": ":name provient aussi d’un groupe ; il n’est listé qu’une fois, ci-dessus.",
+    "Upload screen offers locations (:count): :list.": "L’écran de téléversement propose des emplacements (:count) : :list.",
+    "(preselected)": "(présélectionné)"
 }
