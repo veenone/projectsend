@@ -39,13 +39,24 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // A client's locations, in the order their uploads prefer them.
-        Schema::create('client_storage_location', function (Blueprint $table) {
+        // A person's own locations (client or staff), in the order their
+        // uploads prefer them.
+        Schema::create('user_storage_location', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('storage_location_id')->constrained()->cascadeOnDelete();
             $table->unsignedInteger('priority');
             $table->unique(['user_id', 'storage_location_id']);
+        });
+
+        // A group's locations: every client in the group can upload there.
+        // Ordered by the location itself (default first, then name), so
+        // there is no priority here.
+        Schema::create('group_storage_location', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('group_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('storage_location_id')->constrained()->cascadeOnDelete();
+            $table->unique(['group_id', 'storage_location_id']);
         });
 
         Schema::table('upload_sessions', function (Blueprint $table) {
@@ -112,7 +123,8 @@ return new class extends Migration
         Schema::table('upload_sessions', function (Blueprint $table) {
             $table->dropConstrainedForeignId('storage_location_id');
         });
-        Schema::dropIfExists('client_storage_location');
+        Schema::dropIfExists('group_storage_location');
+        Schema::dropIfExists('user_storage_location');
         Schema::dropIfExists('storage_locations');
     }
 };

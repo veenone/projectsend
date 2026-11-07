@@ -57,7 +57,7 @@ class ExternalStorageSettingsController extends Controller
             ->groupBy('disk')
             ->pluck('aggregate', 'disk');
 
-        $locations = StorageLocation::query()->withCount('clients')->orderByDesc('is_default')->orderBy('id')->get()
+        $locations = StorageLocation::query()->withCount('users')->orderByDesc('is_default')->orderBy('id')->get()
             ->map(fn (StorageLocation $location): array => [
                 'id' => $location->id,
                 'name' => $location->name,
@@ -68,7 +68,7 @@ class ExternalStorageSettingsController extends Controller
                 'accepts_uploads' => $location->accepts_uploads,
                 'configured' => $location->isConfigured(),
                 'location' => $location->location(),
-                'clients_count' => $location->clients_count,
+                'clients_count' => $location->users_count,
                 'files_count' => (int) ($fileCounts[$location->disk] ?? 0),
                 'use_instance_role' => $location->use_instance_role,
                 // Never name a top-level Inertia prop "key" — Inertia's React
