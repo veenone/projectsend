@@ -140,7 +140,6 @@ export default function UsersEdit({
 
                     {storage !== null && (
                         <StorageLocationsCard
-                            audience="staff"
                             storage={storage}
                             value={data.storage_location_ids ?? storage.assigned_ids}
                             onChange={(ids) => setData('storage_location_ids', ids)}

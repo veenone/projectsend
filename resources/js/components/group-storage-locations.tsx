@@ -36,10 +36,12 @@ export function GroupStorageLocations({
         <section className="grid min-w-0 gap-3 rounded-lg border p-4" aria-labelledby="group-storage-locations">
             <div>
                 <Label id="group-storage-locations" className="text-base">
-                    {t('Storage for this group')}
+                    {t('Storage locations')}
                 </Label>
                 <p className="text-muted-foreground text-sm">
-                    {t('Members can upload to these, along with any personal locations they have. A member\'s personal first choice stays preselected.')}
+                    {t(
+                        "Members can upload to these, along with any personal locations they have. A member's personal first choice stays preselected.",
+                    )}
                 </p>
             </div>
 
@@ -77,7 +79,9 @@ export function GroupStorageLocations({
                 </p>
             ))}
 
-            <p className="text-muted-foreground text-xs">{t('Anyone added to this group, including through requests and invitations, can upload here.')}</p>
+            <p className="text-muted-foreground text-xs">
+                {t('Anyone added to this group, including through requests and invitations, can upload here.')}
+            </p>
 
             {!storage.can_assign && (
                 <p className="text-muted-foreground text-xs">{t('Only someone who can change the installation’s settings can change these.')}</p>

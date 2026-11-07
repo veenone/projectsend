@@ -44,17 +44,13 @@ interface GroupFormData {
 
 type Tab = 'general' | 'members' | 'storage';
 
-const tabs: Tab[] = ['general', 'members', 'storage'];
-
 export default function GroupsEdit({ group, members, available_clients, storage }: GroupsEditProps) {
     const { t } = useTranslation();
     const { auth } = usePage<SharedData>().props;
     const pageErrors = usePage().props.errors as Record<string, string>;
-    const [tab, setTab] = useState<Tab>(() => {
-        const requested = new URLSearchParams(window.location.search).get('tab');
-        const known = tabs.find((candidate) => candidate === requested);
-        return known === 'storage' && !storage ? 'general' : (known ?? 'general');
-    });
+    const tabs: Tab[] = storage ? ['general', 'members', 'storage'] : ['general', 'members'];
+    const requestedTab = new URLSearchParams(window.location.search).get('tab');
+    const [tab, setTab] = useState<Tab>(tabs.find((candidate) => candidate === requestedTab) ?? 'general');
     const [selectedClient, setSelectedClient] = useState('');
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -116,7 +112,7 @@ export default function GroupsEdit({ group, members, available_clients, storage 
                 </div>
 
                 <nav className="mt-6 flex gap-1 border-b">
-                    {tabs.filter((tabKey) => tabKey !== 'storage' || storage).map((tabKey) => (
+                    {tabs.map((tabKey) => (
                         <button
                             key={tabKey}
                             onClick={() => setTab(tabKey)}
@@ -151,9 +147,7 @@ export default function GroupsEdit({ group, members, available_clients, storage 
                             />
                             {storage.can_assign && (
                                 <div className="flex justify-end">
-                                    <SaveButton processing={storageForm.processing} recentlySuccessful={storageForm.recentlySuccessful}>
-                                        {t('Save storage')}
-                                    </SaveButton>
+                                    <SaveButton processing={storageForm.processing} recentlySuccessful={storageForm.recentlySuccessful} />
                                 </div>
                             )}
                         </form>

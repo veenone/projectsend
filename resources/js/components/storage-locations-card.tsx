@@ -41,13 +41,11 @@ export function StorageLocationsCard({
     value,
     onChange,
     error,
-    audience = 'client',
 }: {
     storage: StorageProps;
     value: number[];
     onChange: (ids: number[]) => void;
     error?: string;
-    audience?: 'client' | 'staff';
 }) {
     const { t } = useTranslation();
     const byId = new Map(storage.options.map((option) => [option.id, option]));
@@ -55,9 +53,7 @@ export function StorageLocationsCard({
     const available = storage.options.filter((option) => !value.includes(option.id));
     const [adding, setAdding] = useState('');
     const defaultLocation = storage.options.find((option) => option.is_default);
-    const staff = audience === 'staff';
     const fromGroups = storage.from_groups ?? [];
-    const alsoInGroups = storage.also_in_groups ?? [];
     const offered = [...assigned.filter((option) => option.usable).map((option) => option.name), ...fromGroups.map((entry) => entry.name)];
 
     const move = (index: number, by: number) => {
@@ -80,17 +76,13 @@ export function StorageLocationsCard({
                     {t('Storage locations')}
                 </Label>
                 <p className="text-muted-foreground text-sm">
-                    {staff
-                        ? t('Where this staff member’s uploads go. The first is preselected.')
-                        : t('Their uploads go to the first location unless they choose another on the upload screen.')}
+                    {t('Their uploads go to the first location unless they choose another on the upload screen.')}
                 </p>
             </div>
 
             {assigned.length === 0 ? (
                 <p className="text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center text-sm">
-                    {t(staff ? 'No personal locations. Their uploads use the default, :name.' : 'No locations. Their uploads use the default, :name.', {
-                        name: defaultLocation?.name ?? '',
-                    })}
+                    {t('No locations. Their uploads use the default, :name.', { name: defaultLocation?.name ?? '' })}
                 </p>
             ) : (
                 <ol className="grid min-w-0 gap-2">
@@ -192,28 +184,25 @@ export function StorageLocationsCard({
                         {t('From groups')} <span className="font-normal tracking-normal normal-case">{t('Read-only. Change it on the group.')}</span>
                     </p>
                     <ul className="grid min-w-0 gap-2">
-                        {fromGroups.map((entry) => {
-                            const option = byId.get(entry.id);
-                            return (
-                                <li key={entry.id} className="bg-muted/50 flex min-w-0 flex-wrap items-center gap-2 rounded-md border px-3 py-2">
-                                    <span className="text-muted-foreground">
-                                        {option?.local ? <HardDrive className="size-4" /> : <Cylinder className="size-4" />}
-                                    </span>
-                                    <span className="font-medium">{entry.name}</span>
-                                    <span className="text-muted-foreground text-xs">{t('via')}</span>
-                                    {entry.groups.map((group) => (
-                                        <Badge key={group} variant="outline">
-                                            {group}
-                                        </Badge>
-                                    ))}
-                                </li>
-                            );
-                        })}
+                        {fromGroups.map((entry) => (
+                            <li key={entry.id} className="bg-muted/50 flex min-w-0 flex-wrap items-center gap-2 rounded-md border px-3 py-2">
+                                <span className="text-muted-foreground">
+                                    {byId.get(entry.id)?.local ? <HardDrive className="size-4" /> : <Cylinder className="size-4" />}
+                                </span>
+                                <span className="font-medium">{entry.name}</span>
+                                <span className="text-muted-foreground text-xs">{t('via')}</span>
+                                {entry.groups.map((group) => (
+                                    <Badge key={group} variant="outline">
+                                        {group}
+                                    </Badge>
+                                ))}
+                            </li>
+                        ))}
                     </ul>
                 </div>
             )}
 
-            {alsoInGroups.map((name) => (
+            {(storage.also_in_groups ?? []).map((name) => (
                 <p key={name} className="text-muted-foreground text-xs">
                     {t(':name also comes from a group; it is listed once, above.', { name })}
                 </p>
