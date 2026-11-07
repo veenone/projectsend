@@ -24,6 +24,7 @@ interface ClientSettingsProps {
     clients_can_preview_files: boolean;
     clients_home_folders: boolean;
     clients_without_home: number;
+    auto_group_has_storage: boolean;
     groups: { id: number; name: string }[];
 }
 
@@ -38,6 +39,7 @@ export default function ClientSettings({
     clients_can_preview_files,
     clients_home_folders,
     clients_without_home,
+    auto_group_has_storage,
     groups,
 }: ClientSettingsProps) {
     const { t } = useTranslation();
@@ -130,6 +132,9 @@ export default function ClientSettings({
                             </SelectContent>
                         </Select>
                         <p className="text-muted-foreground text-sm">{t('Self-registered clients join this group automatically.')}</p>
+                        {auto_group_has_storage && data.clients_auto_group === String(clients_auto_group) && (
+                            <p className="text-muted-foreground text-sm">{t('Clients who join this group automatically can upload to its storage locations.')}</p>
+                        )}
                         <InputError message={errors.clients_auto_group} />
                     </div>
 

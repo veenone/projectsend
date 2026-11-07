@@ -23,19 +23,6 @@ beforeEach(function () {
     $this->admin = User::factory()->create();
 });
 
-/**
- * @param  list<StorageLocation>  $locations
- * @param  list<User>  $members
- */
-function groupWithStorage(array $locations, array $members): Group
-{
-    $group = Group::query()->create(['name' => 'Group '.Str::random(5)]);
-    $group->storageLocations()->attach(array_map(fn (StorageLocation $l): int => $l->id, $locations));
-    $group->members()->attach(array_map(fn (User $u): int => $u->id, $members));
-
-    return $group;
-}
-
 /** @return list<int> */
 function usableIds(User $user): array
 {
