@@ -2450,5 +2450,6 @@
     "This server’s own disk.": "Собственный диск этого сервера.",
     "Uploading to :name. You can choose again once this upload finishes.": "Загрузка в: :name. Выбрать снова можно будет после завершения этой загрузки.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Используется для загрузок сотрудников и для клиентов без собственных мест хранения.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Где хранятся загруженные файлы. Назначьте клиенту одно или несколько мест хранения на странице его учётной записи; используется первое, если при загрузке не выбрано другое."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Где хранятся загруженные файлы. Назначьте клиенту одно или несколько мест хранения на странице его учётной записи; используется первое, если при загрузке не выбрано другое.",
+    "Their personal storage locations are removed.": "Их личные места хранения будут удалены."
 }

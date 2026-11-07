@@ -2450,5 +2450,6 @@
     "This server’s own disk.": "Ổ đĩa riêng của máy chủ này.",
     "Uploading to :name. You can choose again once this upload finishes.": "Đang tải lên :name. Bạn có thể chọn lại khi lần tải lên này kết thúc.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Dùng cho tải lên của nhân viên và cho khách hàng không có vị trí riêng.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Nơi lưu các tệp đã tải lên. Gán cho khách hàng một hoặc nhiều vị trí trên trang tài khoản của họ; vị trí đầu tiên được dùng trừ khi họ chọn vị trí khác khi tải lên."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Nơi lưu các tệp đã tải lên. Gán cho khách hàng một hoặc nhiều vị trí trên trang tài khoản của họ; vị trí đầu tiên được dùng trừ khi họ chọn vị trí khác khi tải lên.",
+    "Their personal storage locations are removed.": "Các vị trí lưu trữ cá nhân của họ sẽ bị xóa."
 }

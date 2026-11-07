@@ -2450,5 +2450,6 @@
     "This server’s own disk.": "De eigen schijf van deze server.",
     "Uploading to :name. You can choose again once this upload finishes.": "Uploaden naar :name. Je kunt opnieuw kiezen zodra deze upload klaar is.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Gebruikt voor uploads van medewerkers en voor klanten zonder eigen locaties.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Waar geüploade bestanden bewaard worden. Geef een klant een of meer locaties op de pagina van zijn account; de eerste wordt gebruikt, tenzij hij bij het uploaden een andere kiest."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Waar geüploade bestanden bewaard worden. Geef een klant een of meer locaties op de pagina van zijn account; de eerste wordt gebruikt, tenzij hij bij het uploaden een andere kiest.",
+    "Their personal storage locations are removed.": "Hun persoonlijke opslaglocaties worden verwijderd."
 }

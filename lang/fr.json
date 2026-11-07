@@ -2450,5 +2450,6 @@
     "This server’s own disk.": "Le disque propre de ce serveur.",
     "Uploading to :name. You can choose again once this upload finishes.": "Téléversement vers :name. Vous pourrez choisir à nouveau une fois ce téléversement terminé.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Utilisé pour les téléversements de l’équipe et pour les clients sans emplacement propre.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Où sont conservés les fichiers téléversés. Attribuez à un client un ou plusieurs emplacements sur la page de son compte ; le premier est utilisé sauf s’il en choisit un autre en téléversant."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Où sont conservés les fichiers téléversés. Attribuez à un client un ou plusieurs emplacements sur la page de son compte ; le premier est utilisé sauf s’il en choisit un autre en téléversant.",
+    "Their personal storage locations are removed.": "Leurs emplacements de stockage personnels sont supprimés."
 }

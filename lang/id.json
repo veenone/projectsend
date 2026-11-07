@@ -2450,5 +2450,6 @@
     "This server’s own disk.": "Disk milik server ini sendiri.",
     "Uploading to :name. You can choose again once this upload finishes.": "Mengunggah ke :name. Anda dapat memilih lagi setelah unggahan ini selesai.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Dipakai untuk unggahan staf, dan untuk klien yang tidak punya lokasi sendiri.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Tempat berkas yang diunggah disimpan. Berikan satu atau beberapa lokasi kepada klien di halaman akunnya; lokasi pertama dipakai kecuali klien memilih yang lain saat mengunggah."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Tempat berkas yang diunggah disimpan. Berikan satu atau beberapa lokasi kepada klien di halaman akunnya; lokasi pertama dipakai kecuali klien memilih yang lain saat mengunggah.",
+    "Their personal storage locations are removed.": "Lokasi penyimpanan pribadi mereka dihapus."
 }

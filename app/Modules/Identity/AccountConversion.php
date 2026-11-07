@@ -175,7 +175,7 @@ class AccountConversion
     /**
      * @param  User  $handFoldersTo  who takes over the folders the account
      *                               created as staff
-     * @return array{api_tokens_revoked: int, assigned_clients_cleared: int, folders_handed_over: int}
+     * @return array{api_tokens_revoked: int, assigned_clients_cleared: int, folders_handed_over: int, storage_locations_cleared: int}
      */
     public function toClient(User $target, User $handFoldersTo): array
     {
@@ -204,6 +204,11 @@ class AccountConversion
             $foldersHandedOver = Folder::query()->where('created_by', $target->id)
                 ->update(['created_by' => $handFoldersTo->id]);
 
+            // The personal storage list means something different to each
+            // population, so it does not carry across.
+            $storageLocationsCleared = $target->storageLocations()->count();
+            $target->storageLocations()->detach();
+
             // The role has to move with the type. PermissionChecker reads
             // only the role and never the type, and several routes are
             // gated on `can:` without the `staff` middleware — so a
@@ -222,19 +227,21 @@ class AccountConversion
                 'api_tokens_revoked' => $tokensRevoked,
                 'assigned_clients_cleared' => $assignmentsCleared,
                 'folders_handed_over' => $foldersHandedOver,
+                'storage_locations_cleared' => $storageLocationsCleared,
             ]);
 
             return [
                 'api_tokens_revoked' => $tokensRevoked,
                 'assigned_clients_cleared' => $assignmentsCleared,
                 'folders_handed_over' => $foldersHandedOver,
+                'storage_locations_cleared' => $storageLocationsCleared,
             ];
         });
     }
 
     /**
      * @param  list<int>  $assignedClients
-     * @return array{managed_by_cleared: int}
+     * @return array{managed_by_cleared: int, storage_locations_cleared: int}
      */
     public function toStaff(User $target, int $roleId, array $assignedClients = [], ?string $password = null): array
     {
@@ -268,6 +275,11 @@ class AccountConversion
                 ->where('client_id', $target->id)
                 ->delete();
 
+            // The personal storage list means something different to each
+            // population, so it does not carry across.
+            $storageLocationsCleared = $target->storageLocations()->count();
+            $target->storageLocations()->detach();
+
             $target->forceFill([
                 'type' => UserType::Staff,
                 'role_id' => $roleId,
@@ -300,9 +312,13 @@ class AccountConversion
             $this->activity->log(Action::AccountConvertedToStaff, subject: $target, context: [
                 'role' => $target->role?->name,
                 'managed_by_cleared' => $managedByCleared,
+                'storage_locations_cleared' => $storageLocationsCleared,
             ]);
 
-            return ['managed_by_cleared' => $managedByCleared];
+            return [
+                'managed_by_cleared' => $managedByCleared,
+                'storage_locations_cleared' => $storageLocationsCleared,
+            ];
         });
     }
 

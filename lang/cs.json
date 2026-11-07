@@ -2450,5 +2450,6 @@
     "This server’s own disk.": "Vlastní disk tohoto serveru.",
     "Uploading to :name. You can choose again once this upload finishes.": "Nahrává se do :name. Znovu vybrat můžete po dokončení tohoto nahrávání.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Používá se pro nahrávání pracovníků a pro klienty, kteří nemají vlastní umístění.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Kde se ukládají nahrané soubory. Klientovi přidělte jedno nebo více umístění na stránce jeho účtu; použije se první, pokud při nahrávání nevybere jiné."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Kde se ukládají nahrané soubory. Klientovi přidělte jedno nebo více umístění na stránce jeho účtu; použije se první, pokud při nahrávání nevybere jiné.",
+    "Their personal storage locations are removed.": "Jejich osobní umístění úložiště budou odebrána."
 }
