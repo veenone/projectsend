@@ -5,6 +5,7 @@ import { FormEventHandler, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import { GroupForm } from '@/components/group-form';
+import { GroupStorageLocations, type GroupStorageProps } from '@/components/group-storage-locations';
 import Heading from '@/components/heading';
 import HeadingSmall from '@/components/heading-small';
 import InputError from '@/components/input-error';
@@ -30,6 +31,7 @@ interface GroupsEditProps {
     };
     members: Person[];
     available_clients: Person[];
+    storage: GroupStorageProps | null;
 }
 
 interface GroupFormData {
@@ -40,13 +42,19 @@ interface GroupFormData {
     public: boolean;
 }
 
-type Tab = 'general' | 'members';
+type Tab = 'general' | 'members' | 'storage';
 
-export default function GroupsEdit({ group, members, available_clients }: GroupsEditProps) {
+const tabs: Tab[] = ['general', 'members', 'storage'];
+
+export default function GroupsEdit({ group, members, available_clients, storage }: GroupsEditProps) {
     const { t } = useTranslation();
     const { auth } = usePage<SharedData>().props;
     const pageErrors = usePage().props.errors as Record<string, string>;
-    const [tab, setTab] = useState<Tab>('general');
+    const [tab, setTab] = useState<Tab>(() => {
+        const requested = new URLSearchParams(window.location.search).get('tab');
+        const known = tabs.find((candidate) => candidate === requested);
+        return known === 'storage' && !storage ? 'general' : (known ?? 'general');
+    });
     const [selectedClient, setSelectedClient] = useState('');
 
     const breadcrumbs: BreadcrumbItem[] = [
@@ -60,6 +68,13 @@ export default function GroupsEdit({ group, members, available_clients }: Groups
         description: group.description ?? '',
         public: group.public,
     });
+
+    const storageForm = useForm<{ storage_location_ids: number[] }>({ storage_location_ids: storage?.assigned_ids ?? [] });
+
+    const saveStorage: FormEventHandler = (e) => {
+        e.preventDefault();
+        storageForm.put(route('groups.storage-locations.update', group.id), { preserveScroll: true });
+    };
 
     const deleteForm = useForm({});
 
@@ -101,13 +116,13 @@ export default function GroupsEdit({ group, members, available_clients }: Groups
                 </div>
 
                 <nav className="mt-6 flex gap-1 border-b">
-                    {(['general', 'members'] as Tab[]).map((tabKey) => (
+                    {tabs.filter((tabKey) => tabKey !== 'storage' || storage).map((tabKey) => (
                         <button
                             key={tabKey}
                             onClick={() => setTab(tabKey)}
                             className={`border-b-2 px-3 py-2 text-sm ${tab === tabKey ? 'border-primary text-foreground font-medium' : 'text-muted-foreground border-transparent'}`}
                         >
-                            {tabKey === 'general' ? t('General') : t('Members')}
+                            {tabKey === 'general' ? t('General') : tabKey === 'members' ? t('Members') : t('Storage')}
                         </button>
                     ))}
                 </nav>
@@ -125,6 +140,22 @@ export default function GroupsEdit({ group, members, available_clients }: Groups
                             />
 
                             <SaveButton processing={processing} recentlySuccessful={recentlySuccessful} />
+                        </form>
+                    ) : tab === 'storage' && storage ? (
+                        <form onSubmit={saveStorage} className="max-w-xl space-y-4">
+                            <GroupStorageLocations
+                                storage={storage}
+                                value={storageForm.data.storage_location_ids}
+                                onChange={(ids) => storageForm.setData('storage_location_ids', ids)}
+                                error={storageForm.errors.storage_location_ids}
+                            />
+                            {storage.can_assign && (
+                                <div className="flex justify-end">
+                                    <SaveButton processing={storageForm.processing} recentlySuccessful={storageForm.recentlySuccessful}>
+                                        {t('Save storage')}
+                                    </SaveButton>
+                                </div>
+                            )}
                         </form>
                     ) : (
                         <div className="max-w-xl space-y-4">

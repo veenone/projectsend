@@ -2454,5 +2454,13 @@
     "Uploading to :name. You can choose again once this upload finishes.": ":name konumuna yükleniyor. Bu yükleme bitince yeniden seçebilirsiniz.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Personelin yüklemeleri ve kendi konumu olmayan müşteriler için kullanılır.",
     "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Yüklenen dosyaların saklandığı yer. Bir müşteriye hesap sayfasında bir veya daha fazla konum atayın; yüklerken başka bir konum seçmedikçe ilki kullanılır.",
-    "Their personal storage locations are removed.": "Kişisel depolama konumları kaldırılır."
+    "Their personal storage locations are removed.": "Kişisel depolama konumları kaldırılır.",
+    "Storage for this group": "Bu grubun depolaması",
+    "Members can upload to these, along with any personal locations they have. A member's personal first choice stays preselected.": "Üyeler kendi kişisel konumlarına ek olarak buraya da yükleyebilir. Bir üyenin kişisel ilk tercihi önceden seçili kalır.",
+    ":name is hidden here because it no longer accepts uploads.": ":name artık yüklemeleri kabul etmediği için burada gizlendi.",
+    "Anyone added to this group, including through requests and invitations, can upload here.": "Bu gruba eklenen herkes, istekler ve davetler yoluyla eklenenler dahil, buraya yükleyebilir.",
+    "Affects new uploads by :count members. Files already uploaded stay where they are.": "Üyelerin yeni yüklemelerini etkiler: :count. Önceden yüklenen dosyalar bulundukları yerde kalır.",
+    "Save storage": "Depolamayı kaydet",
+    "Clients who join this group automatically can upload to its storage locations.": "Bu gruba otomatik katılan müşteriler, grubun depolama konumlarına yükleme yapabilir.",
+    "Group storage saved.": "Grup depolaması kaydedildi."
 }

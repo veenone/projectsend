@@ -41,6 +41,10 @@ class ClientSettingsController extends Controller
             // say "3 clients have no folder yet" instead of asking somebody
             // to press it and find out.
             'clients_without_home' => $this->homeFolders->pendingCount(),
+            // Joining the auto group gives a new client its storages, which
+            // the settings screen says beside the picker.
+            'auto_group_has_storage' => ($autoGroup = (int) $this->settings->get(Setting::ClientsAutoGroup)) > 0
+                && Group::query()->whereKey($autoGroup)->whereHas('storageLocations')->exists(),
             'groups' => Group::query()->orderBy('name')->get()
                 ->map(fn (Group $group): array => ['id' => $group->id, 'name' => $group->name])
                 ->all(),

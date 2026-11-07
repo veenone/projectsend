@@ -2454,5 +2454,13 @@
     "Uploading to :name. You can choose again once this upload finishes.": "Загрузка в: :name. Выбрать снова можно будет после завершения этой загрузки.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Используется для загрузок сотрудников и для клиентов без собственных мест хранения.",
     "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Где хранятся загруженные файлы. Назначьте клиенту одно или несколько мест хранения на странице его учётной записи; используется первое, если при загрузке не выбрано другое.",
-    "Their personal storage locations are removed.": "Их личные места хранения будут удалены."
+    "Their personal storage locations are removed.": "Их личные места хранения будут удалены.",
+    "Storage for this group": "Хранилище этой группы",
+    "Members can upload to these, along with any personal locations they have. A member's personal first choice stays preselected.": "Участники могут загружать файлы сюда, а также в свои личные хранилища. Первый личный выбор участника остаётся выбранным по умолчанию.",
+    ":name is hidden here because it no longer accepts uploads.": ":name скрыто, потому что больше не принимает загрузки.",
+    "Anyone added to this group, including through requests and invitations, can upload here.": "Любой, кто добавлен в эту группу, в том числе через запросы и приглашения, может загружать файлы сюда.",
+    "Affects new uploads by :count members. Files already uploaded stay where they are.": "Затронет новые загрузки участников: :count. Уже загруженные файлы остаются на месте.",
+    "Save storage": "Сохранить хранилище",
+    "Clients who join this group automatically can upload to its storage locations.": "Клиенты, которые автоматически вступают в эту группу, могут загружать файлы в её хранилища.",
+    "Group storage saved.": "Хранилище группы сохранено."
 }

@@ -2454,5 +2454,13 @@
     "Uploading to :name. You can choose again once this upload finishes.": "Wird in :name hochgeladen. Sie können erneut wählen, sobald dieser Upload abgeschlossen ist.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Gilt für Uploads von Mitarbeitenden und für Kunden ohne eigene Speicherorte.",
     "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Wo hochgeladene Dateien gespeichert werden. Weisen Sie einem Kunden auf seiner Kontoseite einen oder mehrere Speicherorte zu; der erste wird verwendet, außer beim Hochladen wird ein anderer gewählt.",
-    "Their personal storage locations are removed.": "Ihre persönlichen Speicherorte werden entfernt."
+    "Their personal storage locations are removed.": "Ihre persönlichen Speicherorte werden entfernt.",
+    "Storage for this group": "Speicher für diese Gruppe",
+    "Members can upload to these, along with any personal locations they have. A member's personal first choice stays preselected.": "Mitglieder können hier hochladen, zusätzlich zu ihren eigenen Speicherorten. Die erste persönliche Wahl eines Mitglieds bleibt vorausgewählt.",
+    ":name is hidden here because it no longer accepts uploads.": ":name wird hier nicht angezeigt, weil keine Uploads mehr angenommen werden.",
+    "Anyone added to this group, including through requests and invitations, can upload here.": "Wer dieser Gruppe hinzugefügt wird, auch über Anfragen und Einladungen, kann hier hochladen.",
+    "Affects new uploads by :count members. Files already uploaded stay where they are.": "Betrifft neue Uploads von Mitgliedern: :count. Bereits hochgeladene Dateien bleiben, wo sie sind.",
+    "Save storage": "Speicher speichern",
+    "Clients who join this group automatically can upload to its storage locations.": "Kunden, die dieser Gruppe automatisch beitreten, können in deren Speicherorte hochladen.",
+    "Group storage saved.": "Gruppenspeicher gespeichert."
 }

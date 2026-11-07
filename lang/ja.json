@@ -2454,5 +2454,13 @@
     "Uploading to :name. You can choose again once this upload finishes.": ":name にアップロードしています。このアップロードが終わると、もう一度選べます。",
     "Used for staff uploads, and for clients who have no locations of their own.": "スタッフのアップロードと、自分の保存先を持たないクライアントに使われます。",
     "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "アップロードされたファイルの保存先です。クライアントのアカウントページで 1 つ以上の保存先を割り当てます。アップロード時に別の保存先を選ばない限り、最初の保存先が使われます。",
-    "Their personal storage locations are removed.": "個人用のストレージの場所は削除されます。"
+    "Their personal storage locations are removed.": "個人用のストレージの場所は削除されます。",
+    "Storage for this group": "このグループのストレージ",
+    "Members can upload to these, along with any personal locations they have. A member's personal first choice stays preselected.": "メンバーは、自分の個人用の保存先に加えて、ここにもアップロードできます。メンバーの個人用の第一候補は、引き続きあらかじめ選択されます。",
+    ":name is hidden here because it no longer accepts uploads.": ":name は、アップロードを受け付けなくなったため、ここでは非表示です。",
+    "Anyone added to this group, including through requests and invitations, can upload here.": "リクエストや招待経由を含め、このグループに追加された人は誰でもここにアップロードできます。",
+    "Affects new uploads by :count members. Files already uploaded stay where they are.": "メンバーによる新規アップロードに影響します(:count 人)。すでにアップロードされたファイルはそのままです。",
+    "Save storage": "ストレージを保存",
+    "Clients who join this group automatically can upload to its storage locations.": "このグループに自動的に参加するクライアントは、グループのストレージにアップロードできます。",
+    "Group storage saved.": "グループのストレージを保存しました。"
 }
