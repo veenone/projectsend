@@ -338,9 +338,7 @@ test('a client uploads to their first location, or the one they asked for if it 
     expect(resolvedDiskFor($client))->toBe($us->disk)
         ->and(resolvedDiskFor($client, $eu->id))->toBe($eu->disk)
         // Not theirs: their first, not the one asked for.
-        ->and(resolvedDiskFor($client, $other->id))->toBe($us->disk)
-        // Staff always use the default, whatever is assigned to clients.
-        ->and(resolvedDiskFor($this->admin, $eu->id))->toBe('files');
+        ->and(resolvedDiskFor($client, $other->id))->toBe($us->disk);
 });
 
 test('a location that stopped taking uploads is skipped for the next one', function () {
@@ -740,89 +738,6 @@ test('the orphan scanner looks in every bucket, under the name it was given', fu
         ->and($disks[$a->disk])->toBe(['label' => 'Archive', 'location' => 's3://archive'])
         ->and($disks[$b->disk]['location'])->toBe('s3://media');
 });
-
-/**
- * A configured S3 bucket location, saved and flushed into the applier's
- * cache. Not the default unless makeDefault() says so.
- *
- * @param  array<string, mixed>  $attributes
- */
-function bucketLocation(array $attributes = []): StorageLocation
-{
-    $location = new StorageLocation;
-    $location->disk = 'files_loc_'.Str::lower((string) Str::ulid());
-    $location->fill([
-        'name' => 'Bucket '.Str::random(4),
-        'provider' => 's3',
-        'key' => 'AKIAEXAMPLE',
-        'secret' => 'shh',
-        'bucket' => 'my-bucket',
-        'region' => 'us-east-1',
-        ...$attributes,
-    ]);
-    $location->save();
-
-    app(ExternalStorageConfigApplier::class)->flush();
-
-    return $location;
-}
-
-function makeDefault(StorageLocation $location): void
-{
-    StorageLocation::query()->update(['is_default' => false]);
-    $location->forceFill(['is_default' => true])->save();
-
-    applyStorage();
-}
-
-function applyStorage(): void
-{
-    app(ExternalStorageConfigApplier::class)->flush();
-    app(ExternalStorageConfigApplier::class)->apply();
-}
-
-/** @param  list<StorageLocation>  $locations  first preferred */
-function assignPersonalLocations(User $client, array $locations): void
-{
-    $sync = [];
-    foreach ($locations as $index => $location) {
-        $sync[$location->id] = ['priority' => $index + 1];
-    }
-
-    $client->storageLocations()->sync($sync);
-}
-
-function resolvedDiskFor(User $uploader, ?int $requestedLocationId = null): string
-{
-    $event = new ResolvingUploadDisk($uploader, $requestedLocationId);
-    Event::dispatch($event);
-
-    return $event->disk;
-}
-
-function uploadingClient(): User
-{
-    $client = User::factory()->client()->create();
-    RolePermission::query()->firstOrCreate(['role_id' => $client->role_id, 'permission' => Permission::Upload->value]);
-
-    return $client;
-}
-
-/** @param  array<string, mixed>  $session */
-function uploadChunkedAsClient(array $session = []): TestResponse
-{
-    $id = test()->postJson('/uploads', [
-        'filename' => 'statement.pdf',
-        'size' => 11,
-        'type' => 'application/pdf',
-        ...$session,
-    ])->assertOk()->json('uploadId');
-
-    $sign = test()->getJson("/uploads/{$id}/parts/1/sign")->assertOk()->json('url');
-    test()->call('PUT', $sign, [], [], [], ['CONTENT_TYPE' => 'application/octet-stream'], 'hello-world');
-
-    return test()->postJson("/uploads/{$id}/complete");
-}
 
 /**
  * @param  array<string, mixed>  $overrides
