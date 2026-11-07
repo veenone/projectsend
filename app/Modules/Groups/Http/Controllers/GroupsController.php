@@ -178,21 +178,19 @@ class GroupsController extends Controller
         }
 
         $locations = StorageLocation::query()->orderByDesc('is_default')->orderBy('name')->get();
+        $accepting = $locations->where('accepts_uploads', true);
         $assigned = $group->storageLocations()->pluck('storage_locations.id')->all();
 
         return [
             'can_assign' => $this->uploadLocations->canAssign($viewer),
-            'options' => $locations->filter(fn (StorageLocation $location): bool => $location->accepts_uploads)
-                ->map(fn (StorageLocation $location): array => [
-                    'id' => $location->id,
-                    'name' => $location->name,
-                    'local' => $location->isLocal(),
-                    'location' => $location->location(),
-                ])->values()->all(),
-            'hidden_names' => $locations->filter(fn (StorageLocation $location): bool => ! $location->accepts_uploads && in_array($location->id, $assigned, true))
-                ->map(fn (StorageLocation $location): string => $location->name)->values()->all(),
-            'assigned_ids' => $locations->filter(fn (StorageLocation $location): bool => $location->accepts_uploads && in_array($location->id, $assigned, true))
-                ->map(fn (StorageLocation $location): int => $location->id)->values()->all(),
+            'options' => array_values($accepting->map(fn (StorageLocation $location): array => [
+                'id' => $location->id,
+                'name' => $location->name,
+                'local' => $location->isLocal(),
+                'location' => $location->location(),
+            ])->all()),
+            'hidden_names' => array_values($locations->where('accepts_uploads', false)->whereIn('id', $assigned)->map(fn (StorageLocation $l): string => $l->name)->all()),
+            'assigned_ids' => array_values($accepting->whereIn('id', $assigned)->map(fn (StorageLocation $l): int => $l->id)->all()),
             'members_count' => $group->members()->count(),
         ];
     }

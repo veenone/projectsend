@@ -52,7 +52,7 @@ class StorageCardProps
                     // The test usableFor() applies, so the card's preview
                     // of the upload screen can follow unsaved reordering.
                     'usable' => $location->accepts_uploads && ($location->isLocal() || in_array($location->disk, $buckets, true)),
-                ])->values()->all()),
+                ])->all()),
             'assigned_ids' => $assignedIds,
             'files_count' => File::withTrashed()->where('uploaded_by', $account->id)->count(),
         ];
@@ -68,15 +68,15 @@ class StorageCardProps
             }
         }
 
-        $usable = $this->uploadLocations->usableFor($account)->filter(fn (StorageLocation $l): bool => isset($groupNames[$l->id]));
-        $named = fn (StorageLocation $location): array => [
+        $offered = $this->uploadLocations->usableFor($account)->filter(fn (StorageLocation $l): bool => isset($groupNames[$l->id]));
+        $personal = fn (StorageLocation $l): bool => in_array($l->id, $assignedIds, true);
+
+        $props['from_groups'] = array_values($offered->reject($personal)->map(fn (StorageLocation $location): array => [
             'id' => $location->id,
             'name' => $location->name,
-            'groups' => collect($groupNames[$location->id])->sort(SORT_NATURAL | SORT_FLAG_CASE)->values()->all(),
-        ];
-
-        $props['from_groups'] = $usable->reject(fn (StorageLocation $l): bool => in_array($l->id, $assignedIds, true))->map($named)->values()->all();
-        $props['also_in_groups'] = $usable->filter(fn (StorageLocation $l): bool => in_array($l->id, $assignedIds, true))->pluck('name')->values()->all();
+            'groups' => array_values(collect($groupNames[$location->id])->sort(SORT_NATURAL | SORT_FLAG_CASE)->all()),
+        ])->all());
+        $props['also_in_groups'] = array_values($offered->filter($personal)->map(fn (StorageLocation $l): string => $l->name)->all());
 
         return $props;
     }

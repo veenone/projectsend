@@ -82,7 +82,7 @@ class ExternalStorageSettingsController extends Controller
                         'id' => $person->id,
                         'name' => $person->name,
                         'type' => $person->isClient() ? 'client' : 'staff',
-                        'position' => (int) $person->pivot->priority,
+                        'position' => (int) data_get($person, 'pivot.priority'),
                     ])->values()->all(),
                 ],
                 'files_count' => (int) ($fileCounts[$location->disk] ?? 0),

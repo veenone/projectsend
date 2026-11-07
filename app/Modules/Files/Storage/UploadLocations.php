@@ -68,7 +68,7 @@ class UploadLocations
     /**
      * Replaces this person's own list with these locations, first preferred.
      *
-     * @param  list<int>  $ids
+     * @param  array<int>  $ids
      */
     public function replacePersonal(User $account, array $ids): void
     {
