@@ -2462,5 +2462,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Týká se nových nahrání členů: :count. Již nahrané soubory zůstanou, kde jsou.",
     "Save storage": "Uložit úložiště",
     "Clients who join this group automatically can upload to its storage locations.": "Klienti, kteří se do této skupiny připojí automaticky, mohou nahrávat do jejích úložišť.",
-    "Group storage saved.": "Úložiště skupiny uloženo."
+    "Group storage saved.": "Úložiště skupiny uloženo.",
+    "Where this staff member’s uploads go. The first is preselected.": "Kam míří nahrávání tohoto člena týmu. První je předvybrané.",
+    "No personal locations. Their uploads use the default, :name.": "Žádná osobní umístění. Jeho nahrávání používají výchozí: :name.",
+    "From groups": "Ze skupin",
+    "Read-only. Change it on the group.": "Pouze pro čtení. Změňte to ve skupině.",
+    "via": "přes",
+    ":name also comes from a group; it is listed once, above.": ":name pochází také ze skupiny; je uvedeno jen jednou, výše.",
+    "Upload screen offers locations (:count): :list.": "Obrazovka nahrávání nabízí umístění (:count): :list.",
+    "(preselected)": "(předvybráno)"
 }

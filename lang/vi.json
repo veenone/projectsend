@@ -2462,5 +2462,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Ảnh hưởng đến các lượt tải lên mới của thành viên: :count. Các tệp đã tải lên vẫn ở nguyên vị trí.",
     "Save storage": "Lưu cấu hình lưu trữ",
     "Clients who join this group automatically can upload to its storage locations.": "Khách hàng tự động tham gia nhóm này có thể tải lên các vị trí lưu trữ của nhóm.",
-    "Group storage saved.": "Đã lưu lưu trữ của nhóm."
+    "Group storage saved.": "Đã lưu lưu trữ của nhóm.",
+    "Where this staff member’s uploads go. The first is preselected.": "Nơi các lượt tải lên của nhân viên này được lưu. Vị trí đầu tiên được chọn sẵn.",
+    "No personal locations. Their uploads use the default, :name.": "Không có vị trí cá nhân. Các lần tải lên dùng vị trí mặc định, :name.",
+    "From groups": "Từ nhóm",
+    "Read-only. Change it on the group.": "Chỉ đọc. Hãy thay đổi trong nhóm.",
+    "via": "qua",
+    ":name also comes from a group; it is listed once, above.": ":name cũng đến từ một nhóm; chỉ được liệt kê một lần, ở trên.",
+    "Upload screen offers locations (:count): :list.": "Màn hình tải lên cung cấp các vị trí (:count): :list.",
+    "(preselected)": "(chọn sẵn)"
 }

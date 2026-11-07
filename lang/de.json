@@ -2462,5 +2462,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Betrifft neue Uploads von Mitgliedern: :count. Bereits hochgeladene Dateien bleiben, wo sie sind.",
     "Save storage": "Speicher speichern",
     "Clients who join this group automatically can upload to its storage locations.": "Kunden, die dieser Gruppe automatisch beitreten, können in deren Speicherorte hochladen.",
-    "Group storage saved.": "Gruppenspeicher gespeichert."
+    "Group storage saved.": "Gruppenspeicher gespeichert.",
+    "Where this staff member’s uploads go. The first is preselected.": "Wohin die Uploads dieses Teammitglieds gehen. Der erste Eintrag ist vorausgewählt.",
+    "No personal locations. Their uploads use the default, :name.": "Keine persönlichen Speicherorte. Die Uploads verwenden den Standard: :name.",
+    "From groups": "Aus Gruppen",
+    "Read-only. Change it on the group.": "Nur lesbar. Ändern Sie es in der Gruppe.",
+    "via": "über",
+    ":name also comes from a group; it is listed once, above.": ":name kommt auch aus einer Gruppe; es wird nur einmal aufgeführt, oben.",
+    "Upload screen offers locations (:count): :list.": "Die Upload-Seite bietet Speicherorte an (:count): :list.",
+    "(preselected)": "(vorausgewählt)"
 }

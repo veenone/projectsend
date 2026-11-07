@@ -2462,5 +2462,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "メンバーによる新規アップロードに影響します(:count 人)。すでにアップロードされたファイルはそのままです。",
     "Save storage": "ストレージを保存",
     "Clients who join this group automatically can upload to its storage locations.": "このグループに自動的に参加するクライアントは、グループのストレージにアップロードできます。",
-    "Group storage saved.": "グループのストレージを保存しました。"
+    "Group storage saved.": "グループのストレージを保存しました。",
+    "Where this staff member’s uploads go. The first is preselected.": "このスタッフのアップロード先です。先頭が初期選択になります。",
+    "No personal locations. Their uploads use the default, :name.": "個人の保存先はありません。アップロードには既定の :name が使われます。",
+    "From groups": "グループから",
+    "Read-only. Change it on the group.": "読み取り専用です。グループで変更してください。",
+    "via": "経由",
+    ":name also comes from a group; it is listed once, above.": ":name はグループからも付与されています。上に1回だけ表示しています。",
+    "Upload screen offers locations (:count): :list.": "アップロード画面に表示される保存先(:count 件): :list。",
+    "(preselected)": "(初期選択)"
 }

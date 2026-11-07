@@ -2462,5 +2462,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Dotyczy nowych przesłań członków: :count. Pliki już przesłane pozostają tam, gdzie są.",
     "Save storage": "Zapisz magazyn",
     "Clients who join this group automatically can upload to its storage locations.": "Klienci, którzy automatycznie dołączają do tej grupy, mogą przesyłać pliki do jej lokalizacji magazynowych.",
-    "Group storage saved.": "Magazyn grupy zapisany."
+    "Group storage saved.": "Magazyn grupy zapisany.",
+    "Where this staff member’s uploads go. The first is preselected.": "Gdzie trafiają pliki przesyłane przez tego członka zespołu. Pierwsza lokalizacja jest wybrana wstępnie.",
+    "No personal locations. Their uploads use the default, :name.": "Brak lokalizacji osobistych. Przesyłane pliki trafiają do domyślnej: :name.",
+    "From groups": "Z grup",
+    "Read-only. Change it on the group.": "Tylko do odczytu. Zmień to w grupie.",
+    "via": "przez",
+    ":name also comes from a group; it is listed once, above.": ":name pochodzi też z grupy; jest wymieniona tylko raz, powyżej.",
+    "Upload screen offers locations (:count): :list.": "Ekran przesyłania oferuje lokalizacje (:count): :list.",
+    "(preselected)": "(wybrana wstępnie)"
 }

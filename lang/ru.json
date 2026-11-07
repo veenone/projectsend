@@ -2462,5 +2462,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Затронет новые загрузки участников: :count. Уже загруженные файлы остаются на месте.",
     "Save storage": "Сохранить хранилище",
     "Clients who join this group automatically can upload to its storage locations.": "Клиенты, которые автоматически вступают в эту группу, могут загружать файлы в её хранилища.",
-    "Group storage saved.": "Хранилище группы сохранено."
+    "Group storage saved.": "Хранилище группы сохранено.",
+    "Where this staff member’s uploads go. The first is preselected.": "Куда попадают загрузки этого сотрудника. Первое место выбирается заранее.",
+    "No personal locations. Their uploads use the default, :name.": "Личных мест хранения нет. Загрузки идут в место по умолчанию: :name.",
+    "From groups": "Из групп",
+    "Read-only. Change it on the group.": "Только для чтения. Измените в группе.",
+    "via": "через",
+    ":name also comes from a group; it is listed once, above.": ":name также приходит из группы; в списке оно указано один раз, выше.",
+    "Upload screen offers locations (:count): :list.": "Экран загрузки предлагает места хранения (:count): :list.",
+    "(preselected)": "(выбрано заранее)"
 }

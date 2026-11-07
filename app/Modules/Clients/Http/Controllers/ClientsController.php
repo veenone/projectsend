@@ -20,16 +20,14 @@ use App\Modules\Clients\Models\ClientCustomFieldValue;
 use App\Modules\Clients\Notifications\ClientAccountEditedNotification;
 use App\Modules\Clients\Notifications\ClientWelcomeNotification;
 use App\Modules\Files\DeletedAccountContent;
-use App\Modules\Files\Models\File;
 use App\Modules\Identity\AccountContentDeletion;
 use App\Modules\Identity\Erasure\AvailableEmailRule;
 use App\Modules\Identity\Erasure\ErasureSchedule;
 use App\Modules\Identity\TwoFactor\TwoFactorAdministration;
 use App\Modules\Platform\Settings\Setting;
 use App\Modules\Platform\Settings\Settings;
+use App\Modules\Files\Storage\StorageCardProps;
 use App\Modules\Files\Storage\UploadLocations;
-use App\Modules\Platform\Settings\ExternalStorageConfigApplier;
-use App\Modules\Platform\Settings\StorageLocation;
 use App\Support\Pagination;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
@@ -58,7 +56,7 @@ class ClientsController extends Controller
         private readonly ClientAccounts $clients,
         private readonly ErasureSchedule $erasure,
         private readonly DateInput $dates,
-        private readonly ExternalStorageConfigApplier $storageLocations,
+        private readonly StorageCardProps $storageCard,
         private readonly UploadLocations $uploadLocations,
     ) {}
 
@@ -264,41 +262,11 @@ class ClientsController extends Controller
                 ->where('user_id', $client->id)
                 ->pluck('value', 'client_custom_field_id'),
             'content' => $this->accountContent->summarize($client),
-            'storage' => $this->storageProps($request->user(), $client),
+            'storage' => $this->storageCard->for($request->user(), $client),
             'reassign_candidates' => $request->user()?->can('delete_clients') === true
                 ? $this->accountDeletion->candidates($request->user(), $client->id)
                 : [],
         ]);
-    }
-
-    /**
-     * The client's storage locations card. Null where this edition has no
-     * storage locations to give. Only someone who may change the
-     * installation's settings may change them: they decide which bucket a
-     * client's files are written to.
-     *
-     * @return array{can_assign: bool, options: list<array{id: int, name: string, local: bool, location: string, accepts_uploads: bool, is_default: bool}>, assigned_ids: list<int>, files_count: int}|null
-     */
-    private function storageProps(?User $viewer, User $client): ?array
-    {
-        if (! $this->storageLocations->permitted()) {
-            return null;
-        }
-
-        return [
-            'can_assign' => $this->uploadLocations->canAssign($viewer),
-            'options' => array_values(StorageLocation::query()->orderByDesc('is_default')->orderBy('name')->get()
-                ->map(fn (StorageLocation $location): array => [
-                    'id' => $location->id,
-                    'name' => $location->name,
-                    'local' => $location->isLocal(),
-                    'location' => $location->location(),
-                    'accepts_uploads' => $location->accepts_uploads,
-                    'is_default' => $location->is_default,
-                ])->values()->all()),
-            'assigned_ids' => array_values(array_map(intval(...), $client->storageLocations()->pluck('storage_locations.id')->all())),
-            'files_count' => File::withTrashed()->where('uploaded_by', $client->id)->count(),
-        ];
     }
 
     /**
@@ -317,12 +285,7 @@ class ClientsController extends Controller
             'storage_location_ids.*' => ['integer', 'distinct', Rule::exists('storage_locations', 'id')],
         ]);
 
-        $priorities = [];
-        foreach (array_values($validated['storage_location_ids']) as $index => $id) {
-            $priorities[(int) $id] = ['priority' => $index + 1];
-        }
-
-        $client->storageLocations()->sync($priorities);
+        $this->uploadLocations->replacePersonal($client, array_map(intval(...), $validated['storage_location_ids']));
     }
 
     public function update(Request $request, User $client): RedirectResponse

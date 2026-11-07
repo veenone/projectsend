@@ -2462,5 +2462,13 @@
     "Affects new uploads by :count members. Files already uploaded stay where they are.": "Afecta les noves pujades dels membres: :count. Els fitxers ja pujats es queden on són.",
     "Save storage": "Desa l'emmagatzematge",
     "Clients who join this group automatically can upload to its storage locations.": "Els clients que s'uneixen automàticament a aquest grup poden pujar fitxers a les seves ubicacions d'emmagatzematge.",
-    "Group storage saved.": "Emmagatzematge del grup desat."
+    "Group storage saved.": "Emmagatzematge del grup desat.",
+    "Where this staff member’s uploads go. The first is preselected.": "On van les pujades d’aquest membre de l’equip. La primera es preselecciona.",
+    "No personal locations. Their uploads use the default, :name.": "Cap ubicació personal. Les seves pujades fan servir la per defecte, :name.",
+    "From groups": "Dels grups",
+    "Read-only. Change it on the group.": "Només lectura. Canvieu-ho al grup.",
+    "via": "via",
+    ":name also comes from a group; it is listed once, above.": ":name també ve d’un grup; només es mostra una vegada, a dalt.",
+    "Upload screen offers locations (:count): :list.": "La pantalla de pujada ofereix ubicacions (:count): :list.",
+    "(preselected)": "(preseleccionada)"
 }
