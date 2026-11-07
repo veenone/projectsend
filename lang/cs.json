@@ -2451,5 +2451,13 @@
     "Uploading to :name. You can choose again once this upload finishes.": "Nahrává se do :name. Znovu vybrat můžete po dokončení tohoto nahrávání.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Používá se pro nahrávání pracovníků a pro klienty, kteří nemají vlastní umístění.",
     "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Kde se ukládají nahrané soubory. Klientovi přidělte jedno nebo více umístění na stránce jeho účtu; použije se první, pokud při nahrávání nevybere jiné.",
-    "Their personal storage locations are removed.": "Jejich osobní umístění úložiště budou odebrána."
+    "Their personal storage locations are removed.": "Jejich osobní umístění úložiště budou odebrána.",
+    "Storage for this group": "Úložiště této skupiny",
+    "Members can upload to these, along with any personal locations they have. A member's personal first choice stays preselected.": "Členové sem mohou nahrávat soubory, kromě svých osobních umístění. První osobní volba člena zůstává předvybraná.",
+    ":name is hidden here because it no longer accepts uploads.": ":name je zde skryto, protože už nepřijímá nahrávání.",
+    "Anyone added to this group, including through requests and invitations, can upload here.": "Kdokoli, kdo je do této skupiny přidán, i prostřednictvím žádostí a pozvánek, sem může nahrávat soubory.",
+    "Affects new uploads by :count members. Files already uploaded stay where they are.": "Týká se nových nahrání členů: :count. Již nahrané soubory zůstanou, kde jsou.",
+    "Save storage": "Uložit úložiště",
+    "Clients who join this group automatically can upload to its storage locations.": "Klienti, kteří se do této skupiny připojí automaticky, mohou nahrávat do jejích úložišť.",
+    "Group storage saved.": "Úložiště skupiny uloženo."
 }

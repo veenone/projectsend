@@ -2451,5 +2451,13 @@
     "Uploading to :name. You can choose again once this upload finishes.": "Uploaden naar :name. Je kunt opnieuw kiezen zodra deze upload klaar is.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Gebruikt voor uploads van medewerkers en voor klanten zonder eigen locaties.",
     "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Waar geüploade bestanden bewaard worden. Geef een klant een of meer locaties op de pagina van zijn account; de eerste wordt gebruikt, tenzij hij bij het uploaden een andere kiest.",
-    "Their personal storage locations are removed.": "Hun persoonlijke opslaglocaties worden verwijderd."
+    "Their personal storage locations are removed.": "Hun persoonlijke opslaglocaties worden verwijderd.",
+    "Storage for this group": "Opslag voor deze groep",
+    "Members can upload to these, along with any personal locations they have. A member's personal first choice stays preselected.": "Leden kunnen hier uploaden, naast hun eigen locaties. De eerste persoonlijke keuze van een lid blijft voorgeselecteerd.",
+    ":name is hidden here because it no longer accepts uploads.": ":Name is hier verborgen omdat het geen uploads meer accepteert.",
+    "Anyone added to this group, including through requests and invitations, can upload here.": "Iedereen die aan deze groep wordt toegevoegd, ook via verzoeken en uitnodigingen, kan hier uploaden.",
+    "Affects new uploads by :count members. Files already uploaded stay where they are.": "Geldt voor nieuwe uploads van leden: :count. Bestanden die al zijn geüpload blijven waar ze zijn.",
+    "Save storage": "Opslag opslaan",
+    "Clients who join this group automatically can upload to its storage locations.": "Klanten die automatisch lid worden van deze groep kunnen uploaden naar de opslaglocaties ervan.",
+    "Group storage saved.": "Groepsopslag opgeslagen."
 }

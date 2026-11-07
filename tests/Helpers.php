@@ -381,6 +381,19 @@ function assignPersonalLocations(User $client, array $locations): void
     $client->storageLocations()->sync($sync);
 }
 
+/**
+ * @param  list<StorageLocation>  $locations
+ * @param  list<User>  $members
+ */
+function groupWithStorage(array $locations, array $members): Group
+{
+    $group = Group::query()->create(['name' => 'Group '.Str::random(5)]);
+    $group->storageLocations()->attach(array_map(fn (StorageLocation $l): int => $l->id, $locations));
+    $group->members()->attach(array_map(fn (User $u): int => $u->id, $members));
+
+    return $group;
+}
+
 function resolvedDiskFor(User $uploader, ?int $requestedLocationId = null): string
 {
     $event = new ResolvingUploadDisk($uploader, $requestedLocationId);

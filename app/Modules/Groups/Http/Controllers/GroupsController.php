@@ -9,7 +9,10 @@ use App\Models\User;
 use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
 use App\Modules\Files\Access\StaffLibraryScope;
+use App\Modules\Files\Storage\UploadLocations;
 use App\Modules\Groups\Models\Group;
+use App\Modules\Platform\Settings\ExternalStorageConfigApplier;
+use App\Modules\Platform\Settings\StorageLocation;
 use App\Support\Pagination;
 use App\Support\PublicUrl;
 use App\Support\Rules;
@@ -26,6 +29,8 @@ class GroupsController extends Controller
         private readonly ActivityLogger $activity,
         private readonly PublicUrl $publicUrl,
         private readonly StaffLibraryScope $scope,
+        private readonly ExternalStorageConfigApplier $storageLocations,
+        private readonly UploadLocations $uploadLocations,
     ) {}
 
     public function index(Request $request): Response
@@ -154,7 +159,42 @@ class GroupsController extends Controller
                     'name' => $client->name,
                     'email' => $client->email,
                 ])->all(),
+            'storage' => $this->storageProps($viewer, $group),
         ]);
+    }
+
+    /**
+     * The group's Storage tab. Null where this edition has no storage
+     * locations to give. Locations that no longer accept uploads are not
+     * offered; the ones this group still holds are named so the screen can
+     * say why they are missing.
+     *
+     * @return array{can_assign: bool, options: list<array{id: int, name: string, local: bool, location: string}>, hidden_names: list<string>, assigned_ids: list<int>, members_count: int}|null
+     */
+    private function storageProps(User $viewer, Group $group): ?array
+    {
+        if (! $this->storageLocations->permitted()) {
+            return null;
+        }
+
+        $locations = StorageLocation::query()->orderByDesc('is_default')->orderBy('name')->get();
+        $assigned = $group->storageLocations()->pluck('storage_locations.id')->all();
+
+        return [
+            'can_assign' => $this->uploadLocations->canAssign($viewer),
+            'options' => $locations->filter(fn (StorageLocation $location): bool => $location->accepts_uploads)
+                ->map(fn (StorageLocation $location): array => [
+                    'id' => $location->id,
+                    'name' => $location->name,
+                    'local' => $location->isLocal(),
+                    'location' => $location->location(),
+                ])->values()->all(),
+            'hidden_names' => $locations->filter(fn (StorageLocation $location): bool => ! $location->accepts_uploads && in_array($location->id, $assigned, true))
+                ->map(fn (StorageLocation $location): string => $location->name)->values()->all(),
+            'assigned_ids' => $locations->filter(fn (StorageLocation $location): bool => $location->accepts_uploads && in_array($location->id, $assigned, true))
+                ->map(fn (StorageLocation $location): int => $location->id)->values()->all(),
+            'members_count' => $group->members()->count(),
+        ];
     }
 
     public function update(Request $request, Group $group): RedirectResponse

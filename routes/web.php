@@ -34,6 +34,7 @@ use App\Modules\Files\Http\Controllers\PublicShareController;
 use App\Modules\Files\Http\Controllers\ShareLinksController;
 use App\Modules\Files\Http\Controllers\ZipDownloadsController;
 use App\Modules\Groups\Http\Controllers\GroupMembersController;
+use App\Modules\Groups\Http\Controllers\GroupStorageLocationsController;
 use App\Modules\Groups\Http\Controllers\GroupsController;
 use App\Modules\Groups\Http\Controllers\MembershipRequestsController;
 use App\Modules\Groups\Http\Controllers\MyGroupsController;
@@ -347,6 +348,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('groups/{group}', [GroupsController::class, 'edit'])->middleware(['staff', 'can:edit_groups'])->name('groups.edit');
     Route::patch('groups/{group}', [GroupsController::class, 'update'])->middleware(['staff', 'can:edit_groups'])->name('groups.update');
     Route::delete('groups/{group}', [GroupsController::class, 'destroy'])->middleware(['staff', 'can:delete_groups'])->name('groups.destroy');
+    Route::put('groups/{group}/storage-locations', [GroupStorageLocationsController::class, 'update'])->middleware(['staff', 'can:edit_groups'])->name('groups.storage-locations.update');
     Route::post('groups/{group}/members', [GroupMembersController::class, 'store'])->middleware(['staff', 'can:edit_groups'])->name('groups.members.store');
     Route::delete('groups/{group}/members/{member}', [GroupMembersController::class, 'destroy'])->middleware(['staff', 'can:edit_groups'])->name('groups.members.destroy');
 
