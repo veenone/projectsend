@@ -6,6 +6,7 @@ namespace App\Modules\Groups\Models;
 
 use App\Models\User;
 use App\Modules\Identity\UserType;
+use App\Modules\Platform\Settings\StorageLocation;
 use App\Support\Concerns\HasUniqueSlug;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -65,5 +66,15 @@ class Group extends Model
         return $this->belongsToMany(User::class, 'group_members')
             ->where('users.type', UserType::Client)
             ->withTimestamps();
+    }
+
+    /**
+     * Where this group's clients can upload, on top of their own list.
+     *
+     * @return BelongsToMany<StorageLocation, $this>
+     */
+    public function storageLocations(): BelongsToMany
+    {
+        return $this->belongsToMany(StorageLocation::class, 'group_storage_location');
     }
 }

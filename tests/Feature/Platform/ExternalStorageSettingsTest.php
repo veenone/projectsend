@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\User;
 use App\Modules\Files\Models\File;
+use App\Modules\Groups\Models\Group;
 use App\Modules\Files\Notifications\AdminClientUploadedNotification;
 use App\Modules\Files\OrphanFileScanner;
 use App\Modules\Files\Storage\ResolvingUploadDisk;
@@ -333,7 +334,7 @@ test('a client uploads to their first location, or the one they asked for if it 
     $eu = bucketLocation(['name' => 'EU']);
     $us = bucketLocation(['name' => 'US']);
     $other = bucketLocation(['name' => 'Someone else\'s']);
-    assignLocations($client, [$us, $eu]);
+    assignPersonalLocations($client, [$us, $eu]);
     applyStorage();
 
     expect(resolvedDiskFor($client))->toBe($us->disk)
@@ -348,7 +349,7 @@ test('a location that stopped taking uploads is skipped for the next one', funct
     $client = User::factory()->client()->create();
     $first = bucketLocation(['accepts_uploads' => false]);
     $local = StorageLocation::query()->where('disk', 'files')->firstOrFail();
-    assignLocations($client, [$first, $local]);
+    assignPersonalLocations($client, [$first, $local]);
     applyStorage();
 
     expect(resolvedDiskFor($client))->toBe('files')
@@ -360,7 +361,7 @@ test('a client chooses one of their own locations when the upload starts, and th
     $client = uploadingClient();
     $first = bucketLocation(['name' => 'First']);
     $second = bucketLocation(['name' => 'Second']);
-    assignLocations($client, [$first, $second]);
+    assignPersonalLocations($client, [$first, $second]);
     applyStorage();
     Storage::fake($first->disk);
     Storage::fake($second->disk);
@@ -377,7 +378,7 @@ test('a client cannot choose a location that is not theirs', function () {
     $client = uploadingClient();
     $theirs = bucketLocation();
     $notTheirs = bucketLocation();
-    assignLocations($client, [$theirs]);
+    assignPersonalLocations($client, [$theirs]);
     applyStorage();
 
     $this->actingAs($client)->postJson('/uploads', [
@@ -392,7 +393,7 @@ test('the client upload page lists their usable locations, the preferred first, 
     $client = uploadingClient();
     $eu = bucketLocation(['name' => 'Client archive (EU)', 'client_note' => 'Kept in Frankfurt']);
     $local = StorageLocation::query()->where('disk', 'files')->firstOrFail();
-    assignLocations($client, [$eu, $local]);
+    assignPersonalLocations($client, [$eu, $local]);
     applyStorage();
 
     $this->actingAs($client)->get(route('my-files.upload.create'))
@@ -409,7 +410,7 @@ test('an administrator sets a client\'s locations in order, replacing what was t
     $a = bucketLocation();
     $b = bucketLocation();
     $local = StorageLocation::query()->where('disk', 'files')->firstOrFail();
-    assignLocations($client, [$a]);
+    assignPersonalLocations($client, [$a]);
 
     $this->actingAs($this->admin)->patch(route('clients.update', $client), clientUpdatePayload($client, [
         'storage_location_ids' => [$b->id, $local->id],
@@ -433,7 +434,7 @@ test('a staff member who cannot change settings cannot change a client\'s locati
 test('saving a client without the list leaves their locations alone', function () {
     $client = User::factory()->client()->create();
     $a = bucketLocation();
-    assignLocations($client, [$a]);
+    assignPersonalLocations($client, [$a]);
 
     $this->actingAs($this->admin)->patch(route('clients.update', $client), clientUpdatePayload($client))
         ->assertSessionHasNoErrors();
@@ -633,7 +634,7 @@ test('cloud edition never honors a stored external storage backend, even one wri
     $client = User::factory()->client()->create();
     $location = bucketLocation(['key' => 'AKIASTRAY', 'secret' => 'stray-secret', 'bucket' => 'stray-bucket']);
     makeDefault($location);
-    assignLocations($client, [$location]);
+    assignPersonalLocations($client, [$location]);
 
     expect(resolvedDiskFor($this->admin))->toBe('files')
         ->and(resolvedDiskFor($client))->toBe('files');
@@ -673,7 +674,7 @@ test('the client upload email names the location only when the setting is on', f
 
     $client = uploadingClient();
     $eu = bucketLocation(['name' => 'Client archive (EU)']);
-    assignLocations($client, [$eu]);
+    assignPersonalLocations($client, [$eu]);
     applyStorage();
     Storage::fake($eu->disk);
 
@@ -701,6 +702,33 @@ test('the files list filters by location, and offers the filter only with more t
             ->where('searching', true)
             ->has('files', 1)
             ->where('files.0.id', $inBucket->id));
+});
+
+test('a group holds storage locations, and deleting the group removes them', function () {
+    $group = Group::query()->create(['name' => 'Berlin']);
+    $a = bucketLocation();
+    $b = bucketLocation();
+    $group->storageLocations()->attach([$a->id, $b->id]);
+
+    expect($group->storageLocations()->count())->toBe(2);
+
+    $group->forceDelete();
+
+    expect(DB::table('group_storage_location')->count())->toBe(0)
+        ->and(StorageLocation::query()->whereKey([$a->id, $b->id])->count())->toBe(2);
+});
+
+test('deleting a location removes it from groups and people', function () {
+    $group = Group::query()->create(['name' => 'Berlin']);
+    $client = User::factory()->client()->create();
+    $location = bucketLocation();
+    $group->storageLocations()->attach($location->id);
+    assignPersonalLocations($client, [$location]);
+
+    $location->delete();
+
+    expect(DB::table('group_storage_location')->count())->toBe(0)
+        ->and(DB::table('user_storage_location')->count())->toBe(0);
 });
 
 test('the orphan scanner looks in every bucket, under the name it was given', function () {
@@ -756,7 +784,7 @@ function applyStorage(): void
 }
 
 /** @param  list<StorageLocation>  $locations  first preferred */
-function assignLocations(User $client, array $locations): void
+function assignPersonalLocations(User $client, array $locations): void
 {
     $sync = [];
     foreach ($locations as $index => $location) {
@@ -820,7 +848,8 @@ function withoutStorageLocationsTable(): void
     Schema::table('upload_sessions', function (Blueprint $table) {
         $table->dropConstrainedForeignId('storage_location_id');
     });
-    Schema::drop('client_storage_location');
+    Schema::drop('group_storage_location');
+    Schema::drop('user_storage_location');
     Schema::drop('storage_locations');
     Schema::enableForeignKeyConstraints();
 
