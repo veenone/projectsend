@@ -10,9 +10,9 @@ use App\Modules\Audit\ActivityLogger;
 use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\Models\Folder;
 use App\Modules\Identity\Models\Role;
-use App\Modules\Identity\Permissions\SystemRole;
 use App\Modules\Mcp\OAuth\Grants;
 use App\Modules\Platform\Seats\SeatAllowance;
+use App\Modules\Identity\Permissions\SystemRole;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -206,8 +206,7 @@ class AccountConversion
 
             // The personal storage list means something different to each
             // population, so it does not carry across.
-            $storageLocationsCleared = $target->storageLocations()->count();
-            $target->storageLocations()->detach();
+            $storageLocationsCleared = $target->storageLocations()->detach();
 
             // The role has to move with the type. PermissionChecker reads
             // only the role and never the type, and several routes are
@@ -275,10 +274,8 @@ class AccountConversion
                 ->where('client_id', $target->id)
                 ->delete();
 
-            // The personal storage list means something different to each
-            // population, so it does not carry across.
-            $storageLocationsCleared = $target->storageLocations()->count();
-            $target->storageLocations()->detach();
+            // As in toClient(): the personal storage list does not carry across.
+            $storageLocationsCleared = $target->storageLocations()->detach();
 
             $target->forceFill([
                 'type' => UserType::Staff,
@@ -315,10 +312,7 @@ class AccountConversion
                 'storage_locations_cleared' => $storageLocationsCleared,
             ]);
 
-            return [
-                'managed_by_cleared' => $managedByCleared,
-                'storage_locations_cleared' => $storageLocationsCleared,
-            ];
+            return ['managed_by_cleared' => $managedByCleared, 'storage_locations_cleared' => $storageLocationsCleared];
         });
     }
 
