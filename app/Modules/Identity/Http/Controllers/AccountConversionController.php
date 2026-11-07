@@ -90,6 +90,7 @@ class AccountConversionController extends Controller
         $shared = $this->fileAssignmentCounts($ids);
         $managedBy = $this->managedByCounts($ids);
         $manages = $this->managesCounts($ids);
+        $storages = $this->countBy('user_storage_location', 'user_id', $ids);
 
         $activeAdminCount = $this->accounts->activeAdministratorCount();
 
@@ -117,6 +118,7 @@ class AccountConversionController extends Controller
                 'assigned_clients' => $manages[$user->id] ?? 0,
                 'managed_by' => $managedBy[$user->id] ?? 0,
                 'group_memberships' => $memberships[$user->id] ?? 0,
+                'storage_locations' => $storages[$user->id] ?? 0,
                 'files_shared_with_them' => $shared[$user->id] ?? 0,
                 'content' => $content[$user->id] ?? ['files' => 0, 'folders' => 0],
             ],
