@@ -20,9 +20,10 @@ class GroupStorageLocationsController extends Controller
     ) {}
 
     /**
-     * Replaces the group's storage locations with the posted ones. Which
-     * bucket a group's members write to is a setting of the installation,
-     * so editing the group is not enough.
+     * Replaces the group's storage locations with the posted ones, keeping
+     * any it holds that no longer accept uploads. Which bucket a group's
+     * members write to is a setting of the installation, so editing the
+     * group is not enough.
      */
     public function update(Request $request, Group $group): RedirectResponse
     {
@@ -37,7 +38,11 @@ class GroupStorageLocationsController extends Controller
             'storage_location_ids.*' => ['integer', 'distinct', Rule::exists('storage_locations', 'id')->where('accepts_uploads', true)],
         ]);
 
-        $group->storageLocations()->sync($validated['storage_location_ids']);
+        // The tab only lists locations that accept uploads. The others it
+        // holds are shown as hidden, not removed, so they stay.
+        $hidden = $group->storageLocations()->where('accepts_uploads', false)->pluck('storage_locations.id')->all();
+
+        $group->storageLocations()->sync([...$validated['storage_location_ids'], ...$hidden]);
 
         return back()->with('success', __('Group storage saved.'));
     }
