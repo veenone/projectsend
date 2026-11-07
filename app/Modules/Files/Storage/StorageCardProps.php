@@ -37,7 +37,7 @@ class StorageCardProps
         }
 
         $assignedIds = array_values(array_map(intval(...), $account->storageLocations()->pluck('storage_locations.id')->all()));
-        $writable = $this->storage->writableDisks();
+        $buckets = array_column($this->storage->externalLocations(), 'disk');
 
         $props = [
             'can_assign' => $this->uploadLocations->canAssign($viewer),
@@ -51,7 +51,7 @@ class StorageCardProps
                     'is_default' => $location->is_default,
                     // The test usableFor() applies, so the card's preview
                     // of the upload screen can follow unsaved reordering.
-                    'usable' => $location->accepts_uploads && in_array($location->disk, $writable, true),
+                    'usable' => $location->accepts_uploads && ($location->isLocal() || in_array($location->disk, $buckets, true)),
                 ])->values()->all()),
             'assigned_ids' => $assignedIds,
             'files_count' => File::withTrashed()->where('uploaded_by', $account->id)->count(),
