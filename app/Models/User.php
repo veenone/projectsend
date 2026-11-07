@@ -101,9 +101,9 @@ class User extends Authenticatable implements HasLocalePreference
      */
     public function storageLocations(): BelongsToMany
     {
-        return $this->belongsToMany(StorageLocation::class, 'client_storage_location')
+        return $this->belongsToMany(StorageLocation::class, 'user_storage_location')
             ->withPivot('priority')
-            ->orderBy('client_storage_location.priority');
+            ->orderBy('user_storage_location.priority');
     }
 
     /**

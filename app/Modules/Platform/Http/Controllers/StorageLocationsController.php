@@ -55,7 +55,7 @@ class StorageLocationsController extends Controller
             ->groupBy('disk')
             ->pluck('aggregate', 'disk');
 
-        $locations = StorageLocation::query()->withCount('clients')->orderByDesc('is_default')->orderBy('id')->get()
+        $locations = StorageLocation::query()->withCount('users')->orderByDesc('is_default')->orderBy('id')->get()
             ->map(fn (StorageLocation $location): array => [
                 'id' => $location->id,
                 'name' => $location->name,
@@ -67,7 +67,7 @@ class StorageLocationsController extends Controller
                 'configured' => $location->isConfigured(),
                 'location' => $location->location(),
                 'region' => $location->region ?? '',
-                'clients_count' => $location->clients_count,
+                'clients_count' => $location->users_count,
                 'files_count' => (int) ($fileCounts[$location->disk] ?? 0),
                 // The bucket form's fields. Never the secret or key file
                 // themselves, only whether one is stored.

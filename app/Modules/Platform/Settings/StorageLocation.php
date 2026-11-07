@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Platform\Settings;
 
 use App\Models\User;
+use App\Modules\Groups\Models\Group;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -82,9 +83,15 @@ class StorageLocation extends Model
     }
 
     /** @return BelongsToMany<User, $this> */
-    public function clients(): BelongsToMany
+    public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class, 'client_storage_location')->withPivot('priority');
+        return $this->belongsToMany(User::class, 'user_storage_location')->withPivot('priority');
+    }
+
+    /** @return BelongsToMany<Group, $this> */
+    public function groups(): BelongsToMany
+    {
+        return $this->belongsToMany(Group::class, 'group_storage_location');
     }
 
     /** @param Builder<self> $query */
