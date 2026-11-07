@@ -137,9 +137,9 @@ export default function ConvertAccounts({ direction, filters, accounts, paginati
                 >
                     {accounts.map((row) => {
                         const blocked = blockedReason(row);
-                        const revoked = toClient
-                            ? row.consequences.api_tokens + row.consequences.assigned_clients
-                            : row.consequences.managed_by;
+                        const revoked =
+                            (toClient ? row.consequences.api_tokens + row.consequences.assigned_clients : row.consequences.managed_by) +
+                            row.consequences.storage_locations;
 
                         return (
                             <tr key={row.id} className="border-b last:border-0">
