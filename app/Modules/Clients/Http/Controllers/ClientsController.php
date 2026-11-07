@@ -11,11 +11,14 @@ use App\Modules\Audit\ActivityLogger;
 use App\Modules\Clients\ClientCustomFieldInput;
 use App\Modules\Clients\ClientAccounts;
 use App\Modules\Clients\ClientStorageUsage;
+use App\Modules\Files\Access\StaffLibraryScope;
+use App\Modules\Mcp\OAuth\Grants;
+use App\Modules\Platform\Localization\DateInput;
+use App\Modules\Platform\Seats\SeatAllowance;
 use App\Modules\Clients\Models\ClientCustomField;
 use App\Modules\Clients\Models\ClientCustomFieldValue;
 use App\Modules\Clients\Notifications\ClientAccountEditedNotification;
 use App\Modules\Clients\Notifications\ClientWelcomeNotification;
-use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\DeletedAccountContent;
 use App\Modules\Files\Storage\StorageCardProps;
 use App\Modules\Files\Storage\UploadLocations;
@@ -23,9 +26,6 @@ use App\Modules\Identity\AccountContentDeletion;
 use App\Modules\Identity\Erasure\AvailableEmailRule;
 use App\Modules\Identity\Erasure\ErasureSchedule;
 use App\Modules\Identity\TwoFactor\TwoFactorAdministration;
-use App\Modules\Mcp\OAuth\Grants;
-use App\Modules\Platform\Localization\DateInput;
-use App\Modules\Platform\Seats\SeatAllowance;
 use App\Modules\Platform\Settings\Setting;
 use App\Modules\Platform\Settings\Settings;
 use App\Support\Pagination;
@@ -242,6 +242,7 @@ class ClientsController extends Controller
     {
         $this->guardTarget($request, $client);
 
+
         return Inertia::render('clients/edit', [
             'client' => [
                 'id' => $client->id,
@@ -293,6 +294,7 @@ class ClientsController extends Controller
     public function update(Request $request, User $client): RedirectResponse
     {
         $this->guardTarget($request, $client);
+
 
         $validated = $request->validate(array_merge([
             'name' => ['required', 'string', 'max:255'],
@@ -404,6 +406,7 @@ class ClientsController extends Controller
     {
         $this->guardTarget($request, $client);
 
+
         $twoFactor->reset($client);
 
         return back()->with('success', __('Two-factor authentication removed.'));
@@ -412,6 +415,7 @@ class ClientsController extends Controller
     public function destroy(Request $request, User $client): RedirectResponse
     {
         $this->guardTarget($request, $client);
+
 
         $validated = $this->accountDeletion->validate($request, $client);
 
