@@ -2453,5 +2453,6 @@
     "This server’s own disk.": "Il disco di questo server.",
     "Uploading to :name. You can choose again once this upload finishes.": "Caricamento in :name. Potrai scegliere di nuovo al termine di questo caricamento.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Usata per i caricamenti dello staff e per i clienti senza posizioni proprie.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Dove vengono conservati i file caricati. Assegna a un cliente una o più posizioni nella pagina del suo account; si usa la prima, a meno che non ne scelga un’altra durante il caricamento."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Dove vengono conservati i file caricati. Assegna a un cliente una o più posizioni nella pagina del suo account; si usa la prima, a meno che non ne scelga un’altra durante il caricamento.",
+    "Their personal storage locations are removed.": "Le loro posizioni di archiviazione personali vengono rimosse."
 }

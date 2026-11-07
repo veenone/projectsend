@@ -2453,5 +2453,6 @@
     "This server’s own disk.": "此服务器自身的磁盘。",
     "Uploading to :name. You can choose again once this upload finishes.": "正在上传到 :name。此次上传完成后可以重新选择。",
     "Used for staff uploads, and for clients who have no locations of their own.": "用于员工上传，以及没有自己存储位置的客户。",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "上传文件的保存位置。在客户的账户页面为其分配一个或多个位置；除非上传时选择了其他位置，否则使用第一个。"
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "上传文件的保存位置。在客户的账户页面为其分配一个或多个位置；除非上传时选择了其他位置，否则使用第一个。",
+    "Their personal storage locations are removed.": "他们的个人存储位置将被移除。"
 }

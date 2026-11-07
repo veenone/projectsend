@@ -3,8 +3,13 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use App\Modules\Audit\Action;
+use App\Modules\Audit\ActivityLog;
 use App\Modules\Files\Storage\UploadLocations;
 use App\Modules\Groups\Models\Group;
+use App\Modules\Identity\AccountConversion;
+use App\Modules\Identity\Permissions\EnsureSystemRoles;
+use App\Modules\Identity\Permissions\SystemRole;
 use App\Modules\Platform\Settings\StorageLocation;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -162,4 +167,25 @@ test('an open session whose group storage was removed falls back to the first op
     $group->storageLocations()->detach($removed->id);
 
     expect(resolvedDiskFor($client, $removed->id))->toBe($first->disk);
+});
+
+test('converting a client to staff clears their personal locations', function () {
+    $client = User::factory()->client()->create();
+    assignPersonalLocations($client, [bucketLocation(), bucketLocation()]);
+
+    app(AccountConversion::class)->toStaff($client, app(EnsureSystemRoles::class)->materialize(SystemRole::Uploader)->id);
+
+    expect($client->storageLocations()->count())->toBe(0)
+        ->and(ActivityLog::query()->where('action', Action::AccountConvertedToStaff)->where('subject_id', $client->id)->first()->context['storage_locations_cleared'])->toBe(2);
+});
+
+test('converting staff to a client clears their personal locations', function () {
+    $staff = User::factory()->role(SystemRole::Uploader)->create();
+    assignPersonalLocations($staff, [bucketLocation(), bucketLocation()]);
+
+    $result = app(AccountConversion::class)->toClient($staff);
+
+    expect($staff->storageLocations()->count())->toBe(0)
+        ->and($result['storage_locations_cleared'])->toBe(2)
+        ->and(ActivityLog::query()->where('action', Action::AccountConvertedToClient)->where('subject_id', $staff->id)->first()->context['storage_locations_cleared'])->toBe(2);
 });

@@ -2453,5 +2453,6 @@
     "This server’s own disk.": "このサーバー自身のディスクです。",
     "Uploading to :name. You can choose again once this upload finishes.": ":name にアップロードしています。このアップロードが終わると、もう一度選べます。",
     "Used for staff uploads, and for clients who have no locations of their own.": "スタッフのアップロードと、自分の保存先を持たないクライアントに使われます。",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "アップロードされたファイルの保存先です。クライアントのアカウントページで 1 つ以上の保存先を割り当てます。アップロード時に別の保存先を選ばない限り、最初の保存先が使われます。"
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "アップロードされたファイルの保存先です。クライアントのアカウントページで 1 つ以上の保存先を割り当てます。アップロード時に別の保存先を選ばない限り、最初の保存先が使われます。",
+    "Their personal storage locations are removed.": "個人用のストレージの場所は削除されます。"
 }

@@ -2453,5 +2453,6 @@
     "This server’s own disk.": "Bu sunucunun kendi diski.",
     "Uploading to :name. You can choose again once this upload finishes.": ":name konumuna yükleniyor. Bu yükleme bitince yeniden seçebilirsiniz.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Personelin yüklemeleri ve kendi konumu olmayan müşteriler için kullanılır.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Yüklenen dosyaların saklandığı yer. Bir müşteriye hesap sayfasında bir veya daha fazla konum atayın; yüklerken başka bir konum seçmedikçe ilki kullanılır."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Yüklenen dosyaların saklandığı yer. Bir müşteriye hesap sayfasında bir veya daha fazla konum atayın; yüklerken başka bir konum seçmedikçe ilki kullanılır.",
+    "Their personal storage locations are removed.": "Kişisel depolama konumları kaldırılır."
 }

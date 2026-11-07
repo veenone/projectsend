@@ -2453,5 +2453,6 @@
     "This server’s own disk.": "Własny dysk tego serwera.",
     "Uploading to :name. You can choose again once this upload finishes.": "Przesyłanie do: :name. Możesz wybrać ponownie, gdy to przesyłanie się zakończy.",
     "Used for staff uploads, and for clients who have no locations of their own.": "Używana dla plików personelu i klientów bez własnych lokalizacji.",
-    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Gdzie są przechowywane przesłane pliki. Przydziel klientowi jedną lub więcej lokalizacji na stronie jego konta; używana jest pierwsza, chyba że przy przesyłaniu wybierze inną."
+    "Where uploaded files are kept. Give a client one or more locations on their account page; the first one is used unless they choose another when uploading.": "Gdzie są przechowywane przesłane pliki. Przydziel klientowi jedną lub więcej lokalizacji na stronie jego konta; używana jest pierwsza, chyba że przy przesyłaniu wybierze inną.",
+    "Their personal storage locations are removed.": "Ich osobiste lokalizacje przechowywania zostaną usunięte."
 }

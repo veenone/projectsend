@@ -25,6 +25,7 @@ interface Consequences {
     assigned_clients: number;
     managed_by: number;
     group_memberships: number;
+    storage_locations: number;
     files_shared_with_them: number;
     content: { files: number; folders: number };
 }
@@ -232,7 +233,7 @@ function ConvertDialog({
         });
     };
 
-    const revoked = toClient
+    const revoked = (toClient
         ? [
               c.api_tokens > 0 && plural(t, c.api_tokens, '1 API token', ':count API tokens'),
               c.assigned_clients > 0 && plural(t, c.assigned_clients, '1 assigned client', ':count assigned clients'),
@@ -240,7 +241,8 @@ function ConvertDialog({
         : [
               c.managed_by > 0 &&
                   plural(t, c.managed_by, 'Managed by 1 staff member', 'Managed by :count staff members'),
-          ];
+          ]
+    ).concat(c.storage_locations > 0 && t('Their personal storage locations are removed.'));
 
     const kept = [
         (c.content.files > 0 || c.content.folders > 0) &&
