@@ -13,17 +13,21 @@ beforeEach(function () {
     $this->admin = User::factory()->create();
 });
 
-test('an administrator sets a group\'s storage, replacing what was there', function () {
+test('an administrator sets a group\'s storage, replacing what was there but keeping held locations that stopped taking uploads', function () {
     [$a, $b, $c] = [bucketLocation(['name' => 'A']), bucketLocation(['name' => 'B']), bucketLocation(['name' => 'C'])];
+    $closed = bucketLocation(['name' => 'Old MinIO', 'accepts_uploads' => false]);
     applyStorage();
-    $group = groupWithStorage([$a, $b], []);
+    $group = groupWithStorage([$a, $b, $closed], []);
 
+    // The tab never posts the closed one (it is shown as hidden, not
+    // removed), so a save must not take it away: turning uploads back on
+    // restores it.
     $this->actingAs($this->admin)
         ->put("/groups/{$group->id}/storage-locations", ['storage_location_ids' => [$a->id, $c->id]])
         ->assertRedirect();
 
     expect($group->storageLocations()->pluck('storage_locations.id')->sort()->values()->all())
-        ->toBe(collect([$a->id, $c->id])->sort()->values()->all());
+        ->toBe(collect([$a->id, $c->id, $closed->id])->sort()->values()->all());
 });
 
 test('an editor who can edit groups but not settings cannot set group storage', function () {
@@ -49,21 +53,6 @@ test('a location that does not accept uploads cannot be assigned to a group', fu
         ->assertStatus(422)->assertJsonValidationErrors(['storage_location_ids.0']);
 
     expect($group->storageLocations()->count())->toBe(0);
-});
-
-test('saving the group tab keeps a held location that no longer accepts uploads', function () {
-    // The tab never posts it (it is shown as hidden, not removed), so a
-    // save must not take it away: turning uploads back on restores it.
-    $open = bucketLocation(['name' => 'EU archive']);
-    $closed = bucketLocation(['name' => 'Old MinIO', 'accepts_uploads' => false]);
-    applyStorage();
-    $group = groupWithStorage([$open, $closed], []);
-
-    $this->actingAs($this->admin)
-        ->put("/groups/{$group->id}/storage-locations", ['storage_location_ids' => []])
-        ->assertRedirect();
-
-    expect($group->storageLocations()->pluck('storage_locations.id')->all())->toBe([$closed->id]);
 });
 
 test('the group edit page lists accepting locations and names the hidden ones', function () {
