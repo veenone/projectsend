@@ -260,6 +260,27 @@ test('storage from groups leaves out what the upload screen would not offer', fu
     );
 });
 
+test('the card marks which locations the upload screen would offer', function () {
+    $closed = bucketLocation(['name' => 'Closed', 'accepts_uploads' => false]);
+    $unset = bucketLocation(['name' => 'Unset', 'bucket' => null]);
+    $open = bucketLocation(['name' => 'Open']);
+    applyStorage();
+    $client = User::factory()->client()->create();
+    assignPersonalLocations($client, [$closed, $unset, $open]);
+
+    $this->actingAs($this->admin)->get("/clients/{$client->id}")->assertInertia(
+        function (Assert $page) use ($client, $closed, $unset, $open) {
+            $usable = collect($page->toArray()['props']['storage']['options'])->pluck('usable', 'id');
+
+            expect($usable[$closed->id])->toBeFalse()
+                ->and($usable[$unset->id])->toBeFalse()
+                ->and($usable[$open->id])->toBeTrue()
+                // The same answer the upload screen gives.
+                ->and(usableIds($client))->toBe([$open->id]);
+        },
+    );
+});
+
 // ---- Staff uploads -----------------------------------------------------------
 
 test('the staff upload page lists their usable locations, preferred first', function () {
