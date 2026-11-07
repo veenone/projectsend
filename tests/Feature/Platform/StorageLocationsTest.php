@@ -318,6 +318,29 @@ test('the migration keeps the server disk as the default when the old bucket was
         ->and(StorageLocation::query()->where('disk', 'files')->value('is_default'))->toBeTrue();
 });
 
+test('the migration does not leave the pre-migration picture in the boot cache', function () {
+    // The real upgrade: the `migrate` process boots first, against the old
+    // schema, and caches what it sees there. Nobody flushes afterwards.
+    withoutStorageLocationsTable();
+    ExternalStorageSettings::query()->create([
+        'active' => false,
+        'key' => 'AKIAEXAMPLE',
+        'secret' => 'shh',
+        'bucket' => 'my-bucket',
+        'region' => 'us-east-1',
+    ]);
+    app(ExternalStorageConfigApplier::class)->apply();
+
+    $migration = require database_path('migrations/2026_10_09_090000_create_storage_locations_tables.php');
+    $migration->up();
+
+    // The next process boots on whatever the cache now holds.
+    app(ExternalStorageConfigApplier::class)->apply();
+
+    expect(app(ExternalStorageConfigApplier::class)->writableDisks())->toContain('files_external')
+        ->and(config('filesystems.disks.files_external.bucket'))->toBe('my-bucket');
+});
+
 // ---- Where a client's uploads go ---------------------------------------
 
 test('a client with no locations of their own follows the default', function () {
