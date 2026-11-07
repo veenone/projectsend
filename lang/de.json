@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Diese Änderung betrifft nur neue Uploads. Bereits hochgeladene Dateien (:count) bleiben, wo sie sind.",
     "Choose a location": "Speicherort wählen",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Kunden sehen diesen Namen und die Notiz darunter, wenn sie wählen, wohin sie hochladen. Den Bucket sehen sie nie.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Kunden, die ihn hatten, verlieren ihn aus ihrer Liste. Er enthält keine Dateien, sonst ändert sich nichts.",
     "Default for new uploads": "Standard für neue Uploads",
     "Edit location": "Speicherort bearbeiten",
     "Enter the credentials for this bucket.": "Geben Sie die Zugangsdaten für diesen Bucket ein.",
@@ -2470,5 +2469,15 @@
     "via": "über",
     ":name also comes from a group; it is listed once, above.": ":name kommt auch aus einer Gruppe; es wird nur einmal aufgeführt, oben.",
     "Upload screen offers locations (:count): :list.": "Die Upload-Seite bietet Speicherorte an (:count): :list.",
-    "(preselected)": "(vorausgewählt)"
+    "(preselected)": "(vorausgewählt)",
+    "Used by": "Verwendet von",
+    "Everyone else (default)": "Alle anderen (Standard)",
+    "Nobody": "Niemand",
+    "Groups: :count": "Gruppen: :count",
+    "People: :count": "Personen: :count",
+    "Clients: :count": "Kunden: :count",
+    "Choice :position": "Wahl :position",
+    "People": "Personen",
+    "Assignments are changed on each group or person. This list is read-only.": "Zuweisungen werden bei jeder Gruppe oder Person geändert. Diese Liste ist schreibgeschützt.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Gruppen und Personen, die ihn hatten, verlieren ihn aus ihrer Liste. Er enthält keine Dateien, daher ändert sich sonst nichts."
 }

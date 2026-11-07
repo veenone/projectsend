@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Deze wijziging geldt alleen voor nieuwe uploads. Al geüploade bestanden (:count) blijven waar ze zijn.",
     "Choose a location": "Kies een locatie",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Klanten zien deze naam, en de notitie hieronder, als ze kiezen waar ze uploaden. De bucket zien ze nooit.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Klanten die hem hadden, raken hem kwijt uit hun lijst. Er staan geen bestanden in, dus verder verandert er niets.",
     "Default for new uploads": "Standaard voor nieuwe uploads",
     "Edit location": "Locatie bewerken",
     "Enter the credentials for this bucket.": "Vul de inloggegevens voor deze bucket in.",
@@ -2470,5 +2469,15 @@
     "via": "via",
     ":name also comes from a group; it is listed once, above.": ":name komt ook uit een groep; het staat maar één keer vermeld, hierboven.",
     "Upload screen offers locations (:count): :list.": "Het uploadscherm biedt locaties aan (:count): :list.",
-    "(preselected)": "(voorgeselecteerd)"
+    "(preselected)": "(voorgeselecteerd)",
+    "Used by": "Gebruikt door",
+    "Everyone else (default)": "Iedereen anders (standaard)",
+    "Nobody": "Niemand",
+    "Groups: :count": "Groepen: :count",
+    "People: :count": "Personen: :count",
+    "Clients: :count": "Klanten: :count",
+    "Choice :position": "Keuze :position",
+    "People": "Personen",
+    "Assignments are changed on each group or person. This list is read-only.": "Toewijzingen wijzig je bij elke groep of persoon. Deze lijst is alleen-lezen.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Groepen en personen die het hadden, raken het kwijt in hun lijst. Er staan geen bestanden in, dus er verandert verder niets."
 }

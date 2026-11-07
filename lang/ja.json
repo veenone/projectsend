@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "この変更は新しいアップロードにのみ適用されます。アップロード済みのファイル (:count) はそのまま残ります。",
     "Choose a location": "保存先を選択",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "クライアントがアップロード先を選ぶときには、この名前と下のメモが表示されます。バケットは表示されません。",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "この保存先を持っていたクライアントの一覧から削除されます。ファイルはないため、ほかに変わることはありません。",
     "Default for new uploads": "新しいアップロードの既定",
     "Edit location": "保存先を編集",
     "Enter the credentials for this bucket.": "このバケットの認証情報を入力してください。",
@@ -2470,5 +2469,15 @@
     "via": "経由",
     ":name also comes from a group; it is listed once, above.": ":name はグループからも付与されています。上に1回だけ表示しています。",
     "Upload screen offers locations (:count): :list.": "アップロード画面に表示される保存先(:count 件): :list。",
-    "(preselected)": "(初期選択)"
+    "(preselected)": "(初期選択)",
+    "Used by": "使用中",
+    "Everyone else (default)": "その他の全員（デフォルト）",
+    "Nobody": "なし",
+    "Groups: :count": "グループ: :count",
+    "People: :count": "ユーザー: :count",
+    "Clients: :count": "クライアント: :count",
+    "Choice :position": "選択 :position",
+    "People": "ユーザー",
+    "Assignments are changed on each group or person. This list is read-only.": "割り当ては各グループまたはユーザーで変更します。この一覧は読み取り専用です。",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "これを割り当てられていたグループとユーザーの一覧から外れます。ファイルは保存されていないため、ほかに変わることはありません。"
 }

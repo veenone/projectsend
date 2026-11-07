@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Aquest canvi només afecta les pujades noves. Els fitxers ja pujats (:count) es queden on són.",
     "Choose a location": "Tria una ubicació",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Els clients veuen aquest nom, i la nota de sota, quan trien on pujar. Mai veuen el bucket.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Els clients que la tenien la perden de la seva llista. No conté fitxers, així que res més canvia.",
     "Default for new uploads": "Per defecte per a les pujades noves",
     "Edit location": "Edita l'ubicació",
     "Enter the credentials for this bucket.": "Introdueix les credencials per a aquest bucket.",
@@ -2470,5 +2469,15 @@
     "via": "via",
     ":name also comes from a group; it is listed once, above.": ":name també ve d’un grup; només es mostra una vegada, a dalt.",
     "Upload screen offers locations (:count): :list.": "La pantalla de pujada ofereix ubicacions (:count): :list.",
-    "(preselected)": "(preseleccionada)"
+    "(preselected)": "(preseleccionada)",
+    "Used by": "Utilitzat per",
+    "Everyone else (default)": "Tota la resta (per defecte)",
+    "Nobody": "Ningú",
+    "Groups: :count": "Grups: :count",
+    "People: :count": "Persones: :count",
+    "Clients: :count": "Clients: :count",
+    "Choice :position": "Opció :position",
+    "People": "Persones",
+    "Assignments are changed on each group or person. This list is read-only.": "Les assignacions es canvien a cada grup o persona. Aquesta llista és de només lectura.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Els grups i les persones que el tenien el perden de la seva llista. No conté cap fitxer, així que no canvia res més."
 }

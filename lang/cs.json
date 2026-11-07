@@ -2415,7 +2415,6 @@
     "Changing this affects new uploads only. Files already uploaded (:count) stay where they are.": "Tato změna ovlivní jen nová nahrávání. Již nahrané soubory (:count) zůstanou tam, kde jsou.",
     "Choose a location": "Vyberte umístění",
     "Clients see this name, and the note below, when they choose where to upload. They never see the bucket.": "Klienti tento název a poznámku níže uvidí, když budou vybírat, kam nahrávat. Bucket nikdy neuvidí.",
-    "Clients who had it lose it from their list. It holds no files, so nothing else changes.": "Klienti, kteří ho měli, o něj ve svém seznamu přijdou. Neobsahuje žádné soubory, takže se nic jiného nezmění.",
     "Default for new uploads": "Výchozí pro nová nahrávání",
     "Edit location": "Upravit umístění",
     "Enter the credentials for this bucket.": "Zadejte přihlašovací údaje k tomuto bucketu.",
@@ -2470,5 +2469,15 @@
     "via": "přes",
     ":name also comes from a group; it is listed once, above.": ":name pochází také ze skupiny; je uvedeno jen jednou, výše.",
     "Upload screen offers locations (:count): :list.": "Obrazovka nahrávání nabízí umístění (:count): :list.",
-    "(preselected)": "(předvybráno)"
+    "(preselected)": "(předvybráno)",
+    "Used by": "Používá",
+    "Everyone else (default)": "Všichni ostatní (výchozí)",
+    "Nobody": "Nikdo",
+    "Groups: :count": "Skupiny: :count",
+    "People: :count": "Lidé: :count",
+    "Clients: :count": "Klienti: :count",
+    "Choice :position": "Volba :position",
+    "People": "Lidé",
+    "Assignments are changed on each group or person. This list is read-only.": "Přiřazení se mění u každé skupiny nebo osoby. Tento seznam je pouze pro čtení.",
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Skupiny a lidé, kteří ho měli, o něj ze svého seznamu přijdou. Neobsahuje žádné soubory, takže se nic dalšího nemění."
 }
