@@ -88,6 +88,20 @@ test('staff use their personal list', function () {
         ->and(resolvedDiskFor($staff))->toBe($a->disk);
 });
 
+test('the personal list follows its saved priority, not creation or row order', function () {
+    $client = User::factory()->client()->create();
+    $a = bucketLocation(['name' => 'A']);
+    $b = bucketLocation(['name' => 'B']);
+    // Rows written A then B, then reordered in place: neither the ids nor
+    // the pivot rows are in the preferred order any more.
+    assignPersonalLocations($client, [$a, $b]);
+    assignPersonalLocations($client, [$b, $a]);
+    applyStorage();
+
+    expect(usableIds($client))->toBe([$b->id, $a->id])
+        ->and(resolvedDiskFor($client))->toBe($b->disk);
+});
+
 test('staff with nothing assigned use the default', function () {
     $location = bucketLocation();
     applyStorage();
