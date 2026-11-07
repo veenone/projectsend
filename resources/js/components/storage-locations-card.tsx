@@ -14,6 +14,8 @@ export interface StorageLocationOption {
     location: string;
     accepts_uploads: boolean;
     is_default: boolean;
+    /** Whether the upload screen would offer it: accepts uploads and is set up. */
+    usable: boolean;
 }
 
 export interface StorageProps {
@@ -56,7 +58,7 @@ export function StorageLocationsCard({
     const staff = audience === 'staff';
     const fromGroups = storage.from_groups ?? [];
     const alsoInGroups = storage.also_in_groups ?? [];
-    const offered = [...assigned.map((option) => option.name), ...fromGroups.map((entry) => entry.name)];
+    const offered = [...assigned.filter((option) => option.usable).map((option) => option.name), ...fromGroups.map((entry) => entry.name)];
 
     const move = (index: number, by: number) => {
         const next = [...value];
