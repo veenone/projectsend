@@ -21,12 +21,14 @@ use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\Folder;
 use App\Modules\Files\Models\ShareLink;
 use App\Modules\Files\Storage\ResolvingUploadDisk;
+use App\Modules\Files\Storage\UploadLocations;
 use App\Modules\Files\Uploads\StoreUploadedFile;
 use App\Modules\Files\Uploads\UploadExtensionPolicy;
 use App\Modules\Files\Versions\FileVersionLinks;
 use App\Modules\Files\Versions\FileVersions;
 use App\Modules\Platform\Settings\Setting;
 use App\Modules\Platform\Settings\Settings;
+use App\Modules\Platform\Settings\StorageLocation;
 use App\Support\PublicUrl;
 use App\Support\Rules;
 use Illuminate\Http\RedirectResponse;
@@ -81,6 +83,14 @@ class FilesController extends Controller
             'max_file_size_mb' => app(Settings::class)->get(Setting::MaxFileSizeMb),
             'part_size_mb' => (int) config('projectsend.upload_part_size_mb'),
             'allowed_extensions' => app(UploadExtensionPolicy::class)->hintFor($user),
+            // Their own list, preferred first. The page offers a choice
+            // only with two or more.
+            'storage_locations' => app(UploadLocations::class)->usableFor($user)
+                ->map(fn (StorageLocation $location): array => [
+                    'id' => $location->id,
+                    'name' => $location->name,
+                    'note' => $location->client_note,
+                ])->values()->all(),
         ]);
     }
 
