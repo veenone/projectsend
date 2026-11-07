@@ -8,13 +8,14 @@ use App\Models\User;
 use App\Modules\Platform\Settings\ExternalStorageConfigApplier;
 use App\Modules\Platform\Settings\StorageLocation;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Where a new upload goes.
  *
- * A client with storage locations of their own uploads to the first of
- * them that can take it, or to another of them they picked for this
- * upload. Everyone else, staff always included, uploads to the default
+ * Someone with storage locations of their own, or a client whose groups
+ * have some, uploads to the first of them that can take it, or to another
+ * they picked for this upload. Everyone else uploads to the default
  * location. A location only counts while it accepts uploads and, for a
  * bucket, while it is configured and this edition permits buckets at all.
  */
@@ -25,22 +26,43 @@ class UploadLocations
     ) {}
 
     /**
-     * The locations a client may upload to, the preferred one first. Empty
-     * for staff, and for a client whose uploads follow the default.
+     * The locations this person may upload to, the preferred one first:
+     * their own list in its saved order, then the storages of their groups
+     * (clients only; default first, then by name), each listed once. Empty
+     * when their uploads follow the default.
      *
      * @return Collection<int, StorageLocation>
      */
     public function usableFor(User $uploader): Collection
     {
-        if (! $uploader->isClient() || ! $this->storage->permitted()) {
+        // Boot runs before `artisan migrate`, so on an upgrade this can be
+        // asked while the tables are not there yet: everyone follows the
+        // default until they are.
+        if (! $this->storage->permitted() || ! Schema::hasTable('storage_locations')) {
             return collect();
         }
 
         $writable = $this->storage->writableDisks();
 
+        $fromGroups = $uploader->isClient()
+            ? StorageLocation::query()
+                ->whereHas('groups.members', fn ($members) => $members->whereKey($uploader->id))
+                ->orderByDesc('is_default')
+                ->orderBy('name')
+                ->get()
+            : collect();
+
         return $uploader->storageLocations()->get()
+            ->concat($fromGroups)
+            ->unique('id')
             ->filter(fn (StorageLocation $location): bool => $location->accepts_uploads && in_array($location->disk, $writable, true))
             ->values();
+    }
+
+    /** Whether this editor may change who uses which storage. */
+    public function canAssign(?User $editor): bool
+    {
+        return $editor !== null && $this->storage->permitted() && $editor->can('edit_settings');
     }
 
     /**

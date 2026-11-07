@@ -27,6 +27,7 @@ use App\Modules\Identity\Erasure\ErasureSchedule;
 use App\Modules\Identity\TwoFactor\TwoFactorAdministration;
 use App\Modules\Platform\Settings\Setting;
 use App\Modules\Platform\Settings\Settings;
+use App\Modules\Files\Storage\UploadLocations;
 use App\Modules\Platform\Settings\ExternalStorageConfigApplier;
 use App\Modules\Platform\Settings\StorageLocation;
 use App\Support\Pagination;
@@ -58,6 +59,7 @@ class ClientsController extends Controller
         private readonly ErasureSchedule $erasure,
         private readonly DateInput $dates,
         private readonly ExternalStorageConfigApplier $storageLocations,
+        private readonly UploadLocations $uploadLocations,
     ) {}
 
     public function index(Request $request): Response
@@ -284,7 +286,7 @@ class ClientsController extends Controller
         }
 
         return [
-            'can_assign' => $this->canAssignStorage($viewer),
+            'can_assign' => $this->uploadLocations->canAssign($viewer),
             'options' => array_values(StorageLocation::query()->orderByDesc('is_default')->orderBy('name')->get()
                 ->map(fn (StorageLocation $location): array => [
                     'id' => $location->id,
@@ -299,11 +301,6 @@ class ClientsController extends Controller
         ];
     }
 
-    private function canAssignStorage(?User $editor): bool
-    {
-        return $editor !== null && $this->storageLocations->permitted() && $editor->can('edit_settings');
-    }
-
     /**
      * Replaces the client's locations with the posted ones, in the posted
      * order. Left alone when the form did not send the list, which is what
@@ -311,7 +308,7 @@ class ClientsController extends Controller
      */
     private function saveStorageLocations(Request $request, User $editor, User $client): void
     {
-        if (! $request->has('storage_location_ids') || ! $this->canAssignStorage($editor)) {
+        if (! $request->has('storage_location_ids') || ! $this->uploadLocations->canAssign($editor)) {
             return;
         }
 
