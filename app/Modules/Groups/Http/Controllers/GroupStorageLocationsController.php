@@ -44,6 +44,6 @@ class GroupStorageLocationsController extends Controller
 
         $group->storageLocations()->sync([...$validated['storage_location_ids'], ...$hidden]);
 
-        return back()->with('success', __('Group storage saved.'));
+        return back()->with('success', __('Group updated.'));
     }
 }
