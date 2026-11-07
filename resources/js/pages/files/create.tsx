@@ -1,7 +1,9 @@
 import { type BreadcrumbItem, type SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 import Heading from '@/components/heading';
+import { StorageLocationPicker, type UploadStorageLocation } from '@/components/uploads/storage-location-picker';
 import ChunkedUploadDashboard from '@/components/uploads/chunked-upload-dashboard';
 import { useTranslation } from '@/hooks/use-translation';
 import AppLayout from '@/layouts/app-layout';
@@ -12,14 +14,19 @@ interface FilesCreateProps {
     max_file_size_mb: number;
     part_size_mb: number;
     allowed_extensions: string[] | null;
+    /** The uploader's own storage locations, preferred first. A choice is offered with two or more. */
+    storage_locations: UploadStorageLocation[];
 }
 
-export default function FilesCreate({ folder, max_file_size_mb, part_size_mb, allowed_extensions }: FilesCreateProps) {
+export default function FilesCreate({ folder, max_file_size_mb, part_size_mb, allowed_extensions, storage_locations }: FilesCreateProps) {
     const { t } = useTranslation();
     // Dropping a folder recreates its subfolders only for someone who may
     // make folders; anyone else's drop flattens, as it always has.
     const { auth } = usePage<SharedData>().props;
     const canMakeFolders = auth.permissions.includes('create_own_folders') && auth.permissions.includes('upload');
+    const offersChoice = storage_locations.length > 1;
+    const [storageLocationId, setStorageLocationId] = useState<number | null>(storage_locations[0]?.id ?? null);
+    const [uploading, setUploading] = useState(false);
 
     const breadcrumbs: BreadcrumbItem[] = [
         { title: t('All files'), href: '/files' },
@@ -53,12 +60,23 @@ export default function FilesCreate({ folder, max_file_size_mb, part_size_mb, al
 
                 {folder !== null && <p className="text-muted-foreground mb-4 text-sm">{t('Uploading into :folder', { folder: folder.name })}</p>}
 
+                {offersChoice && storageLocationId !== null && (
+                    <StorageLocationPicker
+                        locations={storage_locations}
+                        value={storageLocationId}
+                        onChange={setStorageLocationId}
+                        locked={uploading}
+                    />
+                )}
+
                 <ChunkedUploadDashboard
                     keepFolders={canMakeFolders}
                     folderId={folder?.id}
                     maxFileSizeMb={max_file_size_mb}
                     partSizeMb={part_size_mb}
                     allowedExtensions={allowed_extensions}
+                    storageLocationId={offersChoice ? storageLocationId : null}
+                    onBusyChange={setUploading}
                     onComplete={handleComplete}
                 />
             </div>

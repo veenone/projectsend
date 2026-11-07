@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLog;
+use App\Modules\Files\Models\File;
 use App\Modules\Files\Storage\UploadLocations;
 use App\Modules\Groups\Models\Group;
 use App\Modules\Identity\AccountConversion;
@@ -12,6 +13,7 @@ use App\Modules\Identity\Permissions\EnsureSystemRoles;
 use App\Modules\Identity\Permissions\SystemRole;
 use App\Modules\Platform\Settings\StorageLocation;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -256,4 +258,37 @@ test('storage from groups leaves out what the upload screen would not offer', fu
     $this->actingAs($this->admin)->get("/clients/{$client->id}")->assertInertia(
         fn (Assert $page) => $page->where('storage.from_groups', []),
     );
+});
+
+// ---- Staff uploads -----------------------------------------------------------
+
+test('the staff upload page lists their usable locations, preferred first', function () {
+    $eu = bucketLocation(['name' => 'Archive (EU)', 'client_note' => 'Kept in Frankfurt']);
+    $local = StorageLocation::query()->where('disk', 'files')->firstOrFail();
+    assignPersonalLocations($this->admin, [$eu, $local]);
+    applyStorage();
+
+    $this->actingAs($this->admin)->get(route('files.create'))->assertInertia(
+        fn (Assert $page) => $page
+            ->where('storage_locations.0', ['id' => $eu->id, 'name' => 'Archive (EU)', 'note' => 'Kept in Frankfurt'])
+            ->where('storage_locations.1.id', $local->id)
+            ->missing('storage_locations.0.bucket'),
+    );
+});
+
+test('a staff member\'s chunked upload lands in the location they chose', function () {
+    Storage::fake('files');
+    $first = bucketLocation(['name' => 'First']);
+    $second = bucketLocation(['name' => 'Second']);
+    assignPersonalLocations($this->admin, [$first, $second]);
+    applyStorage();
+    Storage::fake($first->disk);
+    Storage::fake($second->disk);
+
+    $this->actingAs($this->admin);
+    uploadChunkedAsClient(['storage_location_id' => $second->id])->assertOk();
+
+    $file = File::query()->latest('id')->firstOrFail();
+    expect($file->disk)->toBe($second->disk);
+    Storage::disk($second->disk)->assertExists($file->path);
 });
