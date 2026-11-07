@@ -7,6 +7,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
 import { SavedIndicator } from '@/components/save-button';
+import { StorageLocationsCard, type StorageProps } from '@/components/storage-locations-card';
 import { TwoFactorResetPanel } from '@/components/two-factor-reset-panel';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,12 +34,14 @@ interface UsersEditProps {
     content: { files: number; folders: number };
     reassign_candidates: ReassignCandidate[];
     api_tokens: UserApiToken[];
+    /** Null where this edition has no storage locations. */
+    storage: StorageProps | null;
 }
 
 type Tab = 'account' | 'api';
 
 interface UserFormData {
-    [key: string]: string | boolean | number[];
+    [key: string]: string | boolean | number[] | undefined;
     name: string;
     email: string;
     role_id: string;
@@ -46,6 +49,7 @@ interface UserFormData {
     password: string;
     password_confirmation: string;
     assigned_clients: number[];
+    storage_location_ids?: number[];
 }
 
 export default function UsersEdit({
@@ -58,6 +62,7 @@ export default function UsersEdit({
     content,
     reassign_candidates,
     api_tokens,
+    storage,
 }: UsersEditProps) {
     const { t } = useTranslation();
     const { auth } = usePage<SharedData>().props;
@@ -76,6 +81,7 @@ export default function UsersEdit({
         password: '',
         password_confirmation: '',
         assigned_clients: assigned_client_ids,
+        ...(storage?.can_assign ? { storage_location_ids: storage.assigned_ids } : {}),
     });
 
     const deleteForm = useForm({});
@@ -131,6 +137,16 @@ export default function UsersEdit({
                         ownAccount={is_self}
                         errors={errors}
                     />
+
+                    {storage !== null && (
+                        <StorageLocationsCard
+                            audience="staff"
+                            storage={storage}
+                            value={data.storage_location_ids ?? storage.assigned_ids}
+                            onChange={(ids) => setData('storage_location_ids', ids)}
+                            error={errors.storage_location_ids}
+                        />
+                    )}
 
                     <div className="flex items-center gap-2">
                         <Checkbox

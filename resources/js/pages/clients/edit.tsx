@@ -5,7 +5,7 @@ import { FormEventHandler } from 'react';
 import { AccountContentDeleteDialog, type ReassignCandidate } from '@/components/account-content-delete-dialog';
 import { ClientCustomFieldsSection, type CustomFieldDefinition } from '@/components/client-custom-fields-section';
 import { ClientExpiryField } from '@/components/client-expiry-field';
-import { ClientStorageLocations, type ClientStorageProps } from '@/components/client-storage-locations';
+import { StorageLocationsCard, type StorageProps } from '@/components/storage-locations-card';
 import { ConfirmDialog } from '@/components/confirm-dialog';
 import Heading from '@/components/heading';
 import InputError from '@/components/input-error';
@@ -37,7 +37,7 @@ interface ClientsEditProps {
     custom_field_values: Record<string, string>;
     content: { files: number; folders: number };
     /** Null where this edition has no storage locations. */
-    storage: ClientStorageProps | null;
+    storage: StorageProps | null;
     reassign_candidates: ReassignCandidate[];
 }
 
@@ -208,7 +208,7 @@ export default function ClientsEdit({
                     </div>
 
                     {storage !== null && (
-                        <ClientStorageLocations
+                        <StorageLocationsCard
                             storage={storage}
                             value={data.storage_location_ids ?? storage.assigned_ids}
                             onChange={(ids) => setData('storage_location_ids', ids)}

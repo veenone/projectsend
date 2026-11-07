@@ -8,6 +8,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Api\Auth\ApiTokens;
 use App\Modules\Files\DeletedAccountContent;
+use App\Modules\Files\Storage\StorageCardProps;
+use App\Modules\Files\Storage\UploadLocations;
 use App\Modules\Identity\AccountContentDeletion;
 use App\Modules\Identity\Erasure\AvailableEmailRule;
 use App\Modules\Identity\Models\Role;
@@ -47,6 +49,8 @@ class UsersController extends Controller
         private readonly ApiTokens $apiTokens,
         private readonly StaffAccounts $accounts,
         private readonly SeatAllowance $seats,
+        private readonly StorageCardProps $storageCard,
+        private readonly UploadLocations $uploadLocations,
     ) {}
 
     public function index(Request $request): Response
@@ -195,6 +199,7 @@ class UsersController extends Controller
             // integration exists and what it is allowed to do, but only
             // the owner can rename, re-scope or revoke it. See ApiTokens.
             'api_tokens' => $this->apiTokens->detailFor($user),
+            'storage' => $this->storageCard->for($this->actor(), $user),
         ]);
     }
 
@@ -215,6 +220,15 @@ class UsersController extends Controller
             // an exists() plus a type filter used to be two.
             'assigned_clients.*' => ['integer', Rule::in($this->accounts->assignableClientIds($this->actor()))],
         ]);
+
+        // Left alone when the form did not send the list, or the editor may
+        // not change who uses which storage.
+        $storageIds = $this->uploadLocations->canAssign($this->actor()) && $request->has('storage_location_ids')
+            ? $request->validate([
+                'storage_location_ids' => ['present', 'array'],
+                'storage_location_ids.*' => ['integer', 'distinct', Rule::exists('storage_locations', 'id')],
+            ])['storage_location_ids']
+            : null;
 
         // Deactivating yourself is refused here rather than in StaffAccounts
         // because it is a rule about *this* request's actor, not about the
@@ -250,6 +264,10 @@ class UsersController extends Controller
             'active' => (bool) $validated['active'],
             'password' => is_string($validated['password'] ?? null) ? $validated['password'] : '',
         ], $validated['assigned_clients'] ?? []);
+
+        if ($storageIds !== null) {
+            $this->uploadLocations->replacePersonal($user, array_map(intval(...), $storageIds));
+        }
 
         return back()->with('success', __('User updated.'));
     }

@@ -66,6 +66,21 @@ class UploadLocations
     }
 
     /**
+     * Replaces this person's own list with these locations, first preferred.
+     *
+     * @param  list<int>  $ids
+     */
+    public function replacePersonal(User $account, array $ids): void
+    {
+        $priorities = [];
+        foreach (array_values($ids) as $index => $id) {
+            $priorities[$id] = ['priority' => $index + 1];
+        }
+
+        $account->storageLocations()->sync($priorities);
+    }
+
+    /**
      * The disk a new upload by this person is written to. A requested
      * location that is not one of theirs, or no longer usable, is ignored
      * rather than refused: the upload session validated it when it was
