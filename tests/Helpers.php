@@ -328,8 +328,6 @@ function recordingUpdate(array $warm = [], array $exitCodes = []): RecordingUpda
     return $fake;
 }
 
-// ---- Storage locations (shared by ExternalStorageSettingsTest and StorageAssignmentTest) ----
-
 /**
  * A configured S3 bucket location, saved and flushed into the applier's
  * cache. Not the default unless makeDefault() says so.
@@ -371,7 +369,7 @@ function applyStorage(): void
 }
 
 /** @param  list<StorageLocation>  $locations  first preferred */
-function assignPersonalLocations(User $client, array $locations): void
+function assignLocations(User $client, array $locations): void
 {
     $sync = [];
     foreach ($locations as $index => $location) {
