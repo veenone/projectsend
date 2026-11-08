@@ -107,6 +107,8 @@ export default function DeleteUser({ graceDays, filesWithdrawn, filesDeletedImme
                                 <InputError message={errors.password} />
                             </div>
 
+                            <InputError message={(errors as Partial<Record<string, string>>).account} />
+
                             <DialogFooter>
                                 <DialogClose asChild>
                                     <Button variant="secondary" onClick={closeModal}>

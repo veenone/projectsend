@@ -245,9 +245,9 @@ export default function ClientsEdit({
                                     name={client.name}
                                     content={content}
                                     candidates={reassign_candidates}
-                                    onConfirm={(choice) => {
+                                    onConfirm={(choice, visit) => {
                                         deleteForm.transform(() => choice);
-                                        deleteForm.delete(route('clients.destroy', client.id));
+                                        deleteForm.delete(route('clients.destroy', client.id), visit);
                                     }}
                                 />
                             ) : (
@@ -262,7 +262,8 @@ export default function ClientsEdit({
                                         name: client.name,
                                     })}
                                     confirmLabel={t('Delete client')}
-                                    onConfirm={() => deleteForm.delete(route('clients.destroy', client.id))}
+                                    errorField="account"
+                                    onConfirm={(visit) => deleteForm.delete(route('clients.destroy', client.id), visit)}
                                 />
                             ))}
 
