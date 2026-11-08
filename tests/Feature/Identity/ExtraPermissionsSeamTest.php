@@ -8,6 +8,8 @@ use App\Modules\Identity\Models\RolePermission;
 use App\Modules\Identity\Permissions\ExtraPermissions;
 use App\Modules\Identity\Permissions\Permission;
 use App\Modules\Identity\Permissions\PermissionCategory;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia;
 
 function catalogKeys(array $catalog): array
@@ -149,4 +151,27 @@ test('a staff member holding the registered permission may grant, edit and manag
         'role_id' => $role->id,
         'active' => true,
     ])->assertSessionHasNoErrors();
+});
+
+test('an API token caps a registered permission like a core one, once a route names it', function () {
+    app(ExtraPermissions::class)->register('evidence.manage', 'Manage evidence', PermissionCategory::System);
+    $admin = User::factory()->create();
+
+    // A package module naming the key makes it something a token can carry;
+    // a shared route consults the gate on the way.
+    Route::middleware(['auth:sanctum', 'api-active', 'staff-token', 'token-ceiling', 'token-can:evidence.manage'])
+        ->get('api/v1/_test/evidence', fn () => response()->json(['ok' => true]));
+    Route::middleware(['auth:sanctum', 'api-active', 'staff-token', 'token-ceiling', 'token-can:edit_files'])
+        ->get('api/v1/_test/evidence-gate', fn () => response()->json(['allowed' => Gate::allows('evidence.manage')]));
+
+    $ask = function (array $abilities) use ($admin): mixed {
+        forgetRequestState();
+        $token = $admin->createToken('t', $abilities)->plainTextToken;
+
+        return $this->withToken($token)->getJson('/api/v1/_test/evidence-gate')->assertOk()->json('allowed');
+    };
+
+    expect($ask(['edit_files']))->toBeFalse()
+        ->and($ask(['edit_files', 'evidence.manage']))->toBeTrue()
+        ->and($admin->can('evidence.manage'))->toBeTrue();
 });

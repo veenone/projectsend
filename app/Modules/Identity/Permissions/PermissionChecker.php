@@ -105,9 +105,14 @@ class PermissionChecker
     /**
      * The same answer as allows() for a key a package registered through
      * ExtraPermissions: administrators hold it, anyone else needs the row.
+     * Capped by the API token like a core key, once a route names it.
      */
     public function allowsKey(User $user, string $key): bool
     {
+        if (! $this->withinCeiling($user, $key)) {
+            return false;
+        }
+
         $role = $user->role;
 
         if ($role === null) {
