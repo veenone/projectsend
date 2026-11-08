@@ -19,6 +19,14 @@ class PermissionChecker
     private array $granted = [];
 
     /**
+     * Every key stored for a role id, registered or not, loaded once per
+     * request for allowsKey().
+     *
+     * @var array<int, array<string, int>>
+     */
+    private array $stored = [];
+
+    /**
      * The one user whose permissions are capped, the API token they are
      * calling with, and the keys a token can be granted at all. See
      * LimitPermissionsToToken.
@@ -110,7 +118,13 @@ class PermissionChecker
             return true;
         }
 
-        return RolePermission::query()->where('role_id', $role->id)->where('permission', $key)->exists();
+        $this->stored[$role->id] ??= RolePermission::query()
+            ->where('role_id', $role->id)
+            ->pluck('permission')
+            ->flip()
+            ->all();
+
+        return isset($this->stored[$role->id][$key]);
     }
 
     /**

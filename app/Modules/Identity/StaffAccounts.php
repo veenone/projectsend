@@ -12,6 +12,7 @@ use App\Modules\Identity\Erasure\ErasureSchedule;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Mcp\OAuth\Grants;
 use App\Modules\Platform\Seats\SeatAllowance;
+use App\Modules\Identity\Permissions\ExtraPermissions;
 use App\Modules\Identity\Permissions\Permission;
 use App\Modules\Identity\Permissions\PermissionChecker;
 use App\Modules\Identity\Permissions\SystemRole;
@@ -42,6 +43,7 @@ class StaffAccounts
         private readonly ErasureSchedule $erasure,
         private readonly SeatAllowance $seats,
         private readonly StaffLibraryScope $library,
+        private readonly ExtraPermissions $extraPermissions,
     ) {}
 
     /**
@@ -81,8 +83,14 @@ class StaffAccounts
             }
         }
 
-        $known = array_map(fn (Permission $permission): string => $permission->value, Permission::cases());
-        $held = $this->permissions->grantedKeys($actor);
+        // Registered keys count as vocabulary too. grantedKeys() leaves them
+        // out, so whether the actor holds one is asked of allowsKey().
+        $extra = array_keys($this->extraPermissions->all());
+        $known = [...array_map(fn (Permission $permission): string => $permission->value, Permission::cases()), ...$extra];
+        $held = [
+            ...$this->permissions->grantedKeys($actor),
+            ...array_filter($extra, fn (string $key): bool => $this->permissions->allowsKey($actor, $key)),
+        ];
 
         // Keys no longer in the vocabulary grant nothing, so they are not
         // asked about (PermissionChecker ignores them the same way).

@@ -87,8 +87,66 @@ test('an editor cannot grant a registered permission their own role lacks', func
         ->assertSessionHasErrors('permissions');
     expect($role->permissions()->pluck('permission')->all())->toBe([]);
 
+    $this->actingAs($lacking)->post('/roles', ['name' => 'Evidence', 'permissions' => ['evidence.manage']])
+        ->assertSessionHasErrors('permissions');
+    expect(Role::query()->where('name', 'Evidence')->exists())->toBeFalse();
+
     $holding = staffWithPermissions(['manage_users', 'edit_users', 'upload', 'evidence.manage']);
     $this->actingAs($holding)->patch("/roles/{$role->id}", ['name' => 'Uploader', 'permissions' => ['upload', 'evidence.manage']])
         ->assertSessionHasNoErrors();
     expect($role->permissions()->pluck('permission')->sort()->values()->all())->toBe(['evidence.manage', 'upload']);
+});
+
+/**
+ * A role holding a registered key, and an account holding that role.
+ *
+ * @return array{Role, User}
+ */
+function evidenceRoleAndHolder(): array
+{
+    app(ExtraPermissions::class)->register('evidence.manage', 'Manage evidence', PermissionCategory::System);
+    $role = Role::query()->create(['name' => 'Evidence']);
+    RolePermission::query()->create(['role_id' => $role->id, 'permission' => 'evidence.manage']);
+
+    return [$role, User::factory()->create(['role_id' => $role->id])];
+}
+
+test('a staff member cannot hand themselves a role holding a registered permission they lack', function () {
+    [$role] = evidenceRoleAndHolder();
+    $actor = staffWithPermissions(['manage_users', 'edit_users']);
+
+    $this->actingAs($actor)->patch("/users/{$actor->id}", [
+        'name' => $actor->name,
+        'email' => $actor->email,
+        'role_id' => $role->id,
+        'active' => true,
+    ])->assertSessionHasErrors('role_id');
+
+    expect($actor->refresh()->role_id)->not->toBe($role->id);
+});
+
+test('a staff member cannot edit a role, or its holders, carrying a registered permission they lack', function () {
+    [$role, $holder] = evidenceRoleAndHolder();
+    $actor = staffWithPermissions(['manage_users', 'edit_users']);
+
+    $this->actingAs($actor)->get("/roles/{$role->id}")->assertForbidden();
+    $this->actingAs($actor)->patch("/roles/{$role->id}", ['name' => 'Evidence', 'permissions' => []])->assertForbidden();
+    $this->actingAs($actor)->get("/users/{$holder->id}")->assertForbidden();
+
+    expect($role->permissions()->pluck('permission')->all())->toBe(['evidence.manage']);
+});
+
+test('a staff member holding the registered permission may grant, edit and manage it', function () {
+    [$role, $holder] = evidenceRoleAndHolder();
+    $actor = staffWithPermissions(['manage_users', 'edit_users', 'evidence.manage']);
+
+    $this->actingAs($actor)->get("/roles/{$role->id}")->assertOk();
+    $this->actingAs($actor)->get("/users/{$holder->id}")->assertOk();
+
+    $this->actingAs($actor)->patch("/users/{$holder->id}", [
+        'name' => $holder->name,
+        'email' => $holder->email,
+        'role_id' => $role->id,
+        'active' => true,
+    ])->assertSessionHasNoErrors();
 });
