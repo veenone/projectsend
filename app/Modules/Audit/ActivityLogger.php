@@ -26,7 +26,7 @@ class ActivityLogger
      *
      * @param  array<string, mixed>  $context
      */
-    public function log(Action $action, ?User $actor = null, ?Model $subject = null, array $context = []): void
+    public function log(LogAction $action, ?User $actor = null, ?Model $subject = null, array $context = []): void
     {
         $user = $actor ?? Auth::user();
 
@@ -113,7 +113,7 @@ class ActivityLogger
         return [$asking->origin ?? ActivityOrigin::Ui, $asking->credentialName];
     }
 
-    private function shouldRecordIp(Action $action, ?User $actor): bool
+    private function shouldRecordIp(LogAction $action, ?User $actor): bool
     {
         if (! in_array($action, [Action::FileDownloaded, Action::FilePreviewed, Action::ShareLinkDownloaded, Action::PublicFileDownloaded, Action::PublicFilePreviewed], true)) {
             return true;
@@ -132,7 +132,7 @@ class ActivityLogger
      *
      * @param  array<string, mixed>  $context
      */
-    public function logSystem(Action $action, array $context = []): void
+    public function logSystem(LogAction $action, array $context = []): void
     {
         ActivityLog::query()->create([
             'actor_id' => null,

@@ -2473,5 +2473,6 @@
     "Choice :position": "Chaguo :position",
     "People": "Watu",
     "Assignments are changed on each group or person. This list is read-only.": "Mgawo hubadilishwa kwenye kila kikundi au mtu. Orodha hii ni ya kusoma tu.",
-    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Vikundi na watu waliokuwa nayo wataipoteza kwenye orodha yao. Haina faili, kwa hivyo hakuna kingine kinachobadilika."
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Vikundi na watu waliokuwa nayo wataipoteza kwenye orodha yao. Haina faili, kwa hivyo hakuna kingine kinachobadilika.",
+    "Performed \":action\"": "Alitekeleza \":action\""
 }

@@ -2473,5 +2473,6 @@
     "Choice :position": "Opció :position",
     "People": "Persones",
     "Assignments are changed on each group or person. This list is read-only.": "Les assignacions es canvien a cada grup o persona. Aquesta llista és de només lectura.",
-    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Els grups i les persones que el tenien el perden de la seva llista. No conté cap fitxer, així que no canvia res més."
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Els grups i les persones que el tenien el perden de la seva llista. No conté cap fitxer, així que no canvia res més.",
+    "Performed \":action\"": "Ha fet «:action»"
 }

@@ -2473,5 +2473,6 @@
     "Choice :position": "Volba :position",
     "People": "Lidé",
     "Assignments are changed on each group or person. This list is read-only.": "Přiřazení se mění u každé skupiny nebo osoby. Tento seznam je pouze pro čtení.",
-    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Skupiny a lidé, kteří ho měli, o něj ze svého seznamu přijdou. Neobsahuje žádné soubory, takže se nic dalšího nemění."
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Skupiny a lidé, kteří ho měli, o něj ze svého seznamu přijdou. Neobsahuje žádné soubory, takže se nic dalšího nemění.",
+    "Performed \":action\"": "Provedl(a) „:action“"
 }

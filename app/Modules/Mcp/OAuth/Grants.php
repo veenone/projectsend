@@ -6,6 +6,7 @@ namespace App\Modules\Mcp\OAuth;
 
 use App\Models\User;
 use App\Modules\Audit\Action;
+use App\Modules\Audit\LogAction;
 use App\Modules\Mcp\OAuth\Models\McpAuthorizationCode;
 use App\Modules\Mcp\OAuth\Models\McpClient;
 use App\Modules\Mcp\OAuth\Models\McpConnection;
@@ -339,7 +340,7 @@ final class Grants
     /**
      * @param  array<string, mixed>  $context
      */
-    private function audit(Action $action, User $user, array $context): void
+    private function audit(LogAction $action, User $user, array $context): void
     {
         Audit::logFor($action, $user, null, $context);
     }

@@ -10,7 +10,7 @@ namespace App\Modules\Audit;
  * (file.uploaded, group.created, …) as they land; the string values are
  * stable identifiers stored in the database.
  */
-enum Action: string
+enum Action: string implements LogAction
 {
     // Platform / lifecycle (v1 action 0: "ProjectSend has been installed")
     case SetupCompleted = 'setup.completed';
@@ -157,6 +157,11 @@ enum Action: string
     case CommentEdited = 'comment.edited';
     case CommentDeleted = 'comment.deleted';
     case CommentApproved = 'comment.approved';
+
+    public function key(): string
+    {
+        return $this->value;
+    }
 
     /**
      * Full sentence for a log row, with :placeholders resolved from the

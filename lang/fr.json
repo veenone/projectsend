@@ -2473,5 +2473,6 @@
     "Choice :position": "Choix :position",
     "People": "Personnes",
     "Assignments are changed on each group or person. This list is read-only.": "Les attributions se modifient sur chaque groupe ou personne. Cette liste est en lecture seule.",
-    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Les groupes et les personnes qui l’avaient le perdent de leur liste. Il ne contient aucun fichier, donc rien d’autre ne change."
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Les groupes et les personnes qui l’avaient le perdent de leur liste. Il ne contient aucun fichier, donc rien d’autre ne change.",
+    "Performed \":action\"": "A effectué « :action »"
 }

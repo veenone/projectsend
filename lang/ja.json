@@ -2473,5 +2473,6 @@
     "Choice :position": "選択 :position",
     "People": "ユーザー",
     "Assignments are changed on each group or person. This list is read-only.": "割り当ては各グループまたはユーザーで変更します。この一覧は読み取り専用です。",
-    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "これを割り当てられていたグループとユーザーの一覧から外れます。ファイルは保存されていないため、ほかに変わることはありません。"
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "これを割り当てられていたグループとユーザーの一覧から外れます。ファイルは保存されていないため、ほかに変わることはありません。",
+    "Performed \":action\"": "「:action」を実行しました"
 }

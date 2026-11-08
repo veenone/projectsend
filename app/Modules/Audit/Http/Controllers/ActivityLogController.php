@@ -10,6 +10,8 @@ use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLog;
 use App\Modules\Audit\ActivityLogScope;
 use App\Modules\Audit\ActivityOrigin;
+use App\Modules\Audit\ExtraActions;
+use App\Modules\Audit\LogAction;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\Folder;
 use App\Modules\Groups\Models\Group;
@@ -34,6 +36,7 @@ class ActivityLogController extends Controller
         private readonly CapabilityRegistry $capabilities,
         private readonly ActivityLogScope $scope,
         private readonly TimezoneRegistry $timezones,
+        private readonly ExtraActions $extraActions,
     ) {}
 
     public function index(Request $request): Response
@@ -58,7 +61,7 @@ class ActivityLogController extends Controller
                 'origin' => $entry->origin->value,
                 'origin_label' => $entry->origin->label(),
                 'api_token_name' => $entry->api_token_name,
-                'action' => $entry->action->value,
+                'action' => $entry->action->key(),
                 'template' => $entry->action->template(),
                 'replacements' => $this->replacements($entry),
                 'actor_url' => $links($entry->actor_id, User::class),
@@ -72,10 +75,10 @@ class ActivityLogController extends Controller
                 'total' => $entries->total(),
             ],
             'filters' => $filters,
-            'actions' => array_map(fn (Action $action): array => [
-                'key' => $action->value,
+            'actions' => array_map(fn (LogAction $action): array => [
+                'key' => $action->key(),
                 'description' => $action->description(),
-            ], Action::cases()),
+            ], $this->filterableActions()),
             // Every origin this installation could actually produce.
             // Offering a filter that can only ever return nothing would
             // be dangling a feature this edition does not have, which is
@@ -125,7 +128,7 @@ class ActivityLogController extends Controller
                     $entry->actor_type ?? 'system',
                     $entry->origin->label(),
                     $entry->api_token_name ?? '',
-                    $entry->action->value,
+                    $entry->action->key(),
                     __($entry->action->template(), $this->replacements($entry)),
                     $entry->subject_name,
                     $entry->context === null ? '' : json_encode($entry->context),
@@ -256,12 +259,22 @@ class ActivityLogController extends Controller
     }
 
     /**
+     * Core actions, then any a package has registered.
+     *
+     * @return list<LogAction>
+     */
+    private function filterableActions(): array
+    {
+        return [...Action::cases(), ...array_values($this->extraActions->all())];
+    }
+
+    /**
      * @return array{action: ?string, actor_type: ?string, origin: ?string, api_token: ?string, actor: ?string, from: ?string, to: ?string}
      */
     private function validatedFilters(Request $request): array
     {
         $validated = $request->validate([
-            'action' => ['nullable', Rule::enum(Action::class)],
+            'action' => ['nullable', Rule::in(array_map(fn (LogAction $action): string => $action->key(), $this->filterableActions()))],
             'actor_type' => ['nullable', Rule::in(['staff', 'client', 'system'])],
             'origin' => ['nullable', Rule::enum(ActivityOrigin::class)],
             'api_token' => ['nullable', 'string', 'max:255'],

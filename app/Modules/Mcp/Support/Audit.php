@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Mcp\Support;
 
 use App\Models\User;
-use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
+use App\Modules\Audit\LogAction;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -29,7 +29,7 @@ final class Audit
     /**
      * @param  array<string, mixed>  $context
      */
-    public static function log(Action $action, Account $account, ?Model $subject = null, array $context = []): void
+    public static function log(LogAction $action, Account $account, ?Model $subject = null, array $context = []): void
     {
         self::logFor($action, $account->user, $subject, $context);
     }
@@ -40,13 +40,13 @@ final class Audit
      *
      * @param  array<string, mixed>  $context
      */
-    public static function logFor(Action $action, User $user, ?Model $subject = null, array $context = []): void
+    public static function logFor(LogAction $action, User $user, ?Model $subject = null, array $context = []): void
     {
         try {
             app(ActivityLogger::class)->log($action, $user, $subject, $context);
         } catch (Throwable $e) {
             Log::warning('The AI connector could not write an activity entry.', [
-                'action' => $action->value,
+                'action' => $action->key(),
                 'exception' => $e->getMessage(),
             ]);
         }

@@ -2473,5 +2473,6 @@
     "Choice :position": "Lựa chọn :position",
     "People": "Người",
     "Assignments are changed on each group or person. This list is read-only.": "Việc gán được thay đổi ở từng nhóm hoặc từng người. Danh sách này chỉ để xem.",
-    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Các nhóm và người đã có nơi này sẽ mất nó khỏi danh sách của họ. Nơi này không chứa tệp nào nên không có gì khác thay đổi."
+    "Groups and people who had it lose it from their list. It holds no files, so nothing else changes.": "Các nhóm và người đã có nơi này sẽ mất nó khỏi danh sách của họ. Nơi này không chứa tệp nào nên không có gì khác thay đổi.",
+    "Performed \":action\"": "Đã thực hiện \":action\""
 }

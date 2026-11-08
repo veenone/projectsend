@@ -57,7 +57,7 @@ class ActivityResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'action' => $this->action->value,
+            'action' => $this->action->key(),
             'created_at' => $this->created_at->toIso8601String(),
 
             // Snapshots, not joins. The actor may since have been deleted,
