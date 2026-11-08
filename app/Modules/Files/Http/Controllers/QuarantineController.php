@@ -136,6 +136,11 @@ class QuarantineController extends Controller
 
         $uploaders = $this->scope->uploaderIds($user);
 
-        return $uploaders === null ? $query : $query->whereIn('uploaded_by', $uploaders);
+        return $query
+            ->when($uploaders !== null, fn (Builder $q) => $q->whereIn('uploaded_by', $uploaders))
+            // A subtree a package hides from this person stays hidden
+            // here too: the threat name is as telling as the file name.
+            ->when($this->scope->hiddenSubtreeIds($user) !== [], fn (Builder $q) => $q
+                ->whereIn('files.id', $this->scope->files($user)->select('files.id')));
     }
 }

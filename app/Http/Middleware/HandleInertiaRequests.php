@@ -207,11 +207,15 @@ class HandleInertiaRequests extends Middleware
             // once counted the whole installation on the grounds that the
             // permission meant all of them; the screen was narrowed since,
             // and a number the list never explains is a count of other
-            // clients' files.
-            $uploaders = app(StaffLibraryScope::class)->uploaderIds($user);
+            // clients' files. A subtree a package hides from them stays
+            // out as well, as on the screen itself.
+            $scope = app(StaffLibraryScope::class);
+            $uploaders = $scope->uploaderIds($user);
             $counts['quarantine'] = File::query()
                 ->whereIn('scan_status', [ScanStatus::Infected->value, ScanStatus::UnscannableBlocked->value])
                 ->when($uploaders !== null, fn ($query) => $query->whereIn('uploaded_by', $uploaders))
+                ->when($scope->hiddenSubtreeIds($user) !== [], fn ($query) => $query
+                    ->whereIn('files.id', $scope->files($user)->select('files.id')))
                 ->count();
         }
 

@@ -13,6 +13,7 @@ use App\Modules\Files\Access\LibraryVisibilityRules;
 use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\Folder;
+use App\Modules\Files\Scanning\ScanStatus;
 use App\Modules\Identity\Permissions\SystemRole;
 use App\Modules\Mcp\Support\McpContext;
 use App\Modules\Mcp\Tools\GetClient;
@@ -312,4 +313,28 @@ test('a comment on a hidden file cannot be moderated', function () {
 
     expect($hiddenComment->fresh()->isPending())->toBeTrue()
         ->and($plainComment->fresh()->isPending())->toBeFalse();
+});
+
+test('a hidden quarantined file stays off the quarantine screen and its badge, and cannot be released', function () {
+    [$admin, , $secret, $plain] = hiddenFileSharedWithClient(User::factory()->create());
+    foreach ([$secret, $plain] as $file) {
+        $file->forceFill(['scan_status' => ScanStatus::Infected, 'scan_note' => 'Eicar-Test-Signature', 'scanned_at' => now()])->save();
+    }
+
+    $page = $this->actingAs($admin)->get('/files/quarantine')->assertOk();
+    expect(libraryPageNames($page, 'files'))->toBe(['plain-file'])
+        ->and(json_decode(json_encode($page->viewData('page')), true)['props']['pending']['quarantine'])->toBe(1);
+
+    confirmPassword($admin);
+    $this->actingAs($admin)->post("/files/{$secret->id}/release", ['reason' => 'looks fine'])->assertNotFound();
+    expect($secret->fresh()->scan_status)->toBe(ScanStatus::Infected);
+});
+
+test('a hidden missing file stays off the missing-files tab', function () {
+    [$admin, , $secret, $plain] = hiddenFileSharedWithClient(User::factory()->create());
+    File::query()->whereKey([$secret->id, $plain->id])->update(['scan_status' => ScanStatus::Missing]);
+
+    $page = $this->actingAs($admin)->get('/files/orphans?tab=missing')->assertOk();
+    expect(libraryPageNames($page, 'missing'))->toBe(['plain-file'])
+        ->and(json_decode(json_encode($page->viewData('page')), true)['props']['missing_count'])->toBe(1);
 });
