@@ -82,7 +82,9 @@ export function StorageLocationsCard({
 
             {assigned.length === 0 ? (
                 <p className="text-muted-foreground rounded-md border border-dashed px-3 py-4 text-center text-sm">
-                    {t('No locations. Their uploads use the default, :name.', { name: defaultLocation?.name ?? '' })}
+                    {fromGroups.length > 0
+                        ? t('No personal locations. Their uploads use the locations their groups give them.')
+                        : t('No locations. Their uploads use the default, :name.', { name: defaultLocation?.name ?? '' })}
                 </p>
             ) : (
                 <ol className="grid min-w-0 gap-2">

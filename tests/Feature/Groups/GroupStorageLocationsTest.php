@@ -28,6 +28,13 @@ test('an administrator sets a group\'s storage, replacing what was there but kee
 
     expect($group->storageLocations()->pluck('storage_locations.id')->sort()->values()->all())
         ->toBe(collect([$a->id, $c->id, $closed->id])->sort()->values()->all());
+
+    // An empty list clears what accepts uploads, still keeping the closed one.
+    $this->actingAs($this->admin)
+        ->put("/groups/{$group->id}/storage-locations", ['storage_location_ids' => []])
+        ->assertRedirect();
+
+    expect($group->storageLocations()->pluck('storage_locations.id')->all())->toBe([$closed->id]);
 });
 
 test('an editor who can edit groups but not settings cannot set group storage', function () {
