@@ -8,6 +8,7 @@ use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\ShareLink;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * Which files an account can see, and what it may do to one — the
@@ -72,6 +73,8 @@ final class Files
 
         if ($account->isClient()) {
             if ($own && $account->can('edit_files')) {
+                self::requirePolicy('update', $file, $account);
+
                 return;
             }
 
@@ -83,6 +86,8 @@ final class Files
         if (! $account->can($permission)) {
             throw new ToolFailure(ToolError::permissionMissing($permission, Web::file($account, (int) $file->getAttribute('id'))));
         }
+
+        self::requirePolicy('update', $file, $account);
     }
 
     /**
@@ -107,6 +112,8 @@ final class Files
 
         if ($account->isClient()) {
             if ($own && $account->can('delete_files')) {
+                self::requirePolicy('delete', $file, $account);
+
                 return;
             }
 
@@ -117,6 +124,21 @@ final class Files
 
         if (! $account->can($permission)) {
             throw new ToolFailure(ToolError::permissionMissing($permission, Web::file($account, (int) $file->getAttribute('id'))));
+        }
+
+        self::requirePolicy('delete', $file, $account);
+    }
+
+    /**
+     * And FilePolicy itself, through the Gate, as the web and the API ask
+     * it: the permission keys above are the role's answer, but a package
+     * can refuse more (a Gate::before), and the assistant must not be the
+     * one way around that.
+     */
+    private static function requirePolicy(string $ability, File $file, Account $account): void
+    {
+        if (Gate::forUser($account->user)->denies($ability, $file)) {
+            throw new ToolFailure(ToolError::refused(Web::file($account, (int) $file->getAttribute('id'))));
         }
     }
 

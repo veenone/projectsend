@@ -114,6 +114,21 @@ final class ToolError
         );
     }
 
+    /**
+     * The role allows it, but the app refuses it for this file or folder:
+     * the web would answer 403 too. Same code as a missing permission,
+     * since no retry or rewording changes the answer.
+     */
+    public static function refused(string $webUrl): self
+    {
+        return new self(
+            'permission_missing',
+            'ProjectSend does not allow this change to this file or folder.',
+            'ProjectSend does not allow this change to this file or folder, whatever the person\'s role: it may be kept read-only by the site. Tell the person; web_url shows the item. Do not retry.',
+            ['permission' => 'policy', 'web_url' => $webUrl],
+        );
+    }
+
     // ── things that are not there ───────────────────────────────────────
 
     /**

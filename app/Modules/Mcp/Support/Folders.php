@@ -12,6 +12,7 @@ use App\Modules\Files\Models\Folder;
 use App\Modules\Files\Models\FolderAssignment;
 use App\Modules\Files\Sharing\FolderSharing;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The staff library's folders, under the app's own rules — the folder
@@ -64,6 +65,12 @@ final class Folders
 
         if (! $account->can($permission)) {
             throw new ToolFailure(ToolError::permissionMissing($permission, Web::staffFolder((int) $folder->getAttribute('id'))));
+        }
+
+        // And FolderPolicy itself, as the web asks it: a package can
+        // refuse more than the role does (see Files::requirePolicy).
+        if (Gate::forUser($account->user)->denies('update', $folder)) {
+            throw new ToolFailure(ToolError::refused(Web::staffFolder((int) $folder->getAttribute('id'))));
         }
     }
 

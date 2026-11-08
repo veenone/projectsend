@@ -210,6 +210,7 @@ function mcpErrorCatalogue(): array
         ToolError::featureRequiresPlan('share_folder_with_client', $plan, 'https://app.example/register', 'https://example/plans', null, 'folders'),
         ToolError::scopeInsufficient('https://example/settings'),
         ToolError::permissionMissing('create_clients', 'https://example/files'),
+        ToolError::refused('https://example/files/1'),
         ToolError::notFound('file'),
         ToolError::notFound('folder', ['tool' => 'list_folders', 'arguments' => []]),
         ToolError::notFound('client', ['tool' => 'create_client', 'arguments' => ['email' => 'a@b.c']], 'No client has this address.'),
