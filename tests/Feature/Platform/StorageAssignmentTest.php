@@ -130,7 +130,7 @@ test('converting an account either way clears their personal locations', functio
 
     $result = $to === 'staff'
         ? app(AccountConversion::class)->toStaff($account, app(EnsureSystemRoles::class)->materialize(SystemRole::Uploader)->id)
-        : app(AccountConversion::class)->toClient($account);
+        : app(AccountConversion::class)->toClient($account, User::factory()->create());
     $logged = ActivityLog::query()->where('subject_id', $account->id)
         ->where('action', $to === 'staff' ? Action::AccountConvertedToStaff : Action::AccountConvertedToClient)->first();
 
