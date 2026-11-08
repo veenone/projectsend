@@ -138,9 +138,9 @@ class FilesController extends Controller
             ]);
         }
 
-        $diskEvent = new ResolvingUploadDisk($user);
+        $diskEvent = new ResolvingUploadDisk($user, folderId: $folder?->id);
         Event::dispatch($diskEvent);
-        $disk = $diskEvent->disk;
+        $disk = $diskEvent->claimedDisk ?? $diskEvent->disk;
 
         $path = $upload->storeAs(
             now()->format('Y/m'),

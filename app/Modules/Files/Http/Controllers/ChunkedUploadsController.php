@@ -204,7 +204,7 @@ class ChunkedUploadsController extends Controller
             // refused the same way as one its owner turns down, so neither
             // answer tells the uploader which contexts exist.
             $contextKey = $validated['context_key'] ?? null;
-            if ($contextKey !== null && ! ($this->contexts->handlerFor($contextKey)?->authorize($user, $validated['context_id']) ?? false)) {
+            if ($contextKey !== null && ! ($this->contexts->handlerFor($contextKey)?->authorize($user, $validated['context_id'], $folder) ?? false)) {
                 throw ValidationException::withMessages([
                     'context_key' => __('This upload context is not available to you.'),
                 ]);
