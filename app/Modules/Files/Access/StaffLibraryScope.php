@@ -50,6 +50,14 @@ class StaffLibraryScope
     /** @var array<int, Builder<Folder>> */
     private array $folders = [];
 
+    /**
+     * Hidden subtrees, by user id: the per-row checks ask for them, and
+     * expanding them is a query.
+     *
+     * @var array<int, list<int>>
+     */
+    private array $hidden = [];
+
     public function __construct(
         private readonly LibraryVisibilityRules $rules,
     ) {}
@@ -68,7 +76,7 @@ class StaffLibraryScope
     private function buildFiles(User $user): Builder
     {
         $query = File::query();
-        $hidden = $this->rules->hiddenSubtreeIds($user);
+        $hidden = $this->hiddenSubtreeIds($user);
 
         // A hidden subtree is out of reach for every staff member. Files
         // at the root belong to no folder, and no subtree can hide them.
@@ -113,7 +121,7 @@ class StaffLibraryScope
     private function buildFolders(User $user): Builder
     {
         $query = Folder::query();
-        $hidden = $this->rules->hiddenSubtreeIds($user);
+        $hidden = $this->hiddenSubtreeIds($user);
 
         if ($hidden !== []) {
             $query->whereNotIn('id', $hidden);
@@ -168,7 +176,17 @@ class StaffLibraryScope
      */
     private function unrestricted(User $user): bool
     {
-        return ! $user->isClientScoped() && $this->rules->hiddenSubtreeIds($user) === [];
+        return ! $user->isClientScoped() && $this->hiddenSubtreeIds($user) === [];
+    }
+
+    /**
+     * Every folder id a LibraryVisibilityRule hides from this staff member.
+     *
+     * @return list<int>
+     */
+    public function hiddenSubtreeIds(User $user): array
+    {
+        return $this->hidden[$user->id] ??= $this->rules->hiddenSubtreeIds($user);
     }
 
     /**

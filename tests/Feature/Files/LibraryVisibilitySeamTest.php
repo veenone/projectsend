@@ -207,3 +207,32 @@ test('a rule can scope a package\'s own log subjects', function () {
 
     expect($names())->toBe(['auth.login']);
 });
+
+test('a rule registered once outlasts the request, while each viewer\'s answer is worked out again', function () {
+    $viewer = User::factory()->create();
+    $hidden = makeFolder('Hidden');
+    $inner = makeFolder('Inner', $hidden);
+    $file = File::factory()->create(['folder_id' => $inner->id]);
+
+    $members = [];
+    app(LibraryVisibilityRules::class)->register(visibilityRule(
+        hidden: function (User $viewer) use (&$members, $hidden): array {
+            return in_array($viewer->id, $members, true) ? [] : [$hidden->id];
+        },
+    ));
+
+    expect(app(StaffLibraryScope::class)->allowsFile($viewer, $file))->toBeFalse();
+
+    // What a queue worker does between jobs: the rule must survive it.
+    app()->forgetScopedInstances();
+    expect(app(StaffLibraryScope::class)->allowsFile($viewer, $file))->toBeFalse();
+
+    // Membership changes mid-request: the request keeps its answer...
+    $members[] = $viewer->id;
+    expect(app(StaffLibraryScope::class)->allowsFolder($viewer, $inner))->toBeFalse();
+
+    // ...and the next one asks again.
+    app()->forgetScopedInstances();
+    expect(app(StaffLibraryScope::class)->allowsFile($viewer, $file))->toBeTrue()
+        ->and(app(StaffLibraryScope::class)->allowsFolder($viewer, $inner))->toBeTrue();
+});

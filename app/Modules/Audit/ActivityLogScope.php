@@ -71,7 +71,7 @@ class ActivityLogScope
      */
     private function withoutHiddenSubtrees(Builder $query, User $viewer): void
     {
-        $hidden = $this->rules->hiddenSubtreeIds($viewer);
+        $hidden = $this->library->hiddenSubtreeIds($viewer);
 
         if ($hidden === []) {
             return;

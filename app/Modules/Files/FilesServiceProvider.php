@@ -44,9 +44,10 @@ class FilesServiceProvider extends ServiceProvider
         // queue worker starts each job with an empty memo.
         $this->app->scoped(StaffLibraryScope::class);
 
-        // Same lifetime as the scope it feeds: it expands each viewer's
-        // hidden and granted subtrees once per request.
-        $this->app->scoped(LibraryVisibilityRules::class);
+        // A singleton: packages register their rules once at boot, and a
+        // queue worker must not drop them between jobs. The per-viewer
+        // memo lives in StaffLibraryScope, which is scoped.
+        $this->app->singleton(LibraryVisibilityRules::class);
 
         // A singleton, unlike its neighbours: what it holds is registered
         // once at boot by whoever owns an upload context, not built up
