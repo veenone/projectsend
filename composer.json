@@ -8,6 +8,15 @@
         "framework"
     ],
     "license": "GPL-2.0-or-later",
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../projectsend-evidence",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
     "require": {
         "php": "^8.4",
         "bacon/bacon-qr-code": "^3.1",
@@ -25,7 +34,8 @@
         "pragmarx/google2fa": "^9.0",
         "projectsend/community-modules": "^1.0",
         "stevebauman/purify": "^6.3",
-        "tightenco/ziggy": "^2.4"
+        "tightenco/ziggy": "^2.4",
+        "veenone/projectsend-evidence": "@dev"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",

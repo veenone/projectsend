@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "593b0e64166a3d0a3a65da7b553d325f",
+    "content-hash": "1c3413af9ea5d5aa71f633752f630ebf",
     "packages": [
         {
             "name": "aws/aws-crt-php",
@@ -8336,6 +8336,46 @@
             "time": "2025-12-02T11:56:42+00:00"
         },
         {
+            "name": "veenone/projectsend-evidence",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../projectsend-evidence",
+                "reference": "9bbc3ebcec0036aa51bc6e3797f06ecbd6f3d925"
+            },
+            "require": {
+                "illuminate/support": "^12.0",
+                "inertiajs/inertia-laravel": "^2.0",
+                "php": "^8.3"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "ProjectSend\\Evidence\\EvidenceServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "ProjectSend\\Evidence\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "ProjectSend\\Evidence\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "description": "An evidence archive for ProjectSend: test traces kept per project, read-only once stored.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "vlucas/phpdotenv",
             "version": "v5.6.4",
             "source": {
@@ -13886,12 +13926,14 @@
     ],
     "aliases": [],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "veenone/projectsend-evidence": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.4"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
