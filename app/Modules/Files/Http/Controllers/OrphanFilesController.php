@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
+use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\Jobs\ImportOrphanFilesJob;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\OrphanFileImporter;
@@ -15,6 +16,7 @@ use App\Modules\Files\OrphanFileScanner;
 use App\Modules\Files\OrphanImportProgress;
 use App\Modules\Files\Scanning\ScanStatus;
 use App\Support\Pagination;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,6 +42,7 @@ class OrphanFilesController extends Controller
         private readonly OrphanFileImporter $importer,
         private readonly OrphanImportProgress $progress,
         private readonly ActivityLogger $activity,
+        private readonly StaffLibraryScope $scope,
     ) {}
 
     private const PER_PAGE = 25;
@@ -95,7 +98,7 @@ class OrphanFilesController extends Controller
             'pagination' => Pagination::meta($paginator),
             'search' => $search,
             'scanned_disks' => $this->scanner->scannedDisks(),
-            'missing_count' => File::query()->where('scan_status', ScanStatus::Missing)->count(),
+            'missing_count' => $this->missingFiles($user)->count(),
             'import_run' => $this->progress->current(),
         ]);
     }
@@ -110,8 +113,10 @@ class OrphanFilesController extends Controller
      */
     private function missing(Request $request): Response
     {
-        $missing = File::query()
-            ->where('scan_status', ScanStatus::Missing)
+        $user = $request->user();
+        assert($user !== null);
+
+        $missing = $this->missingFiles($user)
             ->with('uploader')
             ->orderBy('name')
             ->paginate(self::PER_PAGE)
@@ -137,6 +142,20 @@ class OrphanFilesController extends Controller
             'missing' => $missing->items(),
             'missing_count' => $missing->total(),
         ]);
+    }
+
+    /**
+     * Rows marked missing, less any in a subtree a package hides from this
+     * person: the listing names the file, its disk and its path.
+     *
+     * @return Builder<File>
+     */
+    private function missingFiles(User $user): Builder
+    {
+        return File::query()
+            ->where('scan_status', ScanStatus::Missing)
+            ->when($this->scope->hiddenSubtreeIds($user) !== [], fn (Builder $q) => $q
+                ->whereIn('files.id', $this->scope->files($user)->select('files.id')));
     }
 
     public function import(Request $request): RedirectResponse

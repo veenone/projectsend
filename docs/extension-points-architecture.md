@@ -344,7 +344,7 @@ whole library. `scopeActivityLog()` narrows the log for the package's own subjec
 about files and folders are already handled by core.
 
 `StaffLibraryScope` folds the rules into every staff listing (files, folders, a client's files
-page), into `allowsFile()` and `allowsFolder()` and so into every policy that consults them
+page, the quarantine screen and its badge, the missing-files tab), into `allowsFile()` and `allowsFolder()` and so into every policy that consults them
 (download, preview, details, comment moderation), into the activity log, and into what the MCP
 connector reports. Files at the library root belong to no folder, and no rule can hide them.
 

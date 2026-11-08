@@ -205,11 +205,14 @@ class HandleInertiaRequests extends Middleware
             // above: a quarantined file is not a file anybody is working
             // with, it is one somebody has to decide about, and the
             // permission is already narrow enough that whoever holds it
-            // is meant to see all of them.
+            // is meant to see all of them. A subtree a package hides from
+            // them is the one exception, as on the screen itself.
+            $scope = app(StaffLibraryScope::class);
             $counts['quarantine'] = File::query()->whereIn('scan_status', [
                 ScanStatus::Infected->value,
                 ScanStatus::UnscannableBlocked->value,
-            ])->count();
+            ])->when($scope->hiddenSubtreeIds($user) !== [], fn ($q) => $q
+                ->whereIn('files.id', $scope->files($user)->select('files.id')))->count();
         }
 
         // Unlike the counts above, every authenticated user (staff or
