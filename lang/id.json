@@ -2440,6 +2440,7 @@
     "Store in": "Simpan di",
     "Stored in: :location": "Disimpan di: :location",
     "That storage location is not available for your uploads.": "Lokasi penyimpanan itu tidak tersedia untuk unggahan Anda.",
+    "This upload context is not available to you.": "Konteks unggahan ini tidak tersedia untuk Anda.",
     "The default location has to be set up and accepting uploads.": "Lokasi bawaan harus sudah diatur dan menerima unggahan.",
     "The email telling staff a client uploaded a file says where it was stored.": "Email yang memberi tahu staf bahwa klien mengunggah berkas menyebutkan tempat berkas itu disimpan.",
     "The server's own storage cannot be removed.": "Penyimpanan milik server sendiri tidak dapat dihapus.",

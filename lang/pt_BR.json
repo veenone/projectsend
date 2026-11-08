@@ -2440,6 +2440,7 @@
     "Store in": "Salvar em",
     "Stored in: :location": "Salvo em: :location",
     "That storage location is not available for your uploads.": "Esse local de armazenamento não está disponível para os seus envios.",
+    "This upload context is not available to you.": "Este contexto de envio não está disponível para você.",
     "The default location has to be set up and accepting uploads.": "O local padrão precisa estar configurado e aceitando envios.",
     "The email telling staff a client uploaded a file says where it was stored.": "O e-mail que avisa a equipe de que um cliente enviou um arquivo informa onde ele foi salvo.",
     "The server's own storage cannot be removed.": "O armazenamento do próprio servidor não pode ser removido.",

@@ -2440,6 +2440,7 @@
     "Store in": "Enregistrer dans",
     "Stored in: :location": "Enregistré dans : :location",
     "That storage location is not available for your uploads.": "Cet emplacement de stockage n’est pas disponible pour vos téléversements.",
+    "This upload context is not available to you.": "Ce contexte de téléversement ne vous est pas accessible.",
     "The default location has to be set up and accepting uploads.": "L’emplacement par défaut doit être configuré et accepter les téléversements.",
     "The email telling staff a client uploaded a file says where it was stored.": "L’e-mail qui informe l’équipe qu’un client a téléversé un fichier indique où il a été enregistré.",
     "The server's own storage cannot be removed.": "Le stockage propre du serveur ne peut pas être retiré.",

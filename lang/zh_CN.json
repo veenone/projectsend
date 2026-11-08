@@ -2440,6 +2440,7 @@
     "Store in": "保存到",
     "Stored in: :location": "保存位置：:location",
     "That storage location is not available for your uploads.": "该存储位置不可用于你的上传。",
+    "This upload context is not available to you.": "此上传上下文对你不可用。",
     "The default location has to be set up and accepting uploads.": "默认位置必须已设置并接受上传。",
     "The email telling staff a client uploaded a file says where it was stored.": "通知员工客户上传了文件的邮件会注明文件的保存位置。",
     "The server's own storage cannot be removed.": "服务器自身的存储无法移除。",

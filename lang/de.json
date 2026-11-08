@@ -2440,6 +2440,7 @@
     "Store in": "Speichern in",
     "Stored in: :location": "Gespeichert in: :location",
     "That storage location is not available for your uploads.": "Dieser Speicherort steht für Ihre Uploads nicht zur Verfügung.",
+    "This upload context is not available to you.": "Dieser Upload-Kontext steht Ihnen nicht zur Verfügung.",
     "The default location has to be set up and accepting uploads.": "Der Standard-Speicherort muss eingerichtet sein und Uploads annehmen.",
     "The email telling staff a client uploaded a file says where it was stored.": "Die E-Mail, die Mitarbeitende über den Upload eines Kunden informiert, nennt den Speicherort.",
     "The server's own storage cannot be removed.": "Der eigene Speicher des Servers kann nicht entfernt werden.",

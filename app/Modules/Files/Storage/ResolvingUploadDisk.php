@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Modules\Files\Storage;
 
 use App\Models\User;
+use App\Modules\Files\Uploads\UploadContext;
 
 /**
  * Dispatched once per upload, before bytes are written, to decide which
@@ -29,5 +30,10 @@ class ResolvingUploadDisk
         // path lets them pick one (UploadSession::storage_location_id).
         // A hint: UploadLocations only honors it if it is theirs to use.
         public readonly ?int $requestedLocationId = null,
+        // The context the upload was started in, and the disk its
+        // handler asked for. A null disk leaves the choice to the
+        // uploader's locations, as for any other upload.
+        public readonly ?UploadContext $context = null,
+        public readonly ?string $contextDisk = null,
     ) {}
 }

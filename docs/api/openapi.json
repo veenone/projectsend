@@ -239,6 +239,17 @@
                                             "integer",
                                             "null"
                                         ]
+                                    },
+                                    "context_key": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ],
+                                        "maxLength": 64
+                                    },
+                                    "context_id": {
+                                        "type": "string",
+                                        "maxLength": 191
                                     }
                                 },
                                 "required": [

@@ -2440,6 +2440,7 @@
     "Store in": "保存先",
     "Stored in: :location": "保存先: :location",
     "That storage location is not available for your uploads.": "その保存先はあなたのアップロードには使えません。",
+    "This upload context is not available to you.": "このアップロード先はあなたには使えません。",
     "The default location has to be set up and accepting uploads.": "既定の保存先は、設定済みでアップロードを受け付けている必要があります。",
     "The email telling staff a client uploaded a file says where it was stored.": "クライアントのアップロードをスタッフに知らせるメールに、保存先が記載されます。",
     "The server's own storage cannot be removed.": "サーバー自身のストレージは削除できません。",

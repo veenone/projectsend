@@ -2440,6 +2440,7 @@
     "Store in": "Guardar en",
     "Stored in: :location": "Guardado en: :location",
     "That storage location is not available for your uploads.": "Esa ubicación de almacenamiento no está disponible para tus subidas.",
+    "This upload context is not available to you.": "Este contexto de subida no está disponible para ti.",
     "The default location has to be set up and accepting uploads.": "La ubicación predeterminada debe estar configurada y aceptar subidas.",
     "The email telling staff a client uploaded a file says where it was stored.": "El correo que avisa al personal de que un cliente ha subido un archivo indica dónde se guardó.",
     "The server's own storage cannot be removed.": "El almacenamiento propio del servidor no se puede quitar.",

@@ -2440,6 +2440,7 @@
     "Store in": "Zapisz w",
     "Stored in: :location": "Zapisano w: :location",
     "That storage location is not available for your uploads.": "Ta lokalizacja magazynu jest niedostępna dla twoich plików.",
+    "This upload context is not available to you.": "Ten kontekst przesyłania jest dla ciebie niedostępny.",
     "The default location has to be set up and accepting uploads.": "Domyślna lokalizacja musi być skonfigurowana i przyjmować pliki.",
     "The email telling staff a client uploaded a file says where it was stored.": "E-mail informujący personel o pliku przesłanym przez klienta podaje, gdzie go zapisano.",
     "The server's own storage cannot be removed.": "Własnego magazynu serwera nie można usunąć.",
