@@ -245,13 +245,17 @@ class LocalPartStore
             }
 
             $context = $session->context();
+            $diskEvent = new ResolvingUploadDisk($session->user, $session->storage_location_id, $context, $session->folder_id);
             $contextDisk = $context !== null
                 ? $this->contexts->handlerFor($context->key)?->disk($session->user, $context->id)
                 : null;
 
-            $diskEvent = new ResolvingUploadDisk($session->user, $session->storage_location_id, $context, $contextDisk);
+            if ($contextDisk !== null) {
+                $diskEvent->claim($contextDisk);
+            }
+
             Event::dispatch($diskEvent);
-            $disk = $diskEvent->disk;
+            $disk = $diskEvent->claimedDisk ?? $diskEvent->disk;
 
             // From the bytes, here, while they are still on this machine.
             // Read back from an external disk afterwards, the type is the

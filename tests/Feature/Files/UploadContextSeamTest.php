@@ -5,9 +5,14 @@ declare(strict_types=1);
 use App\Models\User;
 use App\Modules\Files\Events\FileWasStored;
 use App\Modules\Files\Models\File;
+use App\Modules\Files\Models\Folder;
+use App\Modules\Files\Storage\ResolvingUploadDisk;
 use App\Modules\Files\Uploads\UploadContextHandler;
 use App\Modules\Files\Uploads\UploadContextHandlers;
 use App\Modules\Files\Uploads\UploadSession;
+use App\Modules\Identity\Permissions\Permission;
+use App\Modules\Platform\Settings\ExternalStorageConfigApplier;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Testing\TestResponse;
@@ -34,9 +39,9 @@ function registerUploadContext(string $key, Closure $authorize, ?string $disk = 
     {
         public function __construct(private Closure $authorize, private ?string $disk) {}
 
-        public function authorize(User $uploader, string $id): bool
+        public function authorize(User $uploader, string $id, ?Folder $folder): bool
         {
-            return ($this->authorize)($uploader, $id);
+            return ($this->authorize)($uploader, $id, $folder);
         }
 
         public function disk(User $uploader, string $id): ?string
@@ -63,6 +68,11 @@ test('with nothing registered a chunked upload is created exactly as before', fu
     makeDefault($bucket);
     Storage::fake($bucket->disk);
 
+    $stored = [];
+    Event::listen(FileWasStored::class, function (FileWasStored $event) use (&$stored): void {
+        $stored[] = $event;
+    });
+
     $this->actingAs($client);
     $id = beginUpload()->assertOk()->json('uploadId');
 
@@ -73,7 +83,104 @@ test('with nothing registered a chunked upload is created exactly as before', fu
 
     uploadChunkedAsClient()->assertOk();
 
-    expect(File::query()->latest('id')->firstOrFail()->disk)->toBe($bucket->disk);
+    expect(File::query()->latest('id')->firstOrFail()->disk)->toBe($bucket->disk)
+        ->and($stored)->toHaveCount(1)
+        ->and($stored[0]->context)->toBeNull();
+});
+
+/**
+ * One upload through each path that takes one: the chunked session, the
+ * web form and the API, each into $folder. Returns the disks they landed on.
+ *
+ * @return array{chunked: string, web: string, api: string}
+ */
+function uploadEveryWay(User $staff, ?Folder $folder): array
+{
+    test()->actingAs($staff, 'web');
+    uploadChunkedAsClient(['folder_id' => $folder?->id])->assertOk();
+    $chunked = File::query()->latest('id')->firstOrFail()->disk;
+
+    test()->post('/files', [
+        'file' => UploadedFile::fake()->create('web.pdf', 12, 'application/pdf'),
+        'folder_id' => $folder?->id,
+    ])->assertSessionHasNoErrors();
+    $web = File::query()->latest('id')->firstOrFail()->disk;
+
+    $token = $staff->createToken('t', [Permission::Upload->value])->plainTextToken;
+    app('auth')->forgetGuards();
+    test()->withToken($token)->post('/api/v1/files', [
+        'file' => UploadedFile::fake()->create('api.pdf', 12, 'application/pdf'),
+        'folder_id' => $folder?->id,
+    ], ['Accept' => 'application/json'])->assertStatus(201);
+    $api = File::query()->latest('id')->firstOrFail()->disk;
+    test()->flushHeaders();
+
+    return ['chunked' => $chunked, 'web' => $web, 'api' => $api];
+}
+
+test('with nothing claiming, every upload path resolves its disk exactly as before', function () {
+    Storage::fake('files');
+    $bucket = bucketLocation();
+    makeDefault($bucket);
+    Storage::fake($bucket->disk);
+
+    expect(uploadEveryWay(User::factory()->create(), makeFolder('Anywhere')))
+        ->toBe(['chunked' => $bucket->disk, 'web' => $bucket->disk, 'api' => $bucket->disk]);
+});
+
+test('a listener can claim a disk for a folder on every upload path, whichever order it runs in', function () {
+    Storage::fake('files');
+    $room = makeFolder('Room');
+    $elsewhere = makeFolder('Elsewhere');
+    $bucket = bucketLocation();
+    applyStorage();
+    Storage::fake($bucket->disk);
+
+    // Ahead of core's own listener, which still runs after it and sets
+    // $disk the usual way: the claim must survive that.
+    Event::forget(ResolvingUploadDisk::class);
+    Event::listen(ResolvingUploadDisk::class, function (ResolvingUploadDisk $event) use ($room, $bucket): void {
+        if ($event->folderId === $room->id) {
+            $event->claim($bucket->disk);
+        }
+    });
+    Event::listen(ResolvingUploadDisk::class, [ExternalStorageConfigApplier::class, 'resolveDisk']);
+
+    $staff = User::factory()->create();
+
+    expect(uploadEveryWay($staff, $room))
+        ->toBe(['chunked' => $bucket->disk, 'web' => $bucket->disk, 'api' => $bucket->disk])
+        ->and(uploadEveryWay($staff, $elsewhere))
+        ->toBe(['chunked' => 'files', 'web' => 'files', 'api' => 'files']);
+});
+
+test('the first claim wins', function () {
+    $event = new ResolvingUploadDisk(User::factory()->create());
+    $event->claim('first');
+    $event->claim('second');
+
+    expect($event->claimedDisk)->toBe('first');
+});
+
+test('a handler sees the folder an upload is aimed at, and can refuse the wrong one', function () {
+    $staff = User::factory()->create();
+    $room = makeFolder('Room');
+    $elsewhere = makeFolder('Elsewhere');
+    $seen = [];
+    registerUploadContext('test.room', function (User $uploader, string $id, ?Folder $folder) use (&$seen, $room): bool {
+        $seen[] = $folder?->id;
+
+        return $folder?->is($room) ?? false;
+    });
+
+    $this->actingAs($staff);
+    beginUpload(['context_key' => 'test.room', 'context_id' => 'r', 'folder_id' => $elsewhere->id])
+        ->assertStatus(422)
+        ->assertJsonValidationErrors(['context_key']);
+    beginUpload(['context_key' => 'test.room', 'context_id' => 'r'])->assertStatus(422);
+    beginUpload(['context_key' => 'test.room', 'context_id' => 'r', 'folder_id' => $room->id])->assertOk();
+
+    expect($seen)->toBe([$elsewhere->id, null, $room->id]);
 });
 
 test('an unknown context key is refused before any byte is sent', function () {

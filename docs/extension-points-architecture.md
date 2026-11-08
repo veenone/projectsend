@@ -188,9 +188,10 @@ The handler implements `App\Modules\Files\Uploads\UploadContextHandler`:
 ```php
 final class DataRoomUploads implements UploadContextHandler
 {
-    public function authorize(User $uploader, string $id): bool
+    public function authorize(User $uploader, string $id, ?Folder $folder): bool
     {
-        return DataRoom::query()->whereKey($id)->whereMember($uploader)->exists();
+        return DataRoom::query()->whereKey($id)->whereMember($uploader)
+            ->where('folder_id', $folder?->id)->exists();
     }
 
     public function disk(User $uploader, string $id): ?string
@@ -218,12 +219,34 @@ public function boot(): void
 The package's page starts a chunked upload (`POST /uploads`, or `POST /api/v1/uploads`) with
 `context_key` and `context_id` beside the usual fields. `context_id` is required whenever
 `context_key` is sent and means whatever the handler says it means. `authorize()` is asked when the
-session is created, before any byte is sent; `false` is a 422 on `context_key`. A key nobody
+session is created, before any byte is sent, with the folder the file will land in (`null` for the
+library root; a client who names no folder gets their home folder, as for any upload). Core has
+already checked the uploader may upload there; the handler decides whether its context belongs
+there. `false` is a 422 on `context_key`. A key nobody
 registered gets the same 422, so the answer does not reveal which contexts exist.
 
-`disk()` returning a disk name sends the bytes there. Returning `null` leaves the choice to the
-uploader's storage locations, as for any other upload. Either way the disk is resolved through
-`ResolvingUploadDisk`, which now carries `context` and `contextDisk` too.
+`disk()` returning a disk name sends the bytes there. The name is used as-is: it bypasses the
+uploader's storage locations (`UploadLocations::usableFor()`), so it must be a configured disk the
+handler is content to let this uploader write to. Returning `null` leaves the choice to the
+uploader's storage locations, as for any other upload.
+
+Either way the disk is resolved through `ResolvingUploadDisk`, which carries the `context` and the
+destination `folderId` (null for the library root) on every upload path: the chunked upload, the
+web form's `POST /files` and the API's `POST /api/v1/files`. A listener that must decide the disk
+outright calls `$event->claim($disk)`; the first claim wins, and every upload writes to
+`$event->claimedDisk ?? $event->disk`, so a claim holds whichever order listeners run in. The
+handler's `disk()` answer is claimed before the event is dispatched. To route by folder, whether or
+not a context was named:
+
+```php
+Event::listen(ResolvingUploadDisk::class, function (ResolvingUploadDisk $event): void {
+    if ($event->folderId !== null && DataRoom::query()->where('folder_id', $event->folderId)->exists()) {
+        $event->claim('dataroom_bucket');
+    }
+});
+```
+
+Setting `$event->disk` still works for a default that a later listener may replace.
 
 `FileWasStored` carries the `UploadContext` (`key`, `id`) as `$event->context`, so the handler's
 package can tell its own files from everyone else's. It is `null` for every upload that named no
@@ -231,7 +254,8 @@ context. A key can be registered once; a second registration throws.
 
 **Nothing registered:** any request naming a context is refused, and every other upload is created,
 stored and announced exactly as before, with `context_key`, `context_id` and `FileWasStored::$context`
-all null.
+all null. `ResolvingUploadDisk` is dispatched as before and, with nothing claiming, resolves to the
+same disk.
 
 ## Permissions — `ExtraPermissions`
 
@@ -409,7 +433,7 @@ Smaller seams, each documented in full on its class.
 
 | Event | Asked | Default |
 |---|---|---|
-| `Files\Storage\ResolvingUploadDisk` | Once per upload, before bytes are written: which disk? | `files`. Core's own listener applies storage locations. |
+| `Files\Storage\ResolvingUploadDisk` | Once per upload, before bytes are written: which disk? `claim()` decides it outright. | `files`. Core's own listener applies storage locations. |
 | `Platform\Attribution\Events\ResolvingAttribution` | Per page render and per outgoing email: name ProjectSend to clients? | Yes. Can only be turned off. Staff surfaces are never affected. |
 | `Platform\Installation\Events\ResolvingInstallationStatus` | By `projectsend:status`: anything else worth reporting? | No extra facts. Scalars and null only. |
 | `Identity\Erasure\Events\ResolvingSelfDeletion` | When somebody deletes their own account: do their files go at once? | The installation's setting. Can only be made sooner. |
