@@ -15,6 +15,10 @@ use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
 use Tests\Support\McpWorld;
 
+// The assistant's server leaves its context set after a request; a web test
+// that runs later in the same process would then log as the assistant.
+afterEach(fn () => McpContext::set(null));
+
 test('with nothing registered the activity log page and its filter list are exactly as before', function () {
     $staff = User::factory()->create();
     app(ActivityLogger::class)->log(Action::Login, $staff);
