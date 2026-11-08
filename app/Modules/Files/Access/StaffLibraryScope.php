@@ -174,7 +174,7 @@ class StaffLibraryScope
      * Sees the whole library: not client-scoped, and nothing hidden from
      * them. The answer that lets a per-row check skip the query.
      */
-    private function unrestricted(User $user): bool
+    public function unrestricted(User $user): bool
     {
         return ! $user->isClientScoped() && $this->hiddenSubtreeIds($user) === [];
     }

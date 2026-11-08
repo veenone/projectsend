@@ -7,20 +7,24 @@ use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLog;
 use App\Modules\Audit\ActivityLogger;
 use App\Modules\Audit\ActivityLogScope;
+use App\Modules\Comments\Models\FileComment;
 use App\Modules\Files\Access\LibraryVisibilityRule;
 use App\Modules\Files\Access\LibraryVisibilityRules;
 use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\Folder;
 use App\Modules\Identity\Permissions\SystemRole;
+use App\Modules\Mcp\Support\McpContext;
+use App\Modules\Mcp\Tools\GetClient;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
+use Tests\Support\McpWorld;
 
 /**
  * A rule whose answers are closures over the viewer, so a test can hide
  * or grant per person the way a package's membership check would.
  */
-function visibilityRule(?Closure $hidden = null, ?Closure $granted = null, ?Closure $log = null): LibraryVisibilityRule
+function libraryVisibilityRule(?Closure $hidden = null, ?Closure $granted = null, ?Closure $log = null): LibraryVisibilityRule
 {
     return new class($hidden, $granted, $log) implements LibraryVisibilityRule
     {
@@ -46,7 +50,7 @@ function visibilityRule(?Closure $hidden = null, ?Closure $granted = null, ?Clos
 }
 
 /** @return list<string> */
-function pageNames($response, string $prop, string $key = 'name'): array
+function libraryPageNames($response, string $prop, string $key = 'name'): array
 {
     return collect(json_decode(json_encode($response->viewData('page')), true)['props'][$prop])
         ->pluck($key)->all();
@@ -64,13 +68,27 @@ test('with nothing registered every listing, check and log query is exactly as b
         ->and($scope->folders($admin)->getBindings())->toBe(Folder::query()->getBindings())
         ->and(app(ActivityLogScope::class)->apply(ActivityLog::query(), $admin)->toSql())->toBe(ActivityLog::query()->toSql());
 
-    // The policies ask once per row, so unrestricted staff must not cost a query.
+    // The policies ask once per row, so unrestricted staff must not cost a
+    // query — asked of a fresh scope, so no memo answers for it. A rule
+    // that hides nothing from this viewer costs nothing either.
     $admin->isClientScoped();
-    DB::enableQueryLog();
-    expect($scope->allowsFile($admin, $file))->toBeTrue()
-        ->and($scope->allowsFolder($admin, $folder))->toBeTrue()
-        ->and(DB::getQueryLog())->toBe([]);
-    DB::disableQueryLog();
+    $askFresh = function () use ($admin, $file, $folder): array {
+        app()->forgetScopedInstances();
+        $fresh = app(StaffLibraryScope::class);
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $answers = [$fresh->allowsFile($admin, $file), $fresh->allowsFolder($admin, $folder)];
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+
+        return [$answers, $queries];
+    };
+
+    expect($askFresh())->toBe([[true, true], []]);
+
+    app(LibraryVisibilityRules::class)->register(libraryVisibilityRule(hidden: fn (): array => []));
+    expect($askFresh())->toBe([[true, true], []]);
+    $scope = app(StaffLibraryScope::class);
 
     // A client-scoped manager still sees their own uploads and their
     // client's files, and nothing else.
@@ -109,17 +127,17 @@ test('a hidden subtree disappears from listings, direct access and the activity 
     }
     app(ActivityLogger::class)->log(Action::FolderCreated, $member, $inner);
 
-    app(LibraryVisibilityRules::class)->register(visibilityRule(
+    app(LibraryVisibilityRules::class)->register(libraryVisibilityRule(
         hidden: fn (User $viewer): array => $viewer->is($member) ? [] : [$hidden->id],
     ));
 
     // Outsider: an unrestricted admin, now kept out of the subtree.
     $flat = $this->actingAs($outsider)->get('/files?search=-')->assertOk();
-    expect(pageNames($flat, 'files'))->toEqualCanonicalizing(['visible-file', 'root-file']);
+    expect(libraryPageNames($flat, 'files'))->toEqualCanonicalizing(['visible-file', 'root-file']);
 
     $root = $this->actingAs($outsider)->get('/files')->assertOk();
-    expect(pageNames($root, 'folders'))->toBe(['Visible'])
-        ->and(pageNames($root, 'folder_options'))->toBe(['Visible']);
+    expect(libraryPageNames($root, 'folders'))->toBe(['Visible'])
+        ->and(libraryPageNames($root, 'folder_options'))->toBe(['Visible']);
 
     $scope = app(StaffLibraryScope::class);
     expect($scope->allowsFile($outsider, $files['hidden-top']))->toBeFalse()
@@ -137,16 +155,16 @@ test('a hidden subtree disappears from listings, direct access and the activity 
     }
 
     $log = $this->actingAs($outsider)->get('/activity')->assertOk();
-    expect(pageNames($log, 'entries', 'replacements.subject'))
+    expect(libraryPageNames($log, 'entries', 'replacements.subject'))
         ->toContain('visible-file', 'root-file')
         ->not->toContain('hidden-top', 'hidden-inner', 'Inner');
 
     // Member: the same kind of admin, answered differently by the rule.
-    expect(pageNames($this->actingAs($member)->get('/files?search=-'), 'files'))
+    expect(libraryPageNames($this->actingAs($member)->get('/files?search=-'), 'files'))
         ->toEqualCanonicalizing(['hidden-top', 'hidden-inner', 'visible-file', 'root-file'])
         ->and($scope->allowsFile($member, $files['hidden-inner']))->toBeTrue();
     $this->actingAs($member)->get("/files/{$files['hidden-top']->id}/details")->assertOk();
-    expect(pageNames($this->actingAs($member)->get('/activity'), 'entries', 'replacements.subject'))
+    expect(libraryPageNames($this->actingAs($member)->get('/activity'), 'entries', 'replacements.subject'))
         ->toContain('hidden-top', 'hidden-inner', 'Inner');
 });
 
@@ -165,8 +183,10 @@ test('a grant lets a client-scoped staff member into a subtree they otherwise co
     $top = File::factory()->create(['name' => 'granted-top', 'folder_id' => $granted->id, 'uploaded_by' => $admin->id]);
     $deep = File::factory()->create(['name' => 'granted-inner', 'folder_id' => $grantedInner->id, 'uploaded_by' => $admin->id]);
     $other = File::factory()->create(['name' => 'elsewhere-file', 'folder_id' => $elsewhere->id, 'uploaded_by' => $admin->id]);
+    // A grant opens a subtree, and the root belongs to none.
+    $atRoot = File::factory()->create(['name' => 'root-file', 'uploaded_by' => $admin->id]);
 
-    app(LibraryVisibilityRules::class)->register(visibilityRule(
+    app(LibraryVisibilityRules::class)->register(libraryVisibilityRule(
         granted: fn (User $viewer): array => $viewer->is($manager) ? [$granted->id] : [],
     ));
 
@@ -176,6 +196,7 @@ test('a grant lets a client-scoped staff member into a subtree they otherwise co
         ->and($scope->folders($manager)->pluck('id')->all())->toEqualCanonicalizing([$granted->id, $grantedInner->id])
         ->and($scope->allowsFile($manager, $deep))->toBeTrue()
         ->and($scope->allowsFile($manager, $other))->toBeFalse()
+        ->and($scope->allowsFile($manager, $atRoot))->toBeFalse()
         ->and($scope->allowsFolder($manager, $grantedInner))->toBeTrue()
         ->and($scope->allowsFolder($manager, $elsewhere))->toBeFalse();
 
@@ -200,7 +221,7 @@ test('a rule can scope a package\'s own log subjects', function () {
 
     expect($names())->toContain('file.updated');
 
-    app(LibraryVisibilityRules::class)->register(visibilityRule(
+    app(LibraryVisibilityRules::class)->register(libraryVisibilityRule(
         log: fn (User $viewer, Builder $query) => $query->where(fn (Builder $q) => $q
             ->whereNull('subject_type')->orWhere('subject_type', '!=', 'secret')),
     ));
@@ -215,7 +236,7 @@ test('a rule registered once outlasts the request, while each viewer\'s answer i
     $file = File::factory()->create(['folder_id' => $inner->id]);
 
     $members = [];
-    app(LibraryVisibilityRules::class)->register(visibilityRule(
+    app(LibraryVisibilityRules::class)->register(libraryVisibilityRule(
         hidden: function (User $viewer) use (&$members, $hidden): array {
             return in_array($viewer->id, $members, true) ? [] : [$hidden->id];
         },
@@ -235,4 +256,60 @@ test('a rule registered once outlasts the request, while each viewer\'s answer i
     app()->forgetScopedInstances();
     expect(app(StaffLibraryScope::class)->allowsFile($viewer, $file))->toBeTrue()
         ->and(app(StaffLibraryScope::class)->allowsFolder($viewer, $inner))->toBeTrue();
+});
+
+/**
+ * An unrestricted staff member the rule hides folder "Hidden" from, a client, and
+ * one file inside that folder and one at the root, both shared with them.
+ *
+ * @return array{0: User, 1: User, 2: File, 3: File}
+ */
+function hiddenFileSharedWithClient(?User $admin = null): array
+{
+    $admin ??= McpWorld::staff();
+    $client = McpWorld::clientAccount();
+    $hidden = makeFolder('Hidden');
+
+    $secret = File::factory()->create(['name' => 'hidden-secret', 'folder_id' => $hidden->id]);
+    $plain = File::factory()->create(['name' => 'plain-file']);
+    shareFileWith($secret, $client);
+    shareFileWith($plain, $client);
+
+    app(LibraryVisibilityRules::class)->register(libraryVisibilityRule(hidden: fn (): array => [$hidden->id]));
+
+    return [$admin, $client, $secret, $plain];
+}
+
+test('a hidden file stays out of a client\'s files page', function () {
+    [$admin, $client] = hiddenFileSharedWithClient();
+
+    expect(libraryPageNames($this->actingAs($admin)->get("/clients/{$client->id}/files")->assertOk(), 'files'))
+        ->toBe(['plain-file']);
+});
+
+test('a hidden file stays out of what the assistant says about a client', function () {
+    McpContext::set(null);
+    [$admin, $client] = hiddenFileSharedWithClient();
+
+    $got = McpWorld::call(GetClient::class, ['client_id' => $client->id], $admin);
+
+    expect(McpWorld::error($got))->toBeNull()
+        ->and($got['files_shared']['count'])->toBe(1)
+        ->and(array_column($got['files_shared']['latest'], 'name'))->toBe(['plain-file'])
+        ->and(json_encode($got))->not->toContain('hidden-secret');
+});
+
+test('a comment on a hidden file cannot be moderated', function () {
+    // A full administrator: the assistant's staff fixture holds no
+    // moderate_comments.
+    [$admin, , $secret, $plain] = hiddenFileSharedWithClient(User::factory()->create());
+    $hiddenComment = FileComment::factory()->for($secret)->fromGuest()->pending()->create();
+    $plainComment = FileComment::factory()->for($plain)->fromGuest()->pending()->create();
+
+    $this->actingAs($admin)->post("/comments/{$hiddenComment->id}/approve")->assertForbidden();
+    $this->actingAs($admin)->delete("/comments/{$hiddenComment->id}/moderate")->assertForbidden();
+    $this->actingAs($admin)->post("/comments/{$plainComment->id}/approve")->assertRedirect();
+
+    expect($hiddenComment->fresh()->isPending())->toBeTrue()
+        ->and($plainComment->fresh()->isPending())->toBeFalse();
 });

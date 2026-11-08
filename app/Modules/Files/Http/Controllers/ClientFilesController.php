@@ -51,6 +51,10 @@ class ClientFilesController extends Controller
         $owner = $validated['owner'] ?? null;
 
         $files = File::query()->visibleToClient($client)
+            // What the client sees is not all this viewer may: a subtree
+            // hidden from them stays hidden here too.
+            ->when($this->scope->hiddenSubtreeIds($viewer) !== [], fn (Builder $q) => $q
+                ->whereIn('files.id', $this->scope->files($viewer)->select('files.id')))
             ->when($search !== '', fn (Builder $q) => $q->where(fn (Builder $w) => $w
                 ->where('name', 'like', "%{$search}%")->orWhere('original_name', 'like', "%{$search}%")))
             ->when($owner === 'uploaded', fn (Builder $q) => $q->where('uploaded_by', $client->id))

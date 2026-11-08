@@ -87,14 +87,15 @@ class FileCommentPolicy
             return false;
         }
 
-        if ($comment === null || ! $user->isClientScoped()) {
+        if ($comment === null || $this->library->unrestricted($user)) {
             return true;
         }
 
         // By file id rather than through the relation: a file soft-deleted
         // out from under its comments resolves to null there, and the
         // answer for a scoped moderator is the same either way — it is not
-        // in their library. Unscoped staff never reach this line.
+        // in their library. Unscoped staff reach this line only when a
+        // LibraryVisibilityRule hides part of the library from them.
         return $this->library->files($user)->whereKey($comment->file_id)->exists();
     }
 
