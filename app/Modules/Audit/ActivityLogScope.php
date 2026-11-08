@@ -6,6 +6,7 @@ namespace App\Modules\Audit;
 
 use App\Models\User;
 use App\Modules\Files\Access\ClientIdentityScope;
+use App\Modules\Files\Access\LibraryVisibilityRules;
 use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Identity\UserType;
 use App\Modules\Files\Models\File;
@@ -36,7 +37,9 @@ use Illuminate\Database\Eloquent\Builder;
  * files since deleted (no live row left to test the scope against) —
  * is not theirs to read.
  *
- * An unscoped viewer's log is unchanged: installation-wide, as before.
+ * An unscoped viewer's log is installation-wide, as before, less entries
+ * about files and folders a LibraryVisibilityRule hides from them. Every
+ * rule then narrows the log for its own subject types.
  *
  * Seeing an entry is not the same as being told everybody in it. A file in
  * a scoped library can also reach a client off the viewer's roster (a
@@ -55,6 +58,7 @@ class ActivityLogScope
     public function __construct(
         private readonly StaffLibraryScope $library,
         private readonly ClientIdentityScope $identity,
+        private readonly LibraryVisibilityRules $rules,
     ) {}
 
     /**
@@ -190,16 +194,56 @@ class ActivityLogScope
      */
     public function apply(Builder $query, User $viewer): Builder
     {
-        if (! $viewer->isClientScoped()) {
-            return $query;
+        $viewer->isClientScoped()
+            ? $this->limitToScope($query, $viewer)
+            : $this->withoutHiddenSubtrees($query, $viewer);
+
+        $this->rules->scopeActivityLog($viewer, $query);
+
+        return $query;
+    }
+
+    /**
+     * Drops entries about anything inside a hidden subtree, deleted files
+     * included — they still carry the name. Asked as "not about a hidden
+     * file or folder" rather than "about something in files()", which
+     * would also drop every entry about a file since deleted.
+     *
+     * @param  Builder<ActivityLog>  $query
+     */
+    private function withoutHiddenSubtrees(Builder $query, User $viewer): void
+    {
+        $hidden = $this->rules->hiddenSubtreeIds($viewer);
+
+        if ($hidden === []) {
+            return;
         }
 
+        $fileMorph = (new File)->getMorphClass();
+        $folderMorph = (new Folder)->getMorphClass();
+
+        $query->where(fn (Builder $outer) => $outer
+            ->whereNull('subject_type')
+            ->orWhereNotIn('subject_type', [$fileMorph, $folderMorph])
+            ->orWhere(fn (Builder $files) => $files
+                ->where('subject_type', $fileMorph)
+                ->whereNotIn('subject_id', File::withTrashed()->whereIn('folder_id', $hidden)->select('id')))
+            ->orWhere(fn (Builder $folders) => $folders
+                ->where('subject_type', $folderMorph)
+                ->whereNotIn('subject_id', $hidden)));
+    }
+
+    /**
+     * @param  Builder<ActivityLog>  $query
+     */
+    private function limitToScope(Builder $query, User $viewer): void
+    {
         $fileMorph = (new File)->getMorphClass();
         $folderMorph = (new Folder)->getMorphClass();
         $userMorph = (new User)->getMorphClass();
         $clientIds = $this->library->assignableClientIds($viewer) ?? [];
 
-        return $query->where(function (Builder $outer) use ($viewer, $fileMorph, $folderMorph, $userMorph, $clientIds): void {
+        $query->where(function (Builder $outer) use ($viewer, $fileMorph, $folderMorph, $userMorph, $clientIds): void {
             $outer->where('actor_id', $viewer->id);
 
             $outer->orWhere(fn (Builder $files) => $files

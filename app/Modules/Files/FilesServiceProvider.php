@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Modules\Files;
 
-use App\Modules\Files\Access\ClientIdentityScope;
 use App\Models\User;
-use App\Modules\Files\Events\FileBecameAvailable;
-use App\Modules\Files\Folders\ClientHomeFolders;
-use App\Modules\Files\Events\FileWasStored;
-use App\Modules\Files\Listeners\AnnounceAvailableFile;
+use App\Modules\Files\Access\ClientIdentityScope;
+use App\Modules\Files\Access\LibraryVisibilityRules;
 use App\Modules\Files\Access\StaffLibraryScope;
+use App\Modules\Files\Events\FileBecameAvailable;
+use App\Modules\Files\Events\FileWasStored;
+use App\Modules\Files\Folders\ClientHomeFolders;
+use App\Modules\Files\Jobs\ScanFileJob;
+use App\Modules\Files\Listeners\AnnounceAvailableFile;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\Folder;
-use App\Modules\Files\Jobs\ScanFileJob;
 use App\Modules\Files\Notifications\FileShareDigestNotification;
 use App\Modules\Files\Notifications\FileSharedNotification;
 use App\Modules\Files\Notifications\NewVersionAvailableNotification;
@@ -42,6 +43,10 @@ class FilesServiceProvider extends ServiceProvider
         // reached twice. Scoped rather than a singleton so a long-lived
         // queue worker starts each job with an empty memo.
         $this->app->scoped(StaffLibraryScope::class);
+
+        // Same lifetime as the scope it feeds: it expands each viewer's
+        // hidden and granted subtrees once per request.
+        $this->app->scoped(LibraryVisibilityRules::class);
 
         // A singleton, unlike its neighbours: what it holds is registered
         // once at boot by whoever owns an upload context, not built up
