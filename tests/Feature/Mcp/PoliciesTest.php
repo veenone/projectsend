@@ -41,6 +41,7 @@ it('asks the policy before each file tool deletes, moves or shares', function (s
 
     expect($error['code'] ?? null)->toBe('permission_missing')
         ->and($error['permission'])->toBe('policy')
+        ->and(File::query()->whereKey($file->id)->exists())->toBeTrue()
         ->and(File::query()->find($file->id)?->folder_id)->toBeNull()
         ->and(ShareLink::query()->count())->toBe($tool === RevokeLink::class ? 1 : 0)
         ->and($file->fresh()->assignments()->count())->toBe(0);
