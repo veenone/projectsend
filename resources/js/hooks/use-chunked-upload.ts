@@ -28,6 +28,12 @@ interface UseChunkedUploadOptions {
     previousFileId?: number | null;
     /** The client's chosen storage location — held in a ref, like description. */
     storageLocationId?: number | null;
+    /**
+     * Extra fields for the uploads.store body, for a page that starts an
+     * upload in its own context (e.g. context_key/context_id). The fixed
+     * fields above win on a key clash. Held in a ref, like description.
+     */
+    extraFields?: Record<string, string | number>;
     onFileUploaded?: (fileId: number) => void;
     /** The server refused the version link, but the upload itself succeeded. */
     onVersionError?: (message: string) => void;
@@ -64,6 +70,11 @@ export function useChunkedUploadUppy(options: UseChunkedUploadOptions): { uppy: 
         storageLocationIdRef.current = options.storageLocationId;
     }, [options.storageLocationId]);
 
+    const extraFieldsRef = useRef(options.extraFields);
+    useEffect(() => {
+        extraFieldsRef.current = options.extraFields;
+    }, [options.extraFields]);
+
     const maxFileSizeBytes =
         options.maxFileSizeMb > 0
             ? options.remainingBytes != null
@@ -86,6 +97,7 @@ export function useChunkedUploadUppy(options: UseChunkedUploadOptions): { uppy: 
             getChunkSize: () => options.partSizeMb * 1024 * 1024,
             async createMultipartUpload(file) {
                 return apiFetch<{ uploadId: string; key: string }>(route('uploads.store'), 'POST', {
+                    ...(extraFieldsRef.current ?? {}),
                     filename: file.name,
                     size: file.size,
                     type: file.type,

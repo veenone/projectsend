@@ -225,6 +225,9 @@ library root; a client who names no folder gets their home folder, as for any up
 already checked the uploader may upload there; the handler decides whether its context belongs
 there. `false` is a 422 on `context_key`. A key nobody
 registered gets the same 422, so the answer does not reveal which contexts exist.
+A page built on `ChunkedUploadDashboard` passes them as `extraFields` (for example
+`extraFields={{ context_key: 'dataroom', context_id: room.id }}`), which are merged into that
+body; the uploader's own fields win on a clash.
 
 `disk()` returning a disk name sends the bytes there. The name is used as-is: it bypasses the
 uploader's storage locations (`UploadLocations::usableFor()`), so it must be a configured disk the

@@ -16,6 +16,7 @@ interface ChunkedUploadDashboardProps {
     folderId?: number | null;
     previousFileId?: number | null;
     storageLocationId?: number | null;
+    extraFields?: Record<string, string | number>;
     height?: number;
     onComplete: (fileIds: number[]) => void;
     /** True from the first upload of a batch until the batch is over. */
@@ -33,6 +34,7 @@ export default function ChunkedUploadDashboard({
     folderId,
     previousFileId,
     storageLocationId,
+    extraFields,
     height = 440,
     onComplete,
     onBusyChange,
@@ -50,6 +52,7 @@ export default function ChunkedUploadDashboard({
         folderId,
         previousFileId,
         storageLocationId,
+        extraFields,
         onFileUploaded: (fileId) => uploadedFileIds.push(fileId),
         onVersionError,
     });
