@@ -8,8 +8,12 @@ use App\Modules\Audit\ActivityLogger;
 use App\Modules\Audit\ExtraActions;
 use App\Modules\Files\Models\File;
 use App\Modules\Identity\Permissions\Permission;
+use App\Modules\Mcp\ProjectSendServer;
+use App\Modules\Mcp\Resources\ActivityRecent;
+use App\Modules\Mcp\Support\McpContext;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia;
+use Tests\Support\McpWorld;
 
 test('with nothing registered the activity log page and its filter list are exactly as before', function () {
     $staff = User::factory()->create();
@@ -71,3 +75,17 @@ test('registering the same key twice is refused', function () {
     app(ExtraActions::class)->register('evidence.recorded', 'Archived ":subject"', 'Evidence was archived');
     app(ExtraActions::class)->register('evidence.recorded', 'Archived ":subject"', 'Evidence was archived');
 })->throws(InvalidArgumentException::class);
+
+test('the assistant reads registered and orphaned actions by their key', function () {
+    McpContext::set(null);
+    app(ExtraActions::class)->register('evidence.recorded', 'Archived ":subject"', 'Evidence was archived');
+    $staff = McpWorld::staff();
+
+    app(ActivityLogger::class)->log(app(ExtraActions::class)->find('evidence.recorded'), $staff);
+    DB::table('activity_log')->insert(['action' => 'gone.away', 'origin' => 'ui', 'actor_id' => $staff->id, 'actor_name' => $staff->name, 'created_at' => now()]);
+
+    ProjectSendServer::actingAs($staff)->resource(ActivityRecent::class)
+        ->assertOk()
+        ->assertSee('"action":"evidence.recorded"')
+        ->assertSee('"action":"gone.away"');
+});

@@ -6,6 +6,7 @@ namespace App\Modules\Mcp\Resources;
 
 use App\Modules\Audit\ActivityLog;
 use App\Modules\Audit\ActivityLogScope;
+use App\Modules\Audit\LogAction;
 use App\Modules\Mcp\Support\Account;
 use App\Modules\Mcp\Support\McpContext;
 use App\Modules\Mcp\Support\Presenter;
@@ -78,6 +79,12 @@ class ActivityRecent extends Resource
     {
         if ($enumOrString === null) {
             return null;
+        }
+
+        // A package's action, or one whose package is gone, has a key but
+        // no value property.
+        if ($enumOrString instanceof LogAction) {
+            return $enumOrString->key();
         }
 
         return is_object($enumOrString) && property_exists($enumOrString, 'value') ? (string) $enumOrString->value : (string) $enumOrString;

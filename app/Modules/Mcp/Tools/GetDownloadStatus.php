@@ -6,6 +6,7 @@ namespace App\Modules\Mcp\Tools;
 
 use App\Modules\Audit\ActivityLog;
 use App\Modules\Audit\ActivityLogScope;
+use App\Modules\Audit\LogAction;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\ShareLink;
 use App\Modules\Mcp\Support\Account;
@@ -16,7 +17,6 @@ use App\Modules\Mcp\Support\PlanGate;
 use App\Modules\Mcp\Support\Presenter;
 use App\Modules\Mcp\Support\ToolError;
 use App\Modules\Mcp\Support\Web;
-use BackedEnum;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -154,7 +154,7 @@ class GetDownloadStatus extends ToolBase
 
         foreach ($rows as $row) {
             $action = $row->getAttribute('action');
-            $actionValue = $action instanceof BackedEnum ? (string) $action->value : (string) $action;
+            $actionValue = $action instanceof LogAction ? $action->key() : (string) $action;
             $via = self::VIA[$actionValue] ?? 'link';
 
             $downloads[] = [

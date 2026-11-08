@@ -7,6 +7,7 @@ namespace App\Modules\Mcp\Tools;
 use App\Models\User;
 use App\Modules\Audit\ActivityLog;
 use App\Modules\Audit\ActivityLogScope;
+use App\Modules\Audit\LogAction;
 use App\Modules\Clients\ClientStorageUsage;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\FileAssignment;
@@ -180,7 +181,7 @@ class GetClient extends ToolBase
 
             $out[] = [
                 'at' => Presenter::iso($row->getAttribute('created_at')),
-                'action' => is_object($action) && property_exists($action, 'value') ? (string) $action->value : (string) $action,
+                'action' => $action instanceof LogAction ? $action->key() : (string) $action,
                 'file' => $subjectId === null ? null : ['id' => (int) $subjectId, 'name' => $row->getAttribute('subject_name')],
             ];
         }
