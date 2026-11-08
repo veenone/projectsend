@@ -27,6 +27,10 @@ use Throwable;
  */
 class LocalPartStore
 {
+    public function __construct(
+        private readonly UploadContextHandlers $contexts,
+    ) {}
+
     /**
      * Said twice, because a full temp volume can announce itself in the
      * middle of the copy or only when the last buffer is flushed.
@@ -240,7 +244,12 @@ class LocalPartStore
                 throw new RuntimeException('Could not reopen assembled file.');
             }
 
-            $diskEvent = new ResolvingUploadDisk($session->user, $session->storage_location_id);
+            $context = $session->context();
+            $contextDisk = $context !== null
+                ? $this->contexts->handlerFor($context->key)?->disk($session->user, $context->id)
+                : null;
+
+            $diskEvent = new ResolvingUploadDisk($session->user, $session->storage_location_id, $context, $contextDisk);
             Event::dispatch($diskEvent);
             $disk = $diskEvent->disk;
 

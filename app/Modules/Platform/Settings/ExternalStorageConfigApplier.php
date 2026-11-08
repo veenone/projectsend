@@ -195,7 +195,7 @@ class ExternalStorageConfigApplier
 
     public function resolveDisk(ResolvingUploadDisk $event): void
     {
-        $event->disk = app(UploadLocations::class)->diskFor($event->uploader, $event->requestedLocationId);
+        $event->disk = $event->contextDisk ?? app(UploadLocations::class)->diskFor($event->uploader, $event->requestedLocationId);
     }
 
     /** Whether this edition honors stored storage settings at all. */

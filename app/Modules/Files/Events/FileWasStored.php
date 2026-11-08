@@ -6,6 +6,7 @@ namespace App\Modules\Files\Events;
 
 use App\Models\User;
 use App\Modules\Files\Models\File;
+use App\Modules\Files\Uploads\UploadContext;
 
 /**
  * A file's bytes are on a disk and its row exists.
@@ -29,5 +30,8 @@ class FileWasStored
     public function __construct(
         public readonly File $file,
         public readonly User $uploader,
+        // The context the upload was started in, so the handler that
+        // owns it can tell its own files from everyone else's.
+        public readonly ?UploadContext $context = null,
     ) {}
 }

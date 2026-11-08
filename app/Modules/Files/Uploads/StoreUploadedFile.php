@@ -46,6 +46,7 @@ class StoreUploadedFile
         ?int $folderId = null,
         string $disk = 'files',
         Action $action = Action::FileUploaded,
+        ?UploadContext $context = null,
     ): File {
         $originalName = self::sanitizeFilename($originalName);
 
@@ -81,7 +82,7 @@ class StoreUploadedFile
         // listener sees each upload once without knowing which route
         // produced it. Dispatched after the row exists, so what it
         // receives is a complete File.
-        Event::dispatch(new FileWasStored($file, $uploader));
+        Event::dispatch(new FileWasStored($file, $uploader, $context));
 
         return $file;
     }

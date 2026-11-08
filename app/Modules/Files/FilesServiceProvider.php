@@ -24,6 +24,7 @@ use App\Modules\Files\Scanning\ScanStatus;
 use App\Modules\Files\Scanning\VirusScanner;
 use App\Modules\Files\Thumbnails\Events\ImageRenderingChanged;
 use App\Modules\Files\Thumbnails\RenderedImageCache;
+use App\Modules\Files\Uploads\UploadContextHandlers;
 use App\Modules\Notifications\NotificationTypeDefinition;
 use App\Modules\Notifications\NotificationTypeRegistry;
 use Illuminate\Support\Facades\Event;
@@ -41,6 +42,11 @@ class FilesServiceProvider extends ServiceProvider
         // reached twice. Scoped rather than a singleton so a long-lived
         // queue worker starts each job with an empty memo.
         $this->app->scoped(StaffLibraryScope::class);
+
+        // A singleton, unlike its neighbours: what it holds is registered
+        // once at boot by whoever owns an upload context, not built up
+        // per request.
+        $this->app->singleton(UploadContextHandlers::class);
 
         // Same lifetime, same reason: the identity rule memoises a roster
         // per viewer and the file listings ask it once per row.

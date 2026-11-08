@@ -19,6 +19,7 @@ use App\Modules\Files\Storage\UploadLocations;
 use App\Modules\Files\Uploads\LocalPartStore;
 use App\Modules\Files\Uploads\PartTooLargeException;
 use App\Modules\Files\Uploads\StoreUploadedFile;
+use App\Modules\Files\Uploads\UploadContextHandlers;
 use App\Modules\Files\Uploads\UploadExtensionPolicy;
 use App\Modules\Files\Uploads\UploadSession;
 use App\Modules\Files\Versions\FileVersions;
@@ -64,6 +65,7 @@ class ChunkedUploadsController extends Controller
         private readonly FileVersions $versions,
         private readonly UploadFolderPath $folderPaths,
         private readonly UploadLocations $uploadLocations,
+        private readonly UploadContextHandlers $contexts,
     ) {}
 
     /**
@@ -89,6 +91,8 @@ class ChunkedUploadsController extends Controller
             // together with previous_file_id.
             'relative_path' => ['nullable', 'string', 'max:4096'],
             'storage_location_id' => ['nullable', 'integer'],
+            'context_key' => ['nullable', 'string', 'max:64'],
+            'context_id' => ['required_with:context_key', 'string', 'max:191'],
         ]);
 
         $maxMb = (int) $this->settings->get(Setting::MaxFileSizeMb);
@@ -204,6 +208,17 @@ class ChunkedUploadsController extends Controller
                 ]);
             }
 
+            // A context belongs to whatever registered it, and only that
+            // can say who may upload into it. A key nobody registered is
+            // refused the same way as one its owner turns down, so neither
+            // answer tells the uploader which contexts exist.
+            $contextKey = $validated['context_key'] ?? null;
+            if ($contextKey !== null && ! ($this->contexts->handlerFor($contextKey)?->authorize($user, $validated['context_id']) ?? false)) {
+                throw ValidationException::withMessages([
+                    'context_key' => __('This upload context is not available to you.'),
+                ]);
+            }
+
             // A file from inside a dropped folder goes into the matching
             // subfolder, made if it is not there yet, under the same rules
             // as the New folder button. Not for a new version of a file:
@@ -225,6 +240,8 @@ class ChunkedUploadsController extends Controller
             $session = UploadSession::query()->create([
                 'user_id' => $user->id,
                 'storage_location_id' => $storageLocationId,
+                'context_key' => $contextKey,
+                'context_id' => $contextKey !== null ? $validated['context_id'] : null,
                 'folder_id' => $folder?->id,
                 'previous_file_id' => $previousFileId,
                 'original_name' => $validated['filename'],
@@ -561,6 +578,7 @@ class ChunkedUploadsController extends Controller
             description: $session->description,
             folderId: $folderId,
             disk: $assembled['disk'],
+            context: $session->context(),
         );
 
         $previousFileId = $session->previous_file_id;

@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\DB;
  * @property int|null $folder_id
  * @property int|null $previous_file_id
  * @property int|null $storage_location_id
+ * @property string|null $context_key
+ * @property string|null $context_id
  * @property string $original_name
  * @property int $size
  * @property int $staged_bytes
@@ -67,6 +69,14 @@ class UploadSession extends Model
     public function completionLock(int $seconds): Lock
     {
         return Cache::lock('upload-complete:'.$this->id, $seconds);
+    }
+
+    /** What the upload was started for, when a handler claimed it. */
+    public function context(): ?UploadContext
+    {
+        return $this->context_key !== null && $this->context_id !== null
+            ? new UploadContext($this->context_key, $this->context_id)
+            : null;
     }
 
     public function isOwnedBy(User $user): bool
