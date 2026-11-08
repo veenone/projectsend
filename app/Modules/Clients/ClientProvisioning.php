@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Clients;
 
 use App\Models\User;
-use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
+use App\Modules\Audit\LogAction;
 use App\Modules\Clients\Notifications\AdminClientRegisteredNotification;
 use App\Modules\Groups\Models\Group;
 use App\Modules\Identity\AuthSource;
@@ -93,7 +93,7 @@ class ClientProvisioning
         string $name,
         string $email,
         string $password,
-        Action $action,
+        LogAction $action,
         AuthSource $source = AuthSource::Local,
         ?string $ldapDn = null,
         ?bool $autoApprove = null,

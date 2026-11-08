@@ -9,6 +9,7 @@ use App\Modules\Files\Events\FileWasStored;
 use Illuminate\Support\Facades\Event;
 use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
+use App\Modules\Audit\LogAction;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Scanning\NotScannedReason;
 use App\Modules\Files\Scanning\ScanStatus;
@@ -45,7 +46,7 @@ class StoreUploadedFile
         ?string $description = null,
         ?int $folderId = null,
         string $disk = 'files',
-        Action $action = Action::FileUploaded,
+        LogAction $action = Action::FileUploaded,
         ?UploadContext $context = null,
     ): File {
         $originalName = self::sanitizeFilename($originalName);
@@ -99,7 +100,7 @@ class StoreUploadedFile
      * at the end of that day where they are, the same as picking the date
      * in the editor would.
      */
-    private function defaultExpiry(User $uploader, Action $action): ?Carbon
+    private function defaultExpiry(User $uploader, LogAction $action): ?Carbon
     {
         $days = (int) $this->settings->get(Setting::DefaultFileExpiryDays);
 

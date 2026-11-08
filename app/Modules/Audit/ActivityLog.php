@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Modules\Audit;
 
+use App\Modules\Audit\Casts\LogActionCast;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
@@ -17,7 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $api_token_id
  * @property string|null $api_token_name
  * @property string|null $ip_address
- * @property Action $action
+ * @property LogAction $action
  * @property string|null $subject_type
  * @property int|null $subject_id
  * @property string|null $subject_name
@@ -36,7 +37,7 @@ class ActivityLog extends Model
     protected function casts(): array
     {
         return [
-            'action' => Action::class,
+            'action' => LogActionCast::class,
             'origin' => ActivityOrigin::class,
             'context' => 'json',
             'created_at' => 'datetime',

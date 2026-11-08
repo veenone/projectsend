@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace App\Modules\Files\Preview;
 
 use App\Models\User;
-use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
+use App\Modules\Audit\LogAction;
 use App\Modules\Files\Models\File;
 use Illuminate\Support\Facades\Cache;
 
@@ -41,7 +41,7 @@ class PreviewLog
         private readonly ActivityLogger $activity,
     ) {}
 
-    public function record(Action $action, File $file, ?User $viewer): void
+    public function record(LogAction $action, File $file, ?User $viewer): void
     {
         $viewerKey = $viewer !== null ? (string) $viewer->id : 'ip:'.request()->ip();
 

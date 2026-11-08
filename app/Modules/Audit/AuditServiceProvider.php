@@ -14,6 +14,7 @@ class AuditServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(ActivityLogger::class);
+        $this->app->singleton(ExtraActions::class);
     }
 
     public function boot(): void
