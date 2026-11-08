@@ -6,7 +6,9 @@ namespace App\Modules\Identity\Console;
 
 use App\Models\User;
 use App\Modules\Identity\Erasure\AccountEraser;
+use App\Modules\Identity\Erasure\ErasureRefused;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
 
 class PurgeErasuresCommand extends Command
 {
@@ -21,11 +23,20 @@ class PurgeErasuresCommand extends Command
             ->where('erase_after', '<=', now())
             ->get();
 
+        $erased = 0;
+
         foreach ($due as $user) {
-            $eraser->erase($user);
+            // Refused by a listener (DeletingAccount): left as it is, and
+            // asked again on the next run.
+            try {
+                $eraser->erase($user);
+                $erased++;
+            } catch (ErasureRefused $refused) {
+                Log::warning("Account {$user->id} was not erased: {$refused->getMessage()}");
+            }
         }
 
-        $this->info("Erased {$due->count()} account(s).");
+        $this->info("Erased {$erased} account(s).");
 
         return self::SUCCESS;
     }

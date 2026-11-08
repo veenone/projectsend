@@ -11,6 +11,7 @@ use App\Modules\Clients\ClientPortalCustomFields;
 use App\Modules\Files\DeletedAccountContent;
 use App\Modules\Identity\Erasure\ErasureSchedule;
 use App\Modules\Identity\Erasure\SelfDeletion;
+use App\Modules\Identity\Events\DeletingAccount;
 use App\Modules\Identity\Http\ConfirmationRequired;
 use App\Modules\Identity\Reauthentication;
 use App\Modules\Identity\StaffAccounts;
@@ -24,6 +25,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -150,6 +152,13 @@ class ProfileController extends Controller
             $user,
             removesAdmin: $this->accounts->isAdministratorRole($user->role_id),
         );
+
+        $event = new DeletingAccount($user, 'self');
+        Event::dispatch($event);
+
+        if ($event->refused()) {
+            return back()->withErrors(['account' => $event->refusal]);
+        }
 
         Auth::logout();
 

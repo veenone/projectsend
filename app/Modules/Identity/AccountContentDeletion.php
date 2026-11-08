@@ -9,11 +9,14 @@ use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
 use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\DeletedAccountContent;
+use App\Modules\Identity\Events\DeletingAccount;
 use App\Modules\Identity\Models\Role;
 use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Deciding what happens to an account's files and folders when the account
@@ -86,10 +89,21 @@ class AccountContentDeletion
      * there is nothing to decide, so accounts with no content delete
      * exactly as before.
      *
+     * First asks whether the account may be deleted at all (DeletingAccount);
+     * every administrative delete, web and API, staff and client, comes
+     * through here before its transaction starts.
+     *
      * @return array{content_action?: string, reassign_to_id?: int}
      */
     public function validate(Request $request, User $target): array
     {
+        $event = new DeletingAccount($target, 'delete');
+        Event::dispatch($event);
+
+        if ($event->refused()) {
+            throw ValidationException::withMessages(['account' => $event->refusal]);
+        }
+
         $summary = $this->content->summarize($target);
 
         if ($summary['files'] === 0 && $summary['folders'] === 0) {
