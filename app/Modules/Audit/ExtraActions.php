@@ -35,11 +35,6 @@ final class ExtraActions
         return $this->actions;
     }
 
-    public function has(string $key): bool
-    {
-        return isset($this->actions[$key]);
-    }
-
     public function find(string $key): ?ExtraAction
     {
         return $this->actions[$key] ?? null;

@@ -85,7 +85,8 @@ Event::listen('App\Modules\Platform\Announcements\Events\ResolvingAnnouncement',
 ```
 
 `audience` is required: `'staff'` or `'clients'`. A message aimed at the wrong audience, or at an
-unknown one, reaches nobody. The first `show()` wins; later calls are ignored. `tone` is `info` or
+unknown one, reaches nobody. The first message aimed at the current viewer wins; later ones are
+ignored. `tone` is `info` or
 `warning`, and anything else falls back to `info`.
 
 **Nothing registered:** no band and no icon.
@@ -313,7 +314,7 @@ public function boot(): void
 
 ```php
 app(ActivityLogger::class)->log(
-    app(ExtraActions::class)->find('evidence.recorded'),
+    app(ExtraActions::class)->find('evidence.recorded') ?? throw new LogicException('evidence.recorded is not registered'),
     subject: $file,
     context: ['release' => '1.2'],
 );
@@ -322,7 +323,8 @@ app(ActivityLogger::class)->log(
 The second argument is the sentence for a log row, with the same placeholders core's own templates
 use; the third is the description shown in the action filter. Both are English and double as
 translation keys. A registered action is listed in the activity log's filter, filters like a core
-one, and comes back from `GET /api/v1/activity` under its key.
+one, and comes back from `GET /api/v1/activity` under its key. The API's `?action[]=` filter accepts
+core keys only; the web filter accepts registered ones too.
 
 `ActivityLogger::log()` and `logSystem()` take any `LogAction`: a core `Action` case, a registered
 `ExtraAction`, or an `UnknownAction`. The last is what a stored key that is neither core nor
