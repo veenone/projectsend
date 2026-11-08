@@ -9,6 +9,8 @@ use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Identity\Models\RolePermission;
+use App\Modules\Identity\Permissions\ExtraPermission;
+use App\Modules\Identity\Permissions\ExtraPermissions;
 use App\Modules\Identity\Permissions\Permission;
 use App\Modules\Identity\Permissions\PermissionCategory;
 use App\Modules\Identity\Permissions\PermissionChecker;
@@ -21,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\In;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,6 +40,7 @@ class RolesController extends Controller
         private readonly PermissionChecker $permissions,
         private readonly StartPages $startPages,
         private readonly StaffAccounts $accounts,
+        private readonly ExtraPermissions $extraPermissions,
     ) {}
 
     public function index(Request $request): Response
@@ -72,7 +76,7 @@ class RolesController extends Controller
 
         return Inertia::render('roles/index', [
             'roles' => $roles->all(),
-            'total_permissions' => count(Permission::cases()),
+            'total_permissions' => count(Permission::cases()) + count($this->extraPermissions->all()),
             'filters' => $filters,
         ]);
     }
@@ -93,7 +97,7 @@ class RolesController extends Controller
             'name' => ['required', 'string', 'max:255', 'unique:roles,name'],
             'client_scoped' => ['boolean'],
             'permissions' => ['array'],
-            'permissions.*' => [Rule::enum(Permission::class)],
+            'permissions.*' => [$this->permissionRule()],
             'start_page' => $this->startPageRules(UserType::Staff),
         ]);
 
@@ -166,7 +170,7 @@ class RolesController extends Controller
             'name' => ['required', 'string', 'max:255', Rule::unique('roles', 'name')->ignore($role->id)],
             'client_scoped' => ['boolean'],
             'permissions' => ['array'],
-            'permissions.*' => [Rule::enum(Permission::class)],
+            'permissions.*' => [$this->permissionRule()],
             'start_page' => $this->startPageRules($type),
         ]);
 
@@ -267,7 +271,13 @@ class RolesController extends Controller
             return;
         }
 
-        $beyond = array_values(array_diff($permissions, $this->permissions->grantedKeys($actor)));
+        $held = $this->permissions->grantedKeys($actor);
+        $beyond = array_values(array_filter(
+            $permissions,
+            fn (string $key): bool => $this->extraPermissions->has($key)
+                ? ! $this->permissions->allowsKey($actor, $key)
+                : ! in_array($key, $held, true),
+        ));
 
         if ($beyond !== []) {
             throw ValidationException::withMessages([
@@ -349,6 +359,17 @@ class RolesController extends Controller
     }
 
     /**
+     * The core vocabulary plus whatever packages registered.
+     */
+    private function permissionRule(): In
+    {
+        return Rule::in([
+            ...array_map(fn (Permission $permission): string => $permission->value, Permission::cases()),
+            ...array_keys($this->extraPermissions->all()),
+        ]);
+    }
+
+    /**
      * @param  list<string>  $permissions
      */
     private function syncPermissions(Role $role, array $permissions): void
@@ -370,19 +391,31 @@ class RolesController extends Controller
      */
     private function catalog(): array
     {
-        return array_values(array_map(fn (PermissionCategory $category): array => [
+        return array_map(fn (PermissionCategory $category): array => [
             'key' => $category->value,
             'label' => $category->label(),
-            'permissions' => array_values(array_map(
-                fn (Permission $permission): array => [
-                    'key' => $permission->value,
-                    'label' => $permission->label(),
-                ],
-                array_filter(
-                    Permission::cases(),
-                    fn (Permission $permission): bool => $permission->category() === $category,
-                ),
-            )),
-        ], PermissionCategory::cases()));
+            'permissions' => [
+                ...array_values(array_map(
+                    fn (Permission $permission): array => [
+                        'key' => $permission->value,
+                        'label' => $permission->label(),
+                    ],
+                    array_filter(
+                        Permission::cases(),
+                        fn (Permission $permission): bool => $permission->category() === $category,
+                    ),
+                )),
+                ...array_values(array_map(
+                    fn (ExtraPermission $permission): array => [
+                        'key' => $permission->key,
+                        'label' => $permission->label,
+                    ],
+                    array_filter(
+                        $this->extraPermissions->all(),
+                        fn (ExtraPermission $permission): bool => $permission->category === $category,
+                    ),
+                )),
+            ],
+        ], PermissionCategory::cases());
     }
 }

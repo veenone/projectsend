@@ -12,6 +12,7 @@ use App\Modules\Identity\Console\PurgeErasuresCommand;
 use App\Modules\Identity\Console\StaffPasswordsOnCommand;
 use App\Modules\Identity\Ldap\LdapDirectory;
 use App\Modules\Identity\Ldap\LdapRecordDirectory;
+use App\Modules\Identity\Permissions\ExtraPermissions;
 use App\Modules\Identity\Permissions\Permission;
 use App\Modules\Identity\Permissions\PermissionChecker;
 use App\Modules\Identity\Social\SocialGateway;
@@ -29,6 +30,10 @@ class IdentityServiceProvider extends ServiceProvider
         // a singleton would keep honouring a permission revoked between
         // them. The worker forgets scoped instances before every job.
         $this->app->scoped(PermissionChecker::class);
+
+        // A singleton: packages register into it while booting, and what
+        // they register holds for the life of the process.
+        $this->app->singleton(ExtraPermissions::class);
 
         // Bound to the interface, not resolved concretely, so a test can
         // swap in a fake directory and exercise the whole login flow —

@@ -95,6 +95,25 @@ class PermissionChecker
     }
 
     /**
+     * The same answer as allows() for a key a package registered through
+     * ExtraPermissions: administrators hold it, anyone else needs the row.
+     */
+    public function allowsKey(User $user, string $key): bool
+    {
+        $role = $user->role;
+
+        if ($role === null) {
+            return false;
+        }
+
+        if ($role->is_administrator) {
+            return true;
+        }
+
+        return RolePermission::query()->where('role_id', $role->id)->where('permission', $key)->exists();
+    }
+
+    /**
      * Every permission key granted to the user, for UI hiding.
      *
      * @return list<string>
