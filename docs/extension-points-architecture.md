@@ -262,6 +262,11 @@ the role to have been granted it. The usual grading applies: a staff member cann
 registered permission their own role lacks, cannot give themselves a role that carries one, and
 cannot edit a role, or its holders, carrying one they lack.
 
+Under an API token a registered key is capped like a core one once any `api/` route names it in
+`token-can:`: a gate check on it then answers for the token, not the role. A token cannot be
+minted with a registered key yet, so such a route refuses every token, and a key no API route
+names follows the role.
+
 A key that is already a core permission, or already registered, throws.
 
 **Nothing registered:** the roles editor lists exactly the core permissions, and every permission
