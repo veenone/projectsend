@@ -18,7 +18,9 @@ use Illuminate\Database\Eloquent\Builder;
  * sees. An unscoped staff member sees the whole shared library; a
  * client-scoped one (see User::isClientScoped) sees only the files &
  * folders they created, plus everything belonging to the clients
- * assigned to them.
+ * assigned to them. A package can narrow either through
+ * LibraryVisibilityRules — hide a subtree from anyone, or open one to a
+ * client-scoped staff member.
  *
  * Every staff listing goes through here, and the policies consult
  * allowsFile()/allowsFolder() so direct access (download, details,
@@ -48,6 +50,10 @@ class StaffLibraryScope
     /** @var array<int, Builder<Folder>> */
     private array $folders = [];
 
+    public function __construct(
+        private readonly LibraryVisibilityRules $rules,
+    ) {}
+
     /**
      * @return Builder<File>
      */
@@ -62,19 +68,33 @@ class StaffLibraryScope
     private function buildFiles(User $user): Builder
     {
         $query = File::query();
+        $hidden = $this->rules->hiddenSubtreeIds($user);
+
+        // A hidden subtree is out of reach for every staff member. Files
+        // at the root belong to no folder, and no subtree can hide them.
+        if ($hidden !== []) {
+            $query->where(fn (Builder $placed) => $placed->whereNull('folder_id')->orWhereNotIn('folder_id', $hidden));
+        }
 
         if (! $user->isClientScoped()) {
             return $query;
         }
 
-        // Own uploads ∪ files visible to each assigned client. The
-        // per-client visibility is File::scopeVisibleToClient — the single
-        // source of truth for client file access — so no rule is duplicated.
-        return $query->where(function (Builder $outer) use ($user): void {
+        $granted = $this->rules->grantedSubtreeIds($user);
+
+        // Own uploads ∪ files visible to each assigned client ∪ whatever a
+        // rule opens to them. The per-client visibility is
+        // File::scopeVisibleToClient — the single source of truth for
+        // client file access — so no rule is duplicated.
+        return $query->where(function (Builder $outer) use ($user, $granted): void {
             $outer->where('uploaded_by', $user->id);
 
             foreach ($user->assignedClients as $client) {
                 $outer->orWhere(fn (Builder $scoped) => $scoped->visibleToClient($client));
+            }
+
+            if ($granted !== []) {
+                $outer->orWhereIn('folder_id', $granted);
             }
         });
     }
@@ -93,28 +113,40 @@ class StaffLibraryScope
     private function buildFolders(User $user): Builder
     {
         $query = Folder::query();
+        $hidden = $this->rules->hiddenSubtreeIds($user);
+
+        if ($hidden !== []) {
+            $query->whereNotIn('id', $hidden);
+        }
 
         if (! $user->isClientScoped()) {
             return $query;
         }
 
-        return $query->where(function (Builder $outer) use ($user): void {
+        $granted = $this->rules->grantedSubtreeIds($user);
+
+        return $query->where(function (Builder $outer) use ($user, $granted): void {
             $outer->where('created_by', $user->id);
 
             foreach ($user->assignedClients as $client) {
                 $outer->orWhere(fn (Builder $scoped) => $scoped->visibleToClient($client));
             }
+
+            if ($granted !== []) {
+                $outer->orWhereIn('id', $granted);
+            }
         });
     }
 
     /**
-     * Whether a scoped staff member may reach this specific file. Unscoped
-     * staff always may; the policies AND this into their permission checks
-     * so direct access respects the same boundary as the listings.
+     * Whether a staff member may reach this specific file. Unscoped staff
+     * always may, unless a rule hides part of the library from them; the
+     * policies AND this into their permission checks so direct access
+     * respects the same boundary as the listings.
      */
     public function allowsFile(User $user, File $file): bool
     {
-        if (! $user->isClientScoped()) {
+        if ($this->unrestricted($user)) {
             return true;
         }
 
@@ -123,11 +155,20 @@ class StaffLibraryScope
 
     public function allowsFolder(User $user, Folder $folder): bool
     {
-        if (! $user->isClientScoped()) {
+        if ($this->unrestricted($user)) {
             return true;
         }
 
         return $this->folders($user)->whereKey($folder->getKey())->exists();
+    }
+
+    /**
+     * Sees the whole library: not client-scoped, and nothing hidden from
+     * them. The answer that lets a per-row check skip the query.
+     */
+    private function unrestricted(User $user): bool
+    {
+        return ! $user->isClientScoped() && $this->rules->hiddenSubtreeIds($user) === [];
     }
 
     /**
