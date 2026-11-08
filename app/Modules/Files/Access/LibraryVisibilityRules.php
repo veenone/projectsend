@@ -15,23 +15,15 @@ use InvalidArgumentException;
  * does, and then every answer here is empty too, so StaffLibraryScope and
  * ActivityLogScope behave exactly as they always have.
  *
- * Registered with the container as `scoped`, like StaffLibraryScope, so
- * the expanded subtrees are worked out once per viewer per request — the
- * policies ask once per row. That also means the instance is replaced
- * between queue jobs, so a package registers its rule from
- * `$app->afterResolving(LibraryVisibilityRules::class, ...)` rather than
- * on an instance it resolved once at boot.
+ * A singleton: rules are registered once, from a package's boot(), and
+ * have to outlast the scoped instances a queue worker drops between jobs.
+ * Nothing here is remembered per viewer — StaffLibraryScope keeps that,
+ * for the request.
  */
 class LibraryVisibilityRules
 {
     /** @var list<LibraryVisibilityRule> */
     private array $rules = [];
-
-    /** @var array<int, list<int>> */
-    private array $hidden = [];
-
-    /** @var array<int, list<int>> */
-    private array $granted = [];
 
     public function register(LibraryVisibilityRule $rule): void
     {
@@ -49,7 +41,7 @@ class LibraryVisibilityRules
      */
     public function hiddenSubtreeIds(User $viewer): array
     {
-        return $this->hidden[$viewer->id] ??= $this->subtrees(
+        return $this->subtrees(
             array_merge(...array_map(fn (LibraryVisibilityRule $rule): array => $rule->hiddenFolderIds($viewer), $this->rules)),
         );
     }
@@ -61,7 +53,7 @@ class LibraryVisibilityRules
      */
     public function grantedSubtreeIds(User $viewer): array
     {
-        return $this->granted[$viewer->id] ??= $this->subtrees(
+        return $this->subtrees(
             array_merge(...array_map(fn (LibraryVisibilityRule $rule): array => $rule->grantedFolderIds($viewer), $this->rules)),
         );
     }
