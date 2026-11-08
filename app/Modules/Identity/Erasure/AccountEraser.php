@@ -9,10 +9,12 @@ use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLog;
 use App\Modules\Audit\ActivityLogger;
 use App\Modules\Files\DeletedAccountContent;
+use App\Modules\Identity\Events\DeletingAccount;
 use App\Modules\Identity\UserType;
 use App\Modules\Platform\Settings\Setting;
 use App\Modules\Platform\Settings\Settings;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 
 /**
  * Permanent, GDPR-grade account erasure: removes the account row
@@ -28,8 +30,18 @@ class AccountEraser
         private readonly DeletedAccountContent $content,
     ) {}
 
+    /**
+     * @throws ErasureRefused when a listener refuses (DeletingAccount)
+     */
     public function erase(User $user): void
     {
+        $event = new DeletingAccount($user, 'erase');
+        Event::dispatch($event);
+
+        if ($event->refused()) {
+            throw new ErasureRefused((string) $event->refusal);
+        }
+
         DB::transaction(function () use ($user): void {
             // Decide what happens to the files and folders this account
             // owned *before* the row goes: an admin deleting an account is

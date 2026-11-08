@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Modules\Identity\Console;
 
-use App\Models\User;
 use App\Modules\Identity\AccountLookup;
 use App\Modules\Identity\Erasure\AccountEraser;
+use App\Modules\Identity\Erasure\ErasureRefused;
 use Illuminate\Console\Command;
 
 /**
@@ -41,7 +41,13 @@ class EraseAccountCommand extends Command
             return self::FAILURE;
         }
 
-        $eraser->erase($user);
+        try {
+            $eraser->erase($user);
+        } catch (ErasureRefused $refused) {
+            $this->error($refused->getMessage());
+
+            return self::FAILURE;
+        }
 
         $this->info('Account erased and log entries anonymized.');
 
