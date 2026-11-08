@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Indiquer l’emplacement de stockage dans les notifications de téléversement",
     "New uploads": "Nouveaux téléversements",
     "No locations. Their uploads use the default, :name.": "Aucun emplacement. Ses téléversements utilisent l’emplacement par défaut : :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Aucun emplacement personnel. Ses téléversements utilisent les emplacements que ses groupes lui donnent.",
     "Not set up": "Non configuré",
     "Note for clients": "Note pour les clients",
     "Off keeps serving the files already here.": "Désactivé, il continue de servir les fichiers qu’il contient déjà.",

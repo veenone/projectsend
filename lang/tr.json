@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Yükleme bildirimlerinde depolama konumunu belirt",
     "New uploads": "Yeni yüklemeler",
     "No locations. Their uploads use the default, :name.": "Konum yok. Yüklemeleri varsayılanı kullanır: :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Kişisel konum yok. Yüklemeleri, gruplarının verdiği konumları kullanır.",
     "Not set up": "Ayarlanmadı",
     "Note for clients": "Müşteriler için not",
     "Off keeps serving the files already here.": "Kapatıldığında, içindeki dosyaları sunmaya devam eder.",

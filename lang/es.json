@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Indicar la ubicación de almacenamiento en los avisos de subida",
     "New uploads": "Subidas nuevas",
     "No locations. Their uploads use the default, :name.": "Ninguna ubicación. Sus subidas usan la predeterminada, :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Ninguna ubicación personal. Sus subidas usan las ubicaciones que les dan sus grupos.",
     "Not set up": "Sin configurar",
     "Note for clients": "Nota para los clientes",
     "Off keeps serving the files already here.": "Desactivada, sigue sirviendo los archivos que ya contiene.",

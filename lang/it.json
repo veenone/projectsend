@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Indica la posizione di archiviazione nelle notifiche di caricamento",
     "New uploads": "Nuovi caricamenti",
     "No locations. Their uploads use the default, :name.": "Nessuna posizione. I suoi caricamenti usano quella predefinita, :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Nessuna posizione personale. I suoi caricamenti usano le posizioni che gli danno i suoi gruppi.",
     "Not set up": "Non configurata",
     "Note for clients": "Nota per i clienti",
     "Off keeps serving the files already here.": "Disattivata, continua a servire i file che contiene già.",

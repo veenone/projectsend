@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Nêu vị trí lưu trữ trong thông báo tải lên",
     "New uploads": "Tải lên mới",
     "No locations. Their uploads use the default, :name.": "Không có vị trí nào. Các lần tải lên dùng vị trí mặc định, :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Không có vị trí cá nhân. Các lần tải lên dùng những vị trí mà nhóm của họ cung cấp.",
     "Not set up": "Chưa thiết lập",
     "Note for clients": "Ghi chú cho khách hàng",
     "Off keeps serving the files already here.": "Khi tắt, các tệp đã có vẫn tiếp tục được phục vụ.",

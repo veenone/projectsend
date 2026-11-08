@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Taja mahali pa hifadhi kwenye arifa za upakiaji",
     "New uploads": "Upakiaji mpya",
     "No locations. Their uploads use the default, :name.": "Hakuna mahali. Upakiaji wao unatumia chaguomsingi, :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Hakuna mahali pa kibinafsi. Upakiaji wao unatumia mahali wanapopewa na vikundi vyao.",
     "Not set up": "Haijawekwa",
     "Note for clients": "Maelezo kwa wateja",
     "Off keeps serving the files already here.": "Ikizimwa inaendelea kutoa mafaili yaliyopo tayari.",

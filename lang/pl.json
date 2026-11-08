@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Podawaj lokalizację magazynu w powiadomieniach o przesłaniu",
     "New uploads": "Nowe pliki",
     "No locations. Their uploads use the default, :name.": "Brak lokalizacji. Przesyłane pliki trafiają do domyślnej: :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Brak osobistych lokalizacji. Przesyłane pliki trafiają do lokalizacji udostępnianych przez grupy.",
     "Not set up": "Nieskonfigurowana",
     "Note for clients": "Notatka dla klientów",
     "Off keeps serving the files already here.": "Po wyłączeniu nadal udostępnia pliki, które już w niej są.",

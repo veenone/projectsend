@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "アップロード通知に保存先を記載する",
     "New uploads": "新しいアップロード",
     "No locations. Their uploads use the default, :name.": "保存先はありません。アップロードには既定の :name が使われます。",
+    "No personal locations. Their uploads use the locations their groups give them.": "個人用の保存先はありません。アップロードにはグループから提供される保存先が使われます。",
     "Not set up": "未設定",
     "Note for clients": "クライアント向けのメモ",
     "Off keeps serving the files already here.": "オフにしても、保存済みのファイルは引き続き提供されます。",

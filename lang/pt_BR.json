@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Informar o local de armazenamento nas notificações de envio",
     "New uploads": "Novos envios",
     "No locations. Their uploads use the default, :name.": "Nenhum local. Os envios usam o padrão, :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Nenhum local pessoal. Os envios usam os locais que os grupos oferecem.",
     "Not set up": "Não configurado",
     "Note for clients": "Nota para os clientes",
     "Off keeps serving the files already here.": "Desativado, continua servindo os arquivos que já estão nele.",

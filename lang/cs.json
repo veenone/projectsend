@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Uvádět umístění úložiště v oznámeních o nahrání",
     "New uploads": "Nová nahrávání",
     "No locations. Their uploads use the default, :name.": "Žádná umístění. Jeho nahrávání používají výchozí: :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Žádná osobní umístění. Jeho nahrávání používají umístění, která mu dávají jeho skupiny.",
     "Not set up": "Nenastaveno",
     "Note for clients": "Poznámka pro klienty",
     "Off keeps serving the files already here.": "Vypnuté dál poskytuje soubory, které už v něm jsou.",

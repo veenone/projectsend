@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Indica la ubicació d'emmagatzematge a les notificacions de pujada",
     "New uploads": "Pujades noves",
     "No locations. Their uploads use the default, :name.": "Cap ubicació. Les seves pujades fan servir la per defecte, :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Cap ubicació personal. Les seves pujades fan servir les ubicacions que els donen els seus grups.",
     "Not set up": "No configurada",
     "Note for clients": "Nota per als clients",
     "Off keeps serving the files already here.": "Desactivada, continua servint els fitxers que ja hi ha.",

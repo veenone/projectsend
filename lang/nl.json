@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Opslaglocatie noemen in uploadmeldingen",
     "New uploads": "Nieuwe uploads",
     "No locations. Their uploads use the default, :name.": "Geen locaties. Hun uploads gebruiken de standaard, :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Geen persoonlijke locaties. Hun uploads gebruiken de locaties die hun groepen hun geven.",
     "Not set up": "Niet ingesteld",
     "Note for clients": "Notitie voor klanten",
     "Off keeps serving the files already here.": "Uit blijft de bestanden die er al staan gewoon leveren.",

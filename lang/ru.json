@@ -2426,6 +2426,7 @@
     "Name the storage location in upload notifications": "Указывать место хранения в уведомлениях о загрузке",
     "New uploads": "Новые загрузки",
     "No locations. Their uploads use the default, :name.": "Мест хранения нет. Загрузки идут в место по умолчанию: :name.",
+    "No personal locations. Their uploads use the locations their groups give them.": "Личных мест хранения нет. Загрузки идут в места, которые дают группы.",
     "Not set up": "Не настроено",
     "Note for clients": "Заметка для клиентов",
     "Off keeps serving the files already here.": "Если выключить, файлы, которые уже здесь, по-прежнему будут доступны.",
