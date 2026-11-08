@@ -100,6 +100,26 @@ test('a listener can refuse an administrator\'s delete, and nothing is touched',
         ->and(RolePermission::query()->orderBy('id')->get()->toArray())->toBe($permissions);
 })->with('deletable accounts');
 
+test('the delete dialogs get the refusal as an error on account, with or without content to decide on', function (Closure $make, string $segment) {
+    $bare = $make();
+    $owning = $make();
+    File::factory()->create(['uploaded_by' => $owning->id]);
+    refuseEveryDeletion();
+
+    // An Inertia visit, the way both dialogs send it.
+    $this->actingAs($this->admin)->from("/{$segment}")
+        ->delete("/{$segment}/{$bare->id}")
+        ->assertRedirect("/{$segment}")
+        ->assertSessionHasErrors(['account' => 'Holds archived evidence.']);
+
+    $this->from("/{$segment}")
+        ->delete("/{$segment}/{$owning->id}", ['content_action' => 'cascade_delete'])
+        ->assertRedirect("/{$segment}")
+        ->assertSessionHasErrors(['account' => 'Holds archived evidence.']);
+
+    expect(User::query()->whereKey([$bare->id, $owning->id])->count())->toBe(2);
+})->with('deletable accounts');
+
 test('the same refusal stops erasure, self-deletion and the console command', function () {
     $paths = [];
     Event::listen(DeletingAccount::class, function (DeletingAccount $event) use (&$paths) {

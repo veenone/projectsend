@@ -168,10 +168,11 @@ export default function ClientsIndex({ clients, pagination, filters, reassign_ca
                                                 name={client.name}
                                                 content={client.content}
                                                 candidates={reassign_candidates.filter((candidate) => candidate.id !== client.id)}
-                                                onConfirm={(choice) =>
+                                                onConfirm={(choice, visit) =>
                                                     router.delete(route('clients.destroy', client.id), {
                                                         data: choice,
                                                         preserveScroll: true,
+                                                        ...visit,
                                                     })
                                                 }
                                             />
@@ -187,7 +188,10 @@ export default function ClientsIndex({ clients, pagination, filters, reassign_ca
                                                     name: client.name,
                                                 })}
                                                 confirmLabel={t('Delete client')}
-                                                onConfirm={() => router.delete(route('clients.destroy', client.id), { preserveScroll: true })}
+                                                errorField="account"
+                                                onConfirm={(visit) =>
+                                                    router.delete(route('clients.destroy', client.id), { preserveScroll: true, ...visit })
+                                                }
                                             />
                                         ))}
                                 </div>

@@ -181,10 +181,11 @@ export default function UsersIndex({ users, pagination, filters, roles, reassign
                                                 name={user.name}
                                                 content={user.content}
                                                 candidates={reassign_candidates.filter((candidate) => candidate.id !== user.id)}
-                                                onConfirm={(choice) =>
+                                                onConfirm={(choice, visit) =>
                                                     router.delete(route('users.destroy', user.id), {
                                                         data: choice,
                                                         preserveScroll: true,
+                                                        ...visit,
                                                     })
                                                 }
                                             />
@@ -200,7 +201,10 @@ export default function UsersIndex({ users, pagination, filters, roles, reassign
                                                     name: user.name,
                                                 })}
                                                 confirmLabel={t('Delete user')}
-                                                onConfirm={() => router.delete(route('users.destroy', user.id), { preserveScroll: true })}
+                                                errorField="account"
+                                                onConfirm={(visit) =>
+                                                    router.delete(route('users.destroy', user.id), { preserveScroll: true, ...visit })
+                                                }
                                             />
                                         ))}
                                 </div>

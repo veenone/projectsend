@@ -1,3 +1,5 @@
+import { type ConfirmVisit, useConfirmVisit } from '@/components/confirm-dialog';
+import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -19,7 +21,8 @@ interface AccountContentDeleteDialogProps {
     name: string;
     content: { files: number; folders: number };
     candidates: ReassignCandidate[];
-    onConfirm: (choice: { content_action: 'cascade_delete' | 'reassign'; reassign_to_id?: number }) => void;
+    /** Pass `visit` on to the request: the dialog stays open until it answers and shows a refusal on `account` in place. */
+    onConfirm: (choice: { content_action: 'cascade_delete' | 'reassign'; reassign_to_id?: number }, visit: ConfirmVisit) => void;
 }
 
 /**
@@ -33,8 +36,12 @@ export function AccountContentDeleteDialog({ trigger, name, content, candidates,
     const [contentAction, setContentAction] = useState<'cascade_delete' | 'reassign'>('cascade_delete');
     const [reassignToId, setReassignToId] = useState<string>('');
     const [candidateSearch, setCandidateSearch] = useState('');
+    const { error, setError, processing, visit } = useConfirmVisit('account', () => {
+        setOpen(false);
+        reset();
+    });
 
-    const canConfirm = contentAction === 'cascade_delete' || reassignToId !== '';
+    const canConfirm = !processing && (contentAction === 'cascade_delete' || reassignToId !== '');
 
     const filteredCandidates = useMemo(() => {
         const query = candidateSearch.trim().toLowerCase();
@@ -49,6 +56,7 @@ export function AccountContentDeleteDialog({ trigger, name, content, candidates,
         setContentAction('cascade_delete');
         setReassignToId('');
         setCandidateSearch('');
+        setError(undefined);
     };
 
     return (
@@ -121,6 +129,8 @@ export function AccountContentDeleteDialog({ trigger, name, content, candidates,
                     )}
                 </div>
 
+                <InputError message={error} />
+
                 <DialogFooter className="gap-2">
                     <DialogClose asChild>
                         <Button variant="outline">{t('Cancel')}</Button>
@@ -128,15 +138,14 @@ export function AccountContentDeleteDialog({ trigger, name, content, candidates,
                     <Button
                         variant="destructive"
                         disabled={!canConfirm}
-                        onClick={() => {
-                            setOpen(false);
+                        onClick={() =>
                             onConfirm(
                                 contentAction === 'reassign'
                                     ? { content_action: 'reassign', reassign_to_id: Number(reassignToId) }
                                     : { content_action: 'cascade_delete' },
-                            );
-                            reset();
-                        }}
+                                visit(),
+                            )
+                        }
                     >
                         {t('Delete account')}
                     </Button>
