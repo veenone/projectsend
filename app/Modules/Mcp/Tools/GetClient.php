@@ -9,6 +9,7 @@ use App\Modules\Audit\ActivityLog;
 use App\Modules\Audit\ActivityLogScope;
 use App\Modules\Audit\LogAction;
 use App\Modules\Clients\ClientStorageUsage;
+use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\Models\File;
 use App\Modules\Files\Models\FileAssignment;
 use App\Modules\Mcp\Support\Account;
@@ -134,6 +135,14 @@ class GetClient extends ToolBase
             ->where('assignable_id', $clientId)
             ->whereIn('file_id', Files::visibleTo($account)->select('files.id'))
             ->orderByDesc('id');
+
+        // Neither counted nor named when a rule hides the file from this
+        // staff member, so its download status is never asked either.
+        $library = app(StaffLibraryScope::class);
+
+        if ($library->hiddenSubtreeIds($account->user) !== []) {
+            $assignments->whereIn('file_id', $library->files($account->user)->select('files.id'));
+        }
 
         $count = (int) (clone $assignments)->count();
         $latest = [];
