@@ -432,6 +432,27 @@ Code that calls `AccountEraser::erase()` directly gets an
 
 ---
 
+## Account conversion — `ConvertingAccount`
+
+`App\Modules\Identity\Events\ConvertingAccount`. "May this account change between staff and
+client?" It is asked first by `AccountConversion::guardToClient()` and `guardToStaff()`, before any
+other check and before anything is written. `$event->direction` is `'to_client'` or `'to_staff'`.
+
+```php
+Event::listen('App\Modules\Identity\Events\ConvertingAccount', function ($event): void {
+    if ($event->direction === 'to_client' && Evidence::query()->uploadedBy($event->account)->exists()) {
+        $event->refuse(__('This account holds archived evidence and cannot become a client.'));
+    }
+});
+```
+
+The first refusal wins. The conversion screen shows the message under the form, as an error on
+`user` (a 422 with that error for a JSON request), and the account is left as it was.
+
+**Nothing registered:** every conversion goes ahead exactly as before.
+
+---
+
 ## Other hooks
 
 Smaller seams, each documented in full on its class.

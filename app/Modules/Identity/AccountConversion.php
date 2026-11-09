@@ -9,11 +9,13 @@ use App\Modules\Audit\Action;
 use App\Modules\Audit\ActivityLogger;
 use App\Modules\Files\Access\StaffLibraryScope;
 use App\Modules\Files\Models\Folder;
+use App\Modules\Identity\Events\ConvertingAccount;
 use App\Modules\Identity\Models\Role;
 use App\Modules\Mcp\OAuth\Grants;
 use App\Modules\Platform\Seats\SeatAllowance;
 use App\Modules\Identity\Permissions\SystemRole;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -49,6 +51,8 @@ class AccountConversion
      */
     public function guardToClient(User $actor, User $target): void
     {
+        $this->askListeners($target, 'to_client');
+
         // The mirror of the promotion above: a demotion takes a client
         // seat and frees a staff one.
         $this->seats->guardClient();
@@ -92,6 +96,8 @@ class AccountConversion
      */
     public function guardToStaff(User $actor, User $target): void
     {
+        $this->askListeners($target, 'to_staff');
+
         $this->guardSelf($actor, $target);
 
         // A promotion takes a staff seat. It frees a client one at the same
@@ -155,6 +161,23 @@ class AccountConversion
     public function requiresNewPassword(User $target): bool
     {
         return $target->auth_source !== AuthSource::Local;
+    }
+
+    /**
+     * A package may refuse a conversion (ConvertingAccount). Its message
+     * lands on `user`, the key the conversion screen renders, like the
+     * other refusals here.
+     *
+     * @throws ValidationException
+     */
+    private function askListeners(User $target, string $direction): void
+    {
+        $event = new ConvertingAccount($target, $direction);
+        Event::dispatch($event);
+
+        if ($event->refused()) {
+            throw ValidationException::withMessages(['user' => $event->refusal]);
+        }
     }
 
     /**
